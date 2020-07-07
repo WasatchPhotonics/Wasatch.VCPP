@@ -14,6 +14,10 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
+HWND hTextbox;
+char logBuffer[64 * 1024] = { 0 }; // 64KB text buffer for onscreen log
+int logBufferPos = 0;
+
 WasatchVCPP::Driver* driver = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +35,7 @@ void doSetIntegrationTime();
 void doAcquire();
 
 // util
-int __cdecl         printf2(const char* format, ...);
+int __cdecl         log(const char* format, ...);
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -45,8 +49,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    printf2("wWinMain: hello, world!\n");
-
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_WASATCHVCPPDEMO, szWindowClass, MAX_LOADSTRING);
@@ -56,13 +58,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     if (!InitInstance (hInstance, nCmdShow))
         return FALSE;
 
-    printf2("wWinMain: getting WasatchVCPP::Driver instance\n");
+    log("getting WasatchVCPP::Driver instance");
     driver = WasatchVCPP::Driver::getInstance();
-    printf2("wWinMain: Driver instantiated\n");
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
-    printf2("wWinMain: entering message loop\n");
+    log("entering message loop");
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -72,7 +73,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-    printf2("wWinMain: exited message loop\n");
+    log("exited message loop");
 
     return (int) msg.wParam;
 }
@@ -113,8 +114,15 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    if (!hWnd)
       return FALSE;
 
+   // https://stackoverflow.com/a/15447035/11615696
+   hTextbox = CreateWindowExW(NULL, L"Edit", L"EventLog", 
+       WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | ES_LEFT | ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
+       10, 10, 600, 400, hWnd, NULL, hInst, NULL);
+
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
+
+   log("WasatchVCPPDemo starting");
 
    return TRUE;
 }
@@ -126,10 +134,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - post a quit message and return
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    // Menu selections route here
     switch (message)
     {
-        // Application Menu Selection
         case WM_COMMAND:
             {
                 int wmId = LOWORD(wParam);
@@ -182,26 +188,53 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void doConnect() 
 { 
-    printf2("doConnect: here\n"); 
+    log("calling driver->connect");
     auto result = driver->connect();
-    printf2("doConnect: connect result %s\n", result ? "true" : "false");
+    log("connect result %s", result ? "true" : "false");
 
 }
-void doSetIntegrationTime() { printf2("doSetIntegrationTime: here\n"); }
-void doAcquire() { printf2("doAcquire: here\n"); }
+
+void doSetIntegrationTime() { log("doSetIntegrationTime: here"); }
+void doAcquire() { log("doAcquire: here"); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
 // https://stackoverflow.com/a/30887925/11615696
-int __cdecl printf2(const char *format, ...)
+int __cdecl log(const char *format, ...)
 {
     char str[1024];
     va_list argptr;
     va_start(argptr, format);
-    int ret = vsnprintf(str, sizeof(str), format, argptr);
+    int len = vsnprintf(str, sizeof(str), format, argptr);
     va_end(argptr);
+
+    // output the string to the Visual Studio output window
     OutputDebugStringA(str);
-    return ret;
+    OutputDebugStringA("\r\n");
+
+    // if the string would overfill the on-screen event log buffer, toss the first half of the buffer
+    if (logBufferPos + len + 1 >= sizeof(logBuffer))
+    {
+        int bytesToDelete = sizeof(logBuffer) / 2;
+        memmove(logBuffer, logBuffer + bytesToDelete, sizeof(logBuffer) - bytesToDelete);
+        logBufferPos -= bytesToDelete;
+    }
+
+    // append the new message to the (possibly shrunken) buffer, followed by a linefeed
+    if (logBufferPos + len + 2 < sizeof(logBuffer))
+    {
+        strncpy_s(logBuffer + logBufferPos, sizeof(logBuffer), str, len);
+        logBufferPos += len;
+
+        strncpy_s(logBuffer + logBufferPos, sizeof(logBuffer), "\r\n", 2);
+        logBufferPos += 2;
+    }
+
+    // ensure null-terminated, and copy to Textbox
+    logBuffer[logBufferPos] = 0;
+    SetWindowTextA(hTextbox, logBuffer);
+
+    return len;
 }

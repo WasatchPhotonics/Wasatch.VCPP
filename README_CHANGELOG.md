@@ -4,3 +4,4 @@
     - stubbed Demo menu bar
     - stubbed Driver singleton
     - apparently calling into libusb
+    - working event log in Demo
