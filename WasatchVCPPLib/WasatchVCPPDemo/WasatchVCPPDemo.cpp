@@ -1,10 +1,17 @@
 #include "framework.h"
 #include "WasatchVCPPDemo.h"
 #include "Driver.h"
+#include "Spectrometer.h"
 
 #include <stdio.h>
 
+#include <string>
+#include <vector>
+
 #define MAX_LOADSTRING 100
+
+using std::string;
+using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -15,13 +22,14 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 HWND hTextbox;
-char logBuffer[64 * 1024] = { 0 }; // 64KB text buffer for onscreen log
-int logBufferPos = 0;
+string logBuffer;
+const int MAX_LOG_LEN = 16 * 1024;
 
-WasatchVCPP::Driver* driver = NULL;
+WasatchVCPP::Driver* driver = nullptr;
+WasatchVCPP::Spectrometer* spectrometer = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Forward declarations
+// Forward declarations (move to Demo.h)
 ////////////////////////////////////////////////////////////////////////////////
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -35,7 +43,8 @@ void doSetIntegrationTime();
 void doAcquire();
 
 // util
-int __cdecl         log(const char* format, ...);
+int __cdecl log(const char* format, ...);
+void flushLog();
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -60,6 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     log("getting WasatchVCPP::Driver instance");
     driver = WasatchVCPP::Driver::getInstance();
+    driver->setLogBuffer(logBuffer);
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
@@ -79,7 +89,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Functional Implementation
+// WinForms Implementation
 ////////////////////////////////////////////////////////////////////////////////
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
@@ -117,7 +127,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    // https://stackoverflow.com/a/15447035/11615696
    hTextbox = CreateWindowExW(NULL, L"Edit", L"EventLog", 
        WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | ES_LEFT | ES_MULTILINE | ES_AUTOHSCROLL | ES_AUTOVSCROLL,
-       10, 10, 600, 400, hWnd, NULL, hInst, NULL);
+       10, 10, 600, 400, hWnd, nullptr, hInst, nullptr);
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
@@ -186,16 +196,49 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Spectrometer Callbacks
+////////////////////////////////////////////////////////////////////////////////
+
 void doConnect() 
 { 
-    log("calling driver->connect");
-    auto result = driver->connect();
-    log("connect result %s", result ? "true" : "false");
-
+    int count = driver->openAllSpectrometers();
+    if (count > 0)
+    {
+        log("found %d connected spectrometers", count);
+        spectrometer = driver->getSpectrometer(0);
+    }
+    else
+    {
+        log("no spectrometers found");
+        spectrometer = nullptr;
+    }
 }
 
-void doSetIntegrationTime() { log("doSetIntegrationTime: here"); }
-void doAcquire() { log("doAcquire: here"); }
+void doSetIntegrationTime()
+{
+    if (spectrometer == nullptr)
+        return;
+
+    spectrometer->setIntegrationTimeMS(100);
+    flushLog();
+}
+
+void doAcquire()
+{
+    if (spectrometer == nullptr)
+        return;
+
+    vector<double> spectrum = spectrometer->getSpectrum();
+    if (spectrum.size() < 5)
+    {
+        log("doAcquire: ERROR: failed to read spectrum");
+        return;
+    }
+
+    log("doAcquire: read spectrum of %d pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
+        spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -215,26 +258,25 @@ int __cdecl log(const char *format, ...)
     OutputDebugStringA("\r\n");
 
     // if the string would overfill the on-screen event log buffer, toss the first half of the buffer
-    if (logBufferPos + len + 1 >= sizeof(logBuffer))
+    if (logBuffer.size() + 2 > MAX_LOG_LEN)
     {
         int bytesToDelete = sizeof(logBuffer) / 2;
-        memmove(logBuffer, logBuffer + bytesToDelete, sizeof(logBuffer) - bytesToDelete);
-        logBufferPos -= bytesToDelete;
+        logBuffer.assign(logBuffer.substr(bytesToDelete, logBuffer.size() - bytesToDelete));
     }
 
     // append the new message to the (possibly shrunken) buffer, followed by a linefeed
-    if (logBufferPos + len + 2 < sizeof(logBuffer))
+    if (logBuffer.size() + len + 2 < MAX_LOG_LEN)
     {
-        strncpy_s(logBuffer + logBufferPos, sizeof(logBuffer), str, len);
-        logBufferPos += len;
-
-        strncpy_s(logBuffer + logBufferPos, sizeof(logBuffer), "\r\n", 2);
-        logBufferPos += 2;
+        logBuffer.append(str);
+        logBuffer.append("\r\n");
     }
 
-    // ensure null-terminated, and copy to Textbox
-    logBuffer[logBufferPos] = 0;
-    SetWindowTextA(hTextbox, logBuffer);
+    flushLog();
 
     return len;
+}
+
+void flushLog()
+{
+    SetWindowTextA(hTextbox, logBuffer.c_str());
 }

@@ -159,6 +159,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="libusb.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Spectrometer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -169,6 +170,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Driver.cpp" />
+    <ClCompile Include="Spectrometer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
