@@ -60,10 +60,11 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 
     int ep = 0x82;
     int bytesExpected = pixels * 2;
-    char* buf = (char*)malloc(bytesExpected);
     int totalBytesRead = 0;
-
     int bytesLeftToRead = bytesExpected;
+
+    char* buf = (char*)malloc(bytesExpected);
+
     while (totalBytesRead < bytesExpected)
     {
         driver->log("attempting to read %d bytes from endpoint 0x%02x", bytesLeftToRead, ep);
@@ -95,6 +96,9 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
         driver->log("getSpectrum: totalBytesRead %d, bytesLeftToRead %d", totalBytesRead, bytesLeftToRead);
     }
 
+    if (buf != nullptr)
+        free(buf);
+
     driver->log("getSpectrum: returning spectrum of %d pixels", spectrum.size());
     return spectrum;
 }
@@ -112,7 +116,7 @@ int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, unsign
 int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, vector<unsigned char> data)
 {
     unsigned char* tmp = (unsigned char*)&data[0];
-    return sendCmd(request, value, index, tmp, data.size());
+    return sendCmd(request, value, index, tmp, (int)data.size());
 }
 
 vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, int index, int len, int timeout)
