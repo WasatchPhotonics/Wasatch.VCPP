@@ -12,20 +12,18 @@ namespace WasatchVCPP
 {
     class Driver
     {
-    public:
-        WASATCHVCPPLIB_API Driver();
+        public:
+            WASATCHVCPPLIB_API static Driver* getInstance();
 
-        bool init();
-        int add();
-        usb_dev_handle* openDevice(int vid, int pid);
+            bool connect();
+
+            usb_dev_handle* openDevice(int vid, int pid);
+
+        private:
+            static Driver* instance;
+            Driver(); 
     };
 
-    WASATCHVCPPLIB_API bool init();
+    WASATCHVCPPLIB_API bool connect();
     WASATCHVCPPLIB_API usb_dev_handle* openDevice(int vid, int pid);
-    WASATCHVCPPLIB_API int add();
 }
-
-class Driver
-{
-};
-

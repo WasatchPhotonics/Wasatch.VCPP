@@ -14,6 +14,8 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
+WasatchVCPP::Driver* driver = NULL;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Forward declarations
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,8 +56,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     if (!InitInstance (hInstance, nCmdShow))
         return FALSE;
 
-    printf2("wWinMain: instantiating WasatchVCPP::Driver\n");
-    WasatchVCPP::Driver* driver = new WasatchVCPP::Driver();
+    printf2("wWinMain: getting WasatchVCPP::Driver instance\n");
+    driver = WasatchVCPP::Driver::getInstance();
     printf2("wWinMain: Driver instantiated\n");
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
@@ -178,7 +180,12 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-void doConnect() { printf2("doConnect: here\n"); }
+void doConnect() 
+{ 
+    printf2("doConnect: here\n"); 
+
+
+}
 void doSetIntegrationTime() { printf2("doSetIntegrationTime: here\n"); }
 void doAcquire() { printf2("doAcquire: here\n"); }
 
