@@ -183,7 +183,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 void doConnect() 
 { 
     printf2("doConnect: here\n"); 
-
+    auto result = driver->connect();
+    printf2("doConnect: connect result %s\n", result ? "true" : "false");
 
 }
 void doSetIntegrationTime() { printf2("doSetIntegrationTime: here\n"); }

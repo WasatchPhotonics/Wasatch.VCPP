@@ -15,9 +15,11 @@ namespace WasatchVCPP
         public:
             WASATCHVCPPLIB_API static Driver* getInstance();
 
-            bool connect();
+            WASATCHVCPPLIB_API bool connect();
 
-            usb_dev_handle* openDevice(int vid, int pid);
+            WASATCHVCPPLIB_API usb_dev_handle* openDevice(int vid, int pid);
+
+            WASATCHVCPPLIB_API void log(const char* fmt, ...);
 
         private:
             static Driver* instance;

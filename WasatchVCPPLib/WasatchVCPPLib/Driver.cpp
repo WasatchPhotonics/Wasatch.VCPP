@@ -30,13 +30,14 @@ WasatchVCPP::Driver::Driver()
 
 bool WasatchVCPP::Driver::connect()
 {
+    this->log("connect: calling usb_init");
     usb_init();
 
     auto bus_result = usb_find_busses();
-    printf("usb_find_busses = %d\n", bus_result);
+    this->log("usb_find_busses = %d", bus_result);
 
     auto dev_result = usb_find_devices();
-    printf("usb_find_devices = %d\n", dev_result);
+    this->log("usb_find_devices = %d", dev_result);
 
     return true;
 }
@@ -67,6 +68,18 @@ usb_dev_handle* WasatchVCPP::Driver::openDevice(int vid, int pid)
         }
     }
     return NULL;
+}
+
+// https://stackoverflow.com/a/30887925/11615696
+void WasatchVCPP::Driver::log(const char *format, ...)
+{
+    char str[1024];
+    va_list argptr;
+    va_start(argptr, format);
+    int len = vsnprintf(str, sizeof(str), format, argptr);
+    va_end(argptr);
+    OutputDebugStringA(str);
+    OutputDebugStringA("\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
