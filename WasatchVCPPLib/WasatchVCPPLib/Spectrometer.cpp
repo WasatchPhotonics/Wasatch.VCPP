@@ -73,6 +73,7 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
         if (bytesRead <= 0)
         {
             driver->log("getSpectrum: error (bytesRead negative or zero), giving up");
+            driver->log("getSpectrum: usb error: %s", usb_strerror());
             break;
         }
 

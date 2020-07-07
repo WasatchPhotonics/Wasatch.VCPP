@@ -72,7 +72,9 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                             int configResult = usb_set_configuration(udev, 1);
                             if (configResult != 0)
                             {
-                                log("openAllSpectrometers: error setting configuration 1 (result %d)", configResult);
+                                log("openAllSpectrometers: error setting configuration 1 (result %d): %s", 
+                                    configResult, usb_strerror());
+                                usb_close(udev);
                                 continue;
                             }
 
@@ -80,7 +82,9 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                             int claimResult = usb_claim_interface(udev, 0);
                             if (claimResult != 0)
                             {
-                                log("openAllSpectrometers: error claiming interface 0 (result %d)", claimResult);
+                                log("openAllSpectrometers: error claiming interface 0 (result %d): %s", 
+                                    claimResult, usb_strerror());
+                                usb_close(udev);
                                 continue;
                             }
 
@@ -96,7 +100,10 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                                 log("openAllSpectrometers: Spectrometer instantiation failed");
                             }
                         }
-                        usb_close(udev);
+                        else
+                        {
+                            usb_close(udev);
+                        }
                     }
                     else
                     {
