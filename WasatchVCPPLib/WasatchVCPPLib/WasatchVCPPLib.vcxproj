@@ -156,13 +156,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Driver.h" />
+    <ClInclude Include="EEPROM.h" />
+    <ClInclude Include="FeatureMask.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="libusb.h" />
+    <ClInclude Include="ParseData.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Spectrometer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="EEPROM.cpp" />
+    <ClCompile Include="FeatureMask.cpp" />
+    <ClCompile Include="ParseData.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

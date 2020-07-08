@@ -30,6 +30,15 @@
     <ClInclude Include="Spectrometer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EEPROM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParseData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureMask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -42,6 +51,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Spectrometer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EEPROM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParseData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FeatureMask.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
