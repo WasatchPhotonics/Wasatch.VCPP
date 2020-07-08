@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <iostream>
 
 using std::string;
 
@@ -30,11 +31,6 @@ WasatchVCPP::Driver* WasatchVCPP::Driver::getInstance()
 
 WasatchVCPP::Driver::Driver()
 {
-}
-
-void WasatchVCPP::Driver::setLogBuffer(string& buf)
-{
-    logBuffer = &buf;
 }
 
 int WasatchVCPP::Driver::getNumberOfSpectrometers() { return (int)spectrometers.size(); }
@@ -123,6 +119,16 @@ WasatchVCPP::Spectrometer* WasatchVCPP::Driver::getSpectrometer(int index)
     return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Logging
+////////////////////////////////////////////////////////////////////////////////
+
+bool WasatchVCPP::Driver::setLogfile(const string& pathname)
+{
+    logfile.open(pathname);
+    return logfile.is_open();
+}
+
 // https://stackoverflow.com/a/30887925/11615696
 void WasatchVCPP::Driver::log(const char *format, ...)
 {
@@ -134,19 +140,9 @@ void WasatchVCPP::Driver::log(const char *format, ...)
     OutputDebugStringA(str);
     OutputDebugStringA("\r\n");
 
-    if (logBuffer != nullptr)
+    if (logfile.is_open())
     {
-        logBuffer->append(str);
-        logBuffer->append("\r\n");
+        logfile << str << "\r\n";
+        logfile.flush();
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Static C-type function calls
-////////////////////////////////////////////////////////////////////////////////
-
-int WasatchVCPP::open_all_spectrometers() 
-{ 
-    WasatchVCPP::Driver* driver = WasatchVCPP::Driver::getInstance();
-    return driver->openAllSpectrometers();
 }

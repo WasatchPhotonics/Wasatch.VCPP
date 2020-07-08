@@ -163,6 +163,8 @@
     <ClInclude Include="ParseData.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Spectrometer.h" />
+    <ClInclude Include="Util.h" />
+    <ClInclude Include="WasatchVCPPWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -177,6 +179,8 @@
     </ClCompile>
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="Spectrometer.cpp" />
+    <ClCompile Include="Util.cpp" />
+    <ClCompile Include="WasatchVCPPWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

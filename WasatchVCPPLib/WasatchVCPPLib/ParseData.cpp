@@ -63,10 +63,10 @@ float WasatchVCPP::ParseData::toFloat (const vector<uint8_t>& buf, int index)
     return *((float*)&raw);
 }
 
-string WasatchVCPP::ParseData::toString(const vector<uint8_t>& buf, int index = 0, int len = 0)
+string WasatchVCPP::ParseData::toString(const vector<uint8_t>& buf, int index, int len)
 {
     if (len == 0)
-        len = buf.size();
+        len = (int)buf.size();
 
     std::string s;
     for (int i = 0; i < len; i++)
@@ -138,7 +138,7 @@ bool WasatchVCPP::ParseData::writeInt32(int32_t value, vector<uint8_t>& buf, int
 
 bool WasatchVCPP::ParseData::writeFloat(float value, vector<uint8_t>& buf, int index)
 {
-    float raw = *((float*)&value);
+    uint32_t raw = *((uint32_t*)&value);
     return writeUInt32(raw, buf, index);
 }
 

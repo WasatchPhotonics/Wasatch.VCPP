@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "WasatchVCPPDemo.h"
-#include "Driver.h"
-#include "Spectrometer.h"
+
+#include "WasatchVCPPWrapper.h"
 
 #include <stdio.h>
 
@@ -25,8 +25,12 @@ HWND hTextbox;
 string logBuffer;
 const int MAX_LOG_LEN = 16 * 1024;
 
-WasatchVCPP::Driver* driver = nullptr;
-WasatchVCPP::Spectrometer* spectrometer = nullptr;
+// locally cached spectrometer data
+int specIndex = -1;
+int pixels;
+vector<double> wavelengths;
+vector<double> wavenumbers;
+vector<double> spectrum;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Forward declarations (move to Demo.h)
@@ -44,7 +48,6 @@ void doAcquire();
 
 // util
 int __cdecl log(const char* format, ...);
-void flushLog();
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -67,9 +70,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     if (!InitInstance (hInstance, nCmdShow))
         return FALSE;
 
-    log("getting WasatchVCPP::Driver instance");
-    driver = WasatchVCPP::Driver::getInstance();
-    driver->setLogBuffer(logBuffer);
+    log("setting logfile path");
+    wp_set_logfile_path("wasatch_vcpp.log");
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
@@ -202,31 +204,29 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void doConnect() 
 { 
-    int count = driver->openAllSpectrometers();
-    if (count > 0)
-    {
-        log("found %d connected spectrometers", count);
-        spectrometer = driver->getSpectrometer(0);
-    }
-    else
+    int count = wp_open_all_spectrometers();
+    if (count <= 0)
     {
         log("no spectrometers found");
-        spectrometer = nullptr;
+        specIndex = -1;
+        return;
     }
+
+    log("found %d connected spectrometers", count);
+    specIndex = 0;
 }
 
 void doSetIntegrationTime()
 {
-    if (spectrometer == nullptr)
+    if (specIndex < 0)
         return;
 
-    spectrometer->setIntegrationTimeMS(100);
-    flushLog();
+    wp_set_integration_time_ms(specIndex, 100);
 }
 
 void doAcquire()
 {
-    if (spectrometer == nullptr)
+    if (specIndex < 0)
         return;
 
     vector<double> spectrum = spectrometer->getSpectrum();
@@ -271,12 +271,7 @@ int __cdecl log(const char *format, ...)
         logBuffer.append("\r\n");
     }
 
-    flushLog();
+    SetWindowTextA(hTextbox, logBuffer.c_str());
 
     return len;
-}
-
-void flushLog()
-{
-    SetWindowTextA(hTextbox, logBuffer.c_str());
 }

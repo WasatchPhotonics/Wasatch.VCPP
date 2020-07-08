@@ -22,6 +22,64 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev)
     this->udev = udev;
     driver = Driver::getInstance();
     driver->log("Spectrometer::ctor: instantiating");
+
+    readEEPROM();
+
+    ////////////////////////////////////////////////////////////////////////////
+    // post-eeprom initialization
+    ////////////////////////////////////////////////////////////////////////////
+
+    pixels = eeprom.activePixelsHoriz;
+
+    wavelengths.resize(pixels);
+    for (int i = 0; i < pixels; i++)
+        wavelengths[i] = eeprom.wavecalCoeffs[0] 
+                       + eeprom.wavecalCoeffs[1] * i 
+                       + eeprom.wavecalCoeffs[2] * i * i
+                       + eeprom.wavecalCoeffs[3] * i * i * i
+                       + eeprom.wavecalCoeffs[4] * i * i * i * i;
+
+    if (eeprom.excitationNM > 0)
+    {
+        const double nmToCm = 1.0 / 1e7;
+        const double laserCm = 1.0 / (eeprom.excitationNM * nmToCm);
+
+        wavenumbers.resize(pixels);
+        for (int i = 0; i < pixels; i++)
+            if (wavelengths[i] != 0)
+                wavenumbers[i] = laserCm - (1.0 / (wavelengths[i] * nmToCm));
+            else
+                wavenumbers[i] = 0;
+    }
+    else
+        wavenumbers.resize(0);
+}
+
+bool WasatchVCPP::Spectrometer::close()
+{
+    usb_release_interface(udev, 0);
+    usb_close(udev);
+}
+
+bool WasatchVCPP::Spectrometer::readEEPROM()
+{
+    vector<vector<uint8_t> > pages;
+    for (int page = 0; page < EEPROM::MAX_PAGES; page++)
+    {
+        driver->log("reading EEPROM page %d", page);
+        auto buf = getCmd(0x99, 0x01, page, EEPROM::PAGE_SIZE);
+        pages.push_back(buf);
+    }
+
+    if (!eeprom.parse(pages))
+    {
+        driver->log("ERROR: unable to parse EEPROM");
+        return false;
+    }
+
+    driver->log("EEPROM Contents:\n%s", eeprom.toString().c_str());
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,6 +100,16 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
     driver->log("integrationTimeMS -> %lu", ms);
 
     return isSuccess(0xb2, result);
+}
+
+bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
+{
+    int result = sendCmd(0xbe, flag ? 1 : 0);
+    laserEnabled = flag;
+
+    driver->log("laserEnable -> %d", flag);
+
+    return isSuccess(0xbe, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,14 +187,14 @@ int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, vector
     return sendCmd(request, value, index, tmp, (int)data.size());
 }
 
-vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, int index, int len, int timeout)
+vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, int index, int len)
 {
     vector<unsigned char> retval;
 
     char* data = (char*)malloc(len);
     memset(data, 0, len);
 
-    int result = usb_control_msg(udev, DEVICE_TO_HOST, request, value, index, data, len, timeout);
+    int result = usb_control_msg(udev, DEVICE_TO_HOST, request, value, index, data, len, timeoutMS);
     for (int i = 0; i < result; i++)
         retval.push_back(data[i]);
 

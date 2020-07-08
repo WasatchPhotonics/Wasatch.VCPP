@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 
 namespace WasatchVCPP
 {
@@ -18,26 +19,24 @@ namespace WasatchVCPP
     class Driver
     {
         public:
-            WASATCHVCPPLIB_API static Driver* getInstance();
+            static Driver* getInstance();
 
-            WASATCHVCPPLIB_API int getNumberOfSpectrometers();
-            WASATCHVCPPLIB_API int openAllSpectrometers();
-            WASATCHVCPPLIB_API Spectrometer* getSpectrometer(int index);
+            int getNumberOfSpectrometers();
+            int openAllSpectrometers();
+            Spectrometer* getSpectrometer(int index);
 
-            WASATCHVCPPLIB_API void log(const char* fmt, ...);
-
-            WASATCHVCPPLIB_API void setLogBuffer(std::string& buf);
+            // logging
+            bool setLogfile(const std::string& pathname);
+            void log(const char* fmt, ...);
 
         private:
             static Driver* instance;
 
             Driver(); 
 
-            std::string* logBuffer;
+            std::ofstream logfile;
 
             // std::vector<usb_dev_handle*> devices;
             std::vector<Spectrometer*> spectrometers;
     };
-
-    WASATCHVCPPLIB_API int open_all_spectrometers();
 }
