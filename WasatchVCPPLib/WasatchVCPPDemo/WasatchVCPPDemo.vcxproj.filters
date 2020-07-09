@@ -27,7 +27,7 @@
     <ClInclude Include="WasatchVCPPDemo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SpectrometerProxy.h">
+    <ClInclude Include="WasatchVCPPProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,7 +35,7 @@
     <ClCompile Include="WasatchVCPPDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SpectrometerProxy.cpp">
+    <ClCompile Include="WasatchVCPPProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

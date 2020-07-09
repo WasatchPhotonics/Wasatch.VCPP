@@ -1,7 +1,7 @@
 #include "framework.h"
 #include "WasatchVCPPDemo.h"
 
-#include "WasatchVCPPWrapper.h"
+#include "WasatchVCPPProxy.h"
 
 #include <stdio.h>
 
@@ -25,12 +25,7 @@ HWND hTextbox;
 string logBuffer;
 const int MAX_LOG_LEN = 16 * 1024;
 
-// locally cached spectrometer data
-int specIndex = -1;
-int pixels;
-vector<double> wavelengths;
-vector<double> wavenumbers;
-vector<double> spectrum;
+WasatchVCPP::SpectrometerProxy* spectrometer = nullptr; // example
 
 ////////////////////////////////////////////////////////////////////////////////
 // Forward declarations (move to Demo.h)
@@ -47,7 +42,7 @@ void doSetIntegrationTime();
 void doAcquire();
 
 // util
-int __cdecl log(const char* format, ...);
+void log(const char* format, ...);
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -71,7 +66,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
 
     log("setting logfile path");
-    wp_set_logfile_path("wasatch_vcpp.log");
+    WasatchVCPP::Driver::setLogfile("wasatch_vcpp.log"); // example
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
@@ -204,32 +199,32 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void doConnect() 
 { 
-    int count = wp_open_all_spectrometers();
+    int count = WasatchVCPP::Driver::openAllSpectrometers(); // example
     if (count <= 0)
     {
         log("no spectrometers found");
-        specIndex = -1;
+        spectrometer = nullptr;
         return;
     }
 
     log("found %d connected spectrometers", count);
-    specIndex = 0;
+    spectrometer = WasatchVCPP::Driver::getSpectrometer(0); // example
 }
 
 void doSetIntegrationTime()
 {
-    if (specIndex < 0)
+    if (spectrometer == nullptr)
         return;
 
-    wp_set_integration_time_ms(specIndex, 100);
+    spectrometer->setIntegrationTimeMS(100); // example
 }
 
 void doAcquire()
 {
-    if (specIndex < 0)
+    if (spectrometer == nullptr)
         return;
 
-    vector<double> spectrum = spectrometer->getSpectrum();
+    vector<double> spectrum = spectrometer->getSpectrum(); // example
     if (spectrum.size() < 5)
     {
         log("doAcquire: ERROR: failed to read spectrum");
@@ -244,14 +239,15 @@ void doAcquire()
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
-// https://stackoverflow.com/a/30887925/11615696
-int __cdecl log(const char *format, ...)
+//! A simple log function which updates the scrolling Textbox on the GUI.
+//! @see https://stackoverflow.com/a/30887925/11615696
+void log(const char *fmt, ...)
 {
     char str[1024];
-    va_list argptr;
-    va_start(argptr, format);
-    int len = vsnprintf(str, sizeof(str), format, argptr);
-    va_end(argptr);
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(str, sizeof(str), fmt, args);
+    va_end(args);
 
     // output the string to the Visual Studio output window
     OutputDebugStringA(str);
@@ -271,7 +267,6 @@ int __cdecl log(const char *format, ...)
         logBuffer.append("\r\n");
     }
 
+    // update the Textbox
     SetWindowTextA(hTextbox, logBuffer.c_str());
-
-    return len;
 }

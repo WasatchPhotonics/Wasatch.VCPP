@@ -59,6 +59,7 @@ bool WasatchVCPP::Spectrometer::close()
 {
     usb_release_interface(udev, 0);
     usb_close(udev);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::readEEPROM()

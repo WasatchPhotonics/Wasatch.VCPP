@@ -28,7 +28,7 @@
     Therefore, this WasatchVCPPProxy namespace provides an encapsulated way
     to talk to our spectrometers using modern C++ and STL conventions.
 
-    @see README_ARCHITECTURE.md
+    @see README.md#Architecture
 */
 namespace WasatchVCPP
 {
@@ -54,12 +54,19 @@ namespace WasatchVCPP
             double* spectrumBuf;
     };
 
-    static bool connect();
-    static bool close();
+    class Driver
+    {
+        public:
+            static int openAllSpectrometers();
+            static bool closeAllSpectrometers();
+            static int numberOfSpectrometers;
 
-    static int numberOfSpectrometers;
-    static std::vector<SpectrometerProxy> spectrometers;
+            static SpectrometerProxy* getSpectrometer(int index);
 
-    static bool setLogfile(const std::string& pathname);
+            static bool setLogfile(const std::string& pathname);
+
+        private:
+            static std::vector<SpectrometerProxy> spectrometers;
+    };
 }
 

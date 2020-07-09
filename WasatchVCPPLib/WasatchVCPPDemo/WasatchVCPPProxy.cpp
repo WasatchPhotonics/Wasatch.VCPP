@@ -10,27 +10,44 @@
 #include "WasatchVCPPWrapper.h"
 
 using std::vector;
+using std::string;
 
-int WasatchVCPP::numberOfSpectrometers = 0;
-vector<WasatchVCPP::SpectrometerProxy> spectrometers;
+int WasatchVCPP::Driver::numberOfSpectrometers = 0;
+vector<WasatchVCPP::SpectrometerProxy> WasatchVCPP::Driver::spectrometers;
 
-bool WasatchVCPP::connect()
+int WasatchVCPP::Driver::openAllSpectrometers()
 {
     spectrometers.clear();
 
     numberOfSpectrometers = wp_open_all_spectrometers();
     if (numberOfSpectrometers <= 0)
-        return false;
+        return 0;
 
     for (int i = 0; i < numberOfSpectrometers; i++)
         spectrometers.push_back(SpectrometerProxy(i));
+
+    return numberOfSpectrometers;
 }
 
-bool WasatchVCPP::close()
+WasatchVCPP::SpectrometerProxy* WasatchVCPP::Driver::getSpectrometer(int index)
+{
+    if (index >= spectrometers.size())
+        return nullptr;
+
+    return &spectrometers[index];
+}
+
+bool WasatchVCPP::Driver::closeAllSpectrometers()
 {
     for (int i = 0; i < numberOfSpectrometers; i++)
         spectrometers[i].close();
-    spectrometers.clear()
+    spectrometers.clear();
+    return true;
+}
+
+bool WasatchVCPP::Driver::setLogfile(const string& pathname)
+{ 
+    return WP_SUCCESS == wp_set_logfile_path(pathname.c_str()); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,11 +56,18 @@ bool WasatchVCPP::close()
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+// Lifecycle
+////////////////////////////////////////////////////////////////////////////////
+
 WasatchVCPP::SpectrometerProxy::SpectrometerProxy(int specIndex)
 {
     this->specIndex = specIndex;
 
     pixels = wp_get_pixels(specIndex);
+    if (pixels <= 0)
+        return;
+
     spectrumBuf = (double*)malloc(pixels * sizeof(double));
 
     char tmp[33];
@@ -54,7 +78,7 @@ WasatchVCPP::SpectrometerProxy::SpectrometerProxy(int specIndex)
         model.assign(tmp);
 }
 
-void WasatchVCPP::SpectrometerProxy::close()
+bool WasatchVCPP::SpectrometerProxy::close()
 {
     if (specIndex >= 0)
     {
@@ -67,4 +91,29 @@ void WasatchVCPP::SpectrometerProxy::close()
         free(spectrumBuf);
         spectrumBuf = nullptr;
     }
+
+    return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Acquisition
+////////////////////////////////////////////////////////////////////////////////
+
+vector<double> WasatchVCPP::SpectrometerProxy::getSpectrum()
+{
+    vector<double> result;
+    if (spectrumBuf != nullptr)
+        if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrumBuf, pixels))
+            result = vector<double>(spectrumBuf, spectrumBuf + pixels * sizeof(*spectrumBuf));
+    return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// simple pass-throughs
+////////////////////////////////////////////////////////////////////////////////
+
+bool WasatchVCPP::SpectrometerProxy::setIntegrationTimeMS(unsigned long ms)
+{ return wp_set_integration_time_ms(specIndex, ms); }
+
+bool WasatchVCPP::SpectrometerProxy::setLaserEnable(bool flag)
+{ return wp_set_laser_enable(specIndex, flag); }

@@ -7,7 +7,7 @@
     - added FeatureMask
     - added WasatchVCPPWrapper
     - added WasatchVCPPProxy
-    - documentation
+    - documented architecture
 - 2020-07-07 0.0.1
     - stubbed Demo
     - added Driver 
