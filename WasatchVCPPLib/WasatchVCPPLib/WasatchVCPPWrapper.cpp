@@ -1,7 +1,17 @@
 /**
-    @file   WasatchVCPPWrapper.h
+    @file   WasatchVCPPWrapper.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
 
+    This file implements the "C" interface to the WasatchVCPP library and DLL.
+    Customers would not normally have this file in their distribution; they
+    should be fine with just the header (WasatchVCPPWrapper.h).
+
+    This file is the one and only place where WasatchVCPP::Driver is actually
+    instantiated (via its Singleton).
+
+    This file is the one place where the "C" API calls into the C++ library
+    internals; "above" this file is only C, while "below" this file is only
+    C++.
 */
 
 #include "pch.h"
@@ -31,6 +41,12 @@ Driver* driver = Driver::getInstance();
 // helper functions
 ////////////////////////////////////////////////////////////////////////////////
 
+//! copy a std::string to a C string
+//!
+//! @param s (Input) a populated std::string
+//! @param buf (Output) the destination where the string is to be copied
+//! @param len (Input) allocated size of 'buf'
+//! @returns WP_SUCCESS or WP_ERROR_INSUFFICIENT_STORAGE
 int exportString(string s, char* buf, int len)
 {
     memset(buf, 0, len);
@@ -50,6 +66,12 @@ int exportString(string s, char* buf, int len)
 int wp_open_all_spectrometers()
 {
     return driver->openAllSpectrometers();
+}
+
+int wp_close_all_spectrometers()
+{
+    for (int i = 0; i < driver->getNumberOfSpectrometers(); i++)
+        wp_close_spectrometer(i);
 }
 
 int wp_close_spectrometer(int specIndex)
@@ -238,4 +260,3 @@ int wp_set_laser_enable(int specIndex, int value)
 
     return WP_SUCCESS;
 }
-

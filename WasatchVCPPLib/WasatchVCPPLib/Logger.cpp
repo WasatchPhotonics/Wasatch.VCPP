@@ -1,3 +1,11 @@
+/**
+    @file   Logger.cpp
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  implementation of WasatchVCPP::Logger
+    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
+            or WasatchVCPP::Proxy instead
+*/
+
 #include "pch.h"
 #include "Logger.h"
 #include "Util.h"

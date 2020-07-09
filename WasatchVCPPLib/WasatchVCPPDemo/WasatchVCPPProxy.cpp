@@ -2,7 +2,11 @@
     @file   WasatchVCPPProxy.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  implementation of WasatchCPP::Proxy classes
-    @note   Users can copy and import this file into their own Visual C++ solutions
+    @note   Users can copy and import this file into their own Visual C++ solutions.
+
+    Users don't need this file; they can do everything they need via 
+    WasatchVCPPWrapper.h.  However, these classes automate some marshalling, 
+    loops and error-handling for you in a reasonably object-oriented manner.
 */
 
 #include "framework.h"

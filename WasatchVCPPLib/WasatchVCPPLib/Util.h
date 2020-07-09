@@ -2,6 +2,8 @@
     @file   Util.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  interface of WasatchVCPP::Util
+    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
+            or WasatchVCPP::Proxy instead
 */
 
 #pragma once
@@ -12,6 +14,7 @@
 
 namespace WasatchVCPP
 {
+    //! Static utility functions to manage strings and whatnot.
     class Util
     {
         public:

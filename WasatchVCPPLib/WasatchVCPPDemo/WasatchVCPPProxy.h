@@ -3,6 +3,10 @@
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  interface of WasatchCPP::Proxy classes
     @note   Users can copy and import this file into their own Visual C++ solutions
+
+    Users don't need this file; they can do everything they need via 
+    WasatchVCPPWrapper.h.  However, these classes automate some marshalling, 
+    loops and error-handling for you in a reasonably object-oriented manner.
 */
 #pragma once
 
@@ -37,6 +41,8 @@ namespace WasatchVCPP
         class Spectrometer
         {
             public:
+
+                //! instantiated by WasatchVCPP::Proxy::openAllSpectrometers
                 Spectrometer(int specIndex);
                 bool close();
 

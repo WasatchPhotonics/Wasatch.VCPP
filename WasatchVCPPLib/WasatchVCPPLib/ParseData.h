@@ -2,6 +2,8 @@
     @file   ParseData.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  interface of WasatchVCPP::ParseData
+    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
+            or WasatchVCPP::Proxy instead
 */
 
 #pragma once
@@ -12,8 +14,8 @@
 
 namespace WasatchVCPP
 {
-    //! this class provides methods for reading and writing individual fields 
-    //! within the EEPROM
+    //! This class provides methods for reading and writing individual fields 
+    //! within the EEPROM.  It is primarily used by EEPROM.parse() and EEPROM.write().
     class ParseData
     {
         public:

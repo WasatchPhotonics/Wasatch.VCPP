@@ -1,7 +1,9 @@
 /**
     @file   Driver.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
-    @brief  interface of WasatchCPP::Driver
+    @brief  interface of WasatchVCPP::Driver
+    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
+            or WasatchVCPP::Proxy instead
 */
 
 #pragma once
@@ -23,6 +25,14 @@ namespace WasatchVCPP
 {
     class Spectrometer;
 
+    /**
+        @brief  This is an internal class encapsulating state and control of all
+                connected spectrometers.
+
+        End-users / customers would not normally access this class directly; they 
+        should interact with the library through WasatchVCPPWrapper.h or 
+        WasatchVCPP::Proxy.
+    */
     class Driver
     {
         public:

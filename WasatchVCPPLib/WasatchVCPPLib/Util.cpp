@@ -2,6 +2,8 @@
     @file   Util.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  interface of WasatchVCPP::Util
+    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
+            or WasatchVCPP::Proxy instead
 */
 
 #include "pch.h"

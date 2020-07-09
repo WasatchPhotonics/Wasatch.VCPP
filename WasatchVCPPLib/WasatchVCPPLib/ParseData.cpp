@@ -2,6 +2,8 @@
     @file   ParseData.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  implementation of WasatchVCPP::ParseData
+    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
+            or WasatchVCPP::Proxy instead
 */
 
 #include "pch.h"
