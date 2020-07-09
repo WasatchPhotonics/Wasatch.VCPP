@@ -7,12 +7,14 @@
 #include "pch.h"
 #include "Util.h"
 
+#include <time.h>
+
 using std::string;
 using std::set;
 
 string WasatchVCPP::Util::sprintf(const char* fmt, ...)
 {
-    char str[1024];
+    char str[8192];
     va_list args;
     va_start(args, fmt);
     int len = vsnprintf(str, sizeof(str), fmt, args);
@@ -30,3 +32,12 @@ string WasatchVCPP::Util::toHex(const std::vector<uint8_t>& data)
     return s;
 }
 
+string WasatchVCPP::Util::timestamp()
+{
+	time_t now = time(NULL);
+    tm tm;
+    localtime_s(&tm, &now);
+	char buffer[32];
+	strftime(buffer, 32, "%%m-%d-%Y %H:%M:%S", &tm);
+	return string(buffer);
+}

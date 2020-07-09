@@ -33,8 +33,8 @@ The WasatchVCPP distribution contains:
 
 There are basically four ways you can use WasatchVCPP:
 
-1. use WasatchVCPPWrapper.h to call precompiled WasatchVCPP.dll via C or C++
-2. use WasatchVCPP::Proxy to call precompiled WasatchVCPP.dll via C++
+1. use WasatchVCPPWrapper.h (C API) to call precompiled WasatchVCPP.dll via C or C++
+2. use WasatchVCPP::Proxy (C++ API) to call precompiled WasatchVCPP.dll via C++
 3. compile WasatchVCPP.dll yourself, then call WasatchVCPP classes directly 
    (or use either of the above methods)
 4. import WasatchVCPP classes into your own project, then call them directly 
@@ -75,7 +75,11 @@ WasatchVCPP.
 
 # Backlog
 
-## Merge WasatchVCPPWrapper and WasatchVCPPProxy
+- when logging EEPROM fields, change to "register" ala EnlightenMobile
+- add get\_eeprom\_field(str, \*str)
+- add get\_driver\_version(\*str)
+
+## Merge WasatchVCPPWrapper and WasatchVCPPProxy?
 
 It seems possible to physically merge the contents of WasatchVCPPProxy.h/cpp into 
 WasatchVCPPWrapper.h, such that there's only one header file to include regardless

@@ -1,12 +1,15 @@
 # Changelog
 
-- 2020-07-?? 0.0.2
+- 2020-07-09 0.0.3
+    - added Demo InputBox
+    - starting to read EEPROM
+- 2020-07-08 0.0.2
     - added Util
     - added EEPROM
     - added ParseData
     - added FeatureMask
     - added WasatchVCPPWrapper
-    - added WasatchVCPPProxy
+    - added WasatchVCPP::Proxy
     - documented architecture
 - 2020-07-07 0.0.1
     - stubbed Demo

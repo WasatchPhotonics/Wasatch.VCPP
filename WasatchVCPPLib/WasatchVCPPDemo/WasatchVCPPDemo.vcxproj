@@ -147,12 +147,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
+    <ClInclude Include="InputBox.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Util.h" />
     <ClInclude Include="WasatchVCPPProxy.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WasatchVCPPDemo.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="InputBox.cpp" />
+    <ClCompile Include="Util.cpp" />
     <ClCompile Include="WasatchVCPPProxy.cpp" />
     <ClCompile Include="WasatchVCPPDemo.cpp" />
   </ItemGroup>

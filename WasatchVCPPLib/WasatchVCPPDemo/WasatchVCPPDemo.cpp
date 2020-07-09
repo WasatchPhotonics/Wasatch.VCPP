@@ -15,6 +15,7 @@
     @see README_ARCHITECTURE.md
 */
 #include "framework.h"
+#include "InputBox.h"
 #include "WasatchVCPPDemo.h"
 
 #include "WasatchVCPPProxy.h"
@@ -42,7 +43,7 @@ HWND hTextbox;
 string logBuffer;
 const int MAX_LOG_LEN = 16 * 1024; 
 
-WasatchVCPPProxy::Spectrometer* spectrometer = nullptr; // example
+WasatchVCPP::Proxy::Spectrometer* spectrometer = nullptr; // example
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -66,7 +67,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
 
     log("setting logfile path");
-    WasatchVCPPProxy::Driver::setLogfile("wasatch_vcpp.log"); // example
+    WasatchVCPP::Proxy::Driver::setLogfile("wasatch_vcpp.log"); // example
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
@@ -215,7 +216,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void doConnect() 
 { 
-    int count = WasatchVCPPProxy::Driver::openAllSpectrometers(); // example
+    int count = WasatchVCPP::Proxy::Driver::openAllSpectrometers(); // example
     if (count <= 0)
     {
         log("no spectrometers found");
@@ -224,7 +225,7 @@ void doConnect()
     }
 
     log("found %d connected spectrometers", count);
-    spectrometer = WasatchVCPPProxy::Driver::getSpectrometer(0); // example
+    spectrometer = WasatchVCPP::Proxy::Driver::getSpectrometer(0); // example
 }
 
 void doSetIntegrationTime()
@@ -232,7 +233,12 @@ void doSetIntegrationTime()
     if (spectrometer == nullptr)
         return;
 
-    spectrometer->setIntegrationTimeMS(100); // example
+    char prompt[64];
+    strncpy_s(prompt, "Enter integration time (ms)", sizeof(prompt));
+    string s(InputBox(prompt));
+    int ms = atoi(s.c_str());
+
+    spectrometer->setIntegrationTimeMS(ms); // example
 }
 
 void doAcquire()

@@ -7,6 +7,7 @@
 
 #include "Driver.h"
 #include "Spectrometer.h"
+#include "Util.h"
 
 #include <stdio.h>
 #include <string>
@@ -86,7 +87,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                             }
 
                             // log("openAllSpectrometers: instantiating Spectrometer");
-                            Spectrometer* spec = new Spectrometer(udev);
+                            Spectrometer* spec = new Spectrometer(udev, pid);
                             if (spec != nullptr)
                                 spectrometers.push_back(spec);
                             else
@@ -134,12 +135,13 @@ void WasatchVCPP::Driver::log(const char *fmt, ...)
     va_start(args, fmt);
     int len = vsnprintf(str, sizeof(str), fmt, args);
     va_end(args);
-    OutputDebugStringA(str);
-    OutputDebugStringA("\r\n");
+
+    string line = Util::sprintf("%s %s\r\n", Util::timestamp().c_str(), str);
+    OutputDebugStringA(line.c_str());
 
     if (logfile.is_open())
     {
-        logfile << str << "\r\n";
+        logfile << line;
         logfile.flush();
     }
 }

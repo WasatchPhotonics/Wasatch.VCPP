@@ -175,13 +175,13 @@ string WasatchVCPP::EEPROM::toString() const
     s += Util::sprintf("detectorOffsetOdd               = %d\n", detectorOffsetOdd);
                                                        
     for (int i = 0; i < 5; i++)
-        s += Util::sprintf("wavecalCoeffs[%d]                = %g\n", wavecalCoeffs[i]);
+        s += Util::sprintf("wavecalCoeffs[%d]                = %g\n", i, wavecalCoeffs[i]);
     for (int i = 0; i < 3; i++)
-        s += Util::sprintf("degCToDACCoeffs[%d]              = %g\n", degCToDACCoeffs[i]);
+        s += Util::sprintf("degCToDACCoeffs[%d]              = %g\n", i, degCToDACCoeffs[i]);
     s += Util::sprintf("detectorTempMax                 = %d\n", detectorTempMax);
     s += Util::sprintf("detectorTempMin                 = %d\n", detectorTempMin);
     for (int i = 0; i < 3; i++)
-        s += Util::sprintf("adcToDegCCoeffs[%d]              = %g\n", adcToDegCCoeffs[i]);
+        s += Util::sprintf("adcToDegCCoeffs[%d]              = %g\n", i, adcToDegCCoeffs[i]);
     s += Util::sprintf("thermistorResistanceAt298K      = %d\n", thermistorResistanceAt298K);
     s += Util::sprintf("thermistorBeta                  = %d\n", thermistorBeta);
     s += Util::sprintf("calibrationDate                 = %s\n", calibrationDate.c_str());
@@ -196,12 +196,12 @@ string WasatchVCPP::EEPROM::toString() const
     s += Util::sprintf("ROIHorizStart                   = %u\n", ROIHorizStart);
     s += Util::sprintf("ROIHorizEnd                     = %u\n", ROIHorizEnd);
     for (int i = 0; i < 3; i++)
-        s += Util::sprintf("ROIVertRegion[%d]                = (%u, %u)\n", ROIVertRegionStart[i], ROIVertRegionEnd[i]);
+        s += Util::sprintf("ROIVertRegion[%d]                = (%u, %u)\n", i, ROIVertRegionStart[i], ROIVertRegionEnd[i]);
     for (int i = 0; i < 5; i++)
-        s += Util::sprintf("linearityCoeffs[%d]              = %g\n", linearityCoeffs[i]);
+        s += Util::sprintf("linearityCoeffs[%d]              = %g\n", i, linearityCoeffs[i]);
 
     for (int i = 0; i < 4; i++)
-        s += Util::sprintf("laserPowerCoeffs[%d]             = %g\n", laserPowerCoeffs[i]);
+        s += Util::sprintf("laserPowerCoeffs[%d]             = %g\n", i, laserPowerCoeffs[i]);
     s += Util::sprintf("maxLaserPowerMW                 = %g\n", maxLaserPowerMW);
     s += Util::sprintf("minLaserPowerMW                 = %g\n", minLaserPowerMW);
 

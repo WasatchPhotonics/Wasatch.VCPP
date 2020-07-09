@@ -17,7 +17,7 @@ namespace WasatchVCPP
         public:
             static std::string sprintf(const char* fmt, ...);
             static std::string toHex(const std::vector<uint8_t>& data);
-            static std::string join(const std::set<int16_t>& values);
+            static std::string timestamp();
 
             template<typename T> static std::string join(const T& values, const char* delim = ", ")
             {

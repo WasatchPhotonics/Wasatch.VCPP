@@ -8,7 +8,10 @@
 #include "Driver.h"
 #include "Spectrometer.h"
 
+#include <algorithm>
+
 using std::vector;
+using std::max;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
@@ -17,15 +20,19 @@ using std::vector;
 const int HOST_TO_DEVICE = 0x40;
 const int DEVICE_TO_HOST = 0xC0;
 
+const int MIN_ARM_LEN = 8;
+
 unsigned long MAX_UINT24 = 16777216;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Lifecycle
 ////////////////////////////////////////////////////////////////////////////////
 
-WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev)
+WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid)
 {
     this->udev = udev;
+    this->pid = pid;
+
     driver = Driver::getInstance();
     driver->log("Spectrometer::ctor: instantiating");
 
@@ -74,7 +81,7 @@ bool WasatchVCPP::Spectrometer::readEEPROM()
     for (int page = 0; page < EEPROM::MAX_PAGES; page++)
     {
         driver->log("reading EEPROM page %d", page);
-        auto buf = getCmd(0x99, 0x01, page, EEPROM::PAGE_SIZE);
+        auto buf = getCmd(0xff, 0x01, page, EEPROM::PAGE_SIZE);
         pages.push_back(buf);
     }
 
@@ -184,6 +191,14 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 
 int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, unsigned char* data, int len)
 {
+    unsigned char buf[MIN_ARM_LEN] = { 0 };
+    if (data == nullptr && isARM())
+    {
+        data = buf;
+        len = sizeof(buf);
+    }
+
+    driver->log("sendCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
     int result = usb_control_msg(udev, HOST_TO_DEVICE, request, value, index, (char*)data, len, timeoutMS);
     return result;
 }
@@ -198,9 +213,13 @@ vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, 
 {
     vector<unsigned char> retval;
 
+    if (isARM())
+        len = max(MIN_ARM_LEN, len);
+
     char* data = (char*)malloc(len);
     memset(data, 0, len);
 
+    driver->log("getCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
     int result = usb_control_msg(udev, DEVICE_TO_HOST, request, value, index, data, len, timeoutMS);
     for (int i = 0; i < result; i++)
         retval.push_back(data[i]);
@@ -212,6 +231,8 @@ vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, 
 ////////////////////////////////////////////////////////////////////////////////
 // Utility
 ////////////////////////////////////////////////////////////////////////////////
+
+bool WasatchVCPP::Spectrometer::isARM() { return pid == 0x4000; }
 
 //! @todo use PID to determine appropriate result code by platform
 bool WasatchVCPP::Spectrometer::isSuccess(unsigned char opcode, int result)

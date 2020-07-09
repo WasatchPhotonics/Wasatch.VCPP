@@ -18,7 +18,7 @@ namespace WasatchVCPP
     class Spectrometer
     {
         public:
-            Spectrometer(usb_dev_handle* udev);
+            Spectrometer(usb_dev_handle* udev, int pid);
             bool close();
 
             EEPROM eeprom;
@@ -28,6 +28,7 @@ namespace WasatchVCPP
             int timeoutMS = 1000;
             std::vector<double> wavelengths;
             std::vector<double> wavenumbers;
+            bool isARM();
 
             // cached properties
             int integrationTimeMS;
@@ -42,6 +43,8 @@ namespace WasatchVCPP
 
         private:
             usb_dev_handle* udev;
+            int pid;
+
             Driver* driver;
 
             bool readEEPROM();
