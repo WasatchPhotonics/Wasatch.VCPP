@@ -12,7 +12,8 @@
 namespace WasatchVCPP
 {
     /**
-        @brief namespace providing proxy Driver and Spectrometer C++ classes
+        @brief provides object-oriented Driver and Spectrometer C++ classes on 
+               the client (caller) side
 
         Okay, why do we need this namespace, and the classes within it?
 

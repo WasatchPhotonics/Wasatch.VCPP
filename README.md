@@ -9,19 +9,19 @@ All namespaces are prefixed with WasatchVCPP, meaning "Wasatch Photonics Visual 
 
 This is the overall architecture as I envision it:
 
-                       _WasatchVCPPProxy____    _WasatchVCPP.lib/dll________________________________________   
-                      |                     |  |                                                            |
-    WasatchVCPPDemo <--> SpectrometerProxy <-->| WasatchVCPPWrapper.h (exports)                             |
-    (customer code)   |_____________________|  |          ^                                                 |
-                                               |----------|-------------------------------------------------|
-                                               |          v                 .--> WasatchVCPP::Driver        |
-                                               | WasatchVCPPWrapper.cpp <--:                                |
-                                               |                            `--> WasatchVCPP::Spectrometer  |
-                                               |                                 '--> WasatchVCPP::EEPROM   |
-                                               |____________________________________________________________|
+                       _WasatchVCPP::Proxy_    _WasatchVCPP.dll/lib_______________________________________   
+                      |   Driver           |  |                                                           |
+    WasatchVCPPDemo <---> Spectrometer <----->| WasatchVCPPWrapper.h (exports)                            |
+    (customer code)   |____________________|  |          ^                                                |
+                                              |----------|------------------------------------------------|
+                                              |          v                 .--> WasatchVCPP::Driver       |
+                                              | WasatchVCPPWrapper.cpp <--:                               |
+                                              |                            `--> WasatchVCPP::Spectrometer |
+                                              |                                 '--> WasatchVCPP::EEPROM  |
+                                              |___________________________________________________________|
 # Contents
 
-So the WasatchVCPP distribution contains:
+The WasatchVCPP distribution contains:
 
 - WasatchVCPP.dll (compiled driver)
 - WasatchVCPP.lib (needed to link with DLL)
@@ -34,7 +34,7 @@ So the WasatchVCPP distribution contains:
 There are basically four ways you can use WasatchVCPP:
 
 1. use WasatchVCPPWrapper.h to call precompiled WasatchVCPP.dll via C or C++
-2. use WasatchVCPPProxy to call precompiled WasatchVCPP.dll via C++
+2. use WasatchVCPP::Proxy to call precompiled WasatchVCPP.dll via C++
 3. compile WasatchVCPP.dll yourself, then call WasatchVCPP classes directly 
    (or use either of the above methods)
 4. import WasatchVCPP classes into your own project, then call them directly 
@@ -42,16 +42,14 @@ There are basically four ways you can use WasatchVCPP:
 
 ## Discussion
 
-All of this boils down to this well-documented caveat that DLLs should only
-export a C API, and not use C++ types, classes, templates, STL etc:
+The key takeaway for robust C++ DLL design is that DLLs should only export a 
+"flattened" C API, and not use C++ types, classes, templates, STL etc:
 
 - https://stackoverflow.com/a/22797419/11615696
 
-That necessity impelled the creation of WasatchVCPPWrapper.h, which boils
-the API down to a "flat" C interface.
-
-However, it's not much fun calling C libraries from C++, which led to the
-creation of WasatchVCPPProxy.
+That requirement drove the creation of WasatchVCPPWrapper.h, which provides
+a fully flattened, C-compatible interface.  However, it's not much fun calling C 
+libraries from C++, which led to the creation of WasatchVCPPProxy.
 
 If you are calling the pre-compiled DLL and .lib provided in our distribution,
 you can use either WasatchVCPPWrapper.h or WasatchVCPPProxy to access the DLL

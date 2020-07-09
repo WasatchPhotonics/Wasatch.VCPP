@@ -18,6 +18,7 @@
 #include <vector>
 #include <fstream>
 
+//! encapsulates all classes of the WasatchVCPP USB spectrometer driver
 namespace WasatchVCPP
 {
     class Spectrometer;
