@@ -17,6 +17,7 @@
 #define ID_SPECTROMETER_ACQUIRE         32773
 #define ID_SPECTROMETER_SETLASERENABLE  32774
 #define ID_SPECTROMETER_READEEPROM      32775
+#define ID_SPECTROMETER_SETOUTFILE      32779
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -25,7 +26,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         32776
+#define _APS_NEXT_COMMAND_VALUE         32780
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

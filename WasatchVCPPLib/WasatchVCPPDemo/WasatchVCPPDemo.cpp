@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 
+#include <fstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -43,12 +44,13 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
-// for the event long
+// for the event log
 HWND hTextbox;
 string logBuffer;
 const int MAX_LOG_LEN = 16 * 1024; 
 
 WasatchVCPP::Proxy::Spectrometer* spectrometer = nullptr; // example
+std::ofstream outfile;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -146,7 +148,6 @@ void doAcquire()
     if (spectrometer == nullptr)
         return;
 
-    log("calling getSpectrum");
     vector<double> spectrum = spectrometer->getSpectrum(); // example
     if (spectrum.empty())
     {
@@ -156,6 +157,29 @@ void doAcquire()
 
     log("doAcquire: read spectrum of %u pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
         spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
+
+    // if we've opened an outfile, append the spectrum (row-ordered)
+    if (outfile.is_open())
+    {
+        for (auto y : spectrum)
+            outfile << y << ", ";
+        outfile << "\n";
+    }
+}
+
+void doSetOutfile()
+{
+    string filename = InputBox("Enter filename", "Set Outfile", "wasatch_vcpp.csv");
+    outfile.open(filename);
+    log("Spectra will be appended to %s", filename.c_str());
+
+    // if we've already connected to a spectrometer, initialize the file by writing the wavelength axis
+    if (spectrometer != nullptr)
+    {
+        for (auto nm : spectrometer->wavelengths)
+            outfile << nm << ", ";
+        outfile << "\n";
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,6 +309,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         break;
                     case ID_SPECTROMETER_SETLASERENABLE:
                         doSetLaserEnable();
+                        break;
+                    case ID_SPECTROMETER_SETOUTFILE:
+                        doSetOutfile();
                         break;
 
                     default: 

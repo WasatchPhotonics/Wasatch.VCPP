@@ -159,13 +159,14 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
     int bytesLeftToRead = bytesExpected;
     int timeoutMS = generateTimeoutMS();
 
-    char* buf = (char*)malloc(bytesExpected);
+    //! @todo make this an instance attribute
+    uint8_t* buf = (uint8_t*)malloc(bytesExpected);
 
     while (totalBytesRead < bytesExpected)
     {
         logger.debug("attempting to read %d bytes from endpoint 0x%02x with timeout %dms", 
             bytesLeftToRead, ep, timeoutMS);
-        int bytesRead = usb_bulk_read(udev, ep, buf, bytesLeftToRead, timeoutMS);
+        int bytesRead = usb_bulk_read(udev, ep, (char*)buf, bytesLeftToRead, timeoutMS);
         logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
 
         if (bytesRead <= 0)
@@ -182,7 +183,7 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 
         for (int i = 0; i + 1 < bytesRead; i += 2)
         {
-            unsigned short pixel = buf[i] | (buf[i + 1] << 8);
+            uint16_t pixel = buf[i] | (buf[i + 1] << 8);
             spectrum.push_back(pixel);
         }
 
@@ -194,6 +195,19 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 
     if (buf != nullptr)
         free(buf);
+
+    if (spectrum.empty())
+    {
+        logger.error("getSpectrum: returning empty spectrum");
+        return spectrum;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // post-processing
+    ////////////////////////////////////////////////////////////////////////////
+
+    // stomp first pixel
+    spectrum[0] = spectrum[1];
 
     logger.debug("getSpectrum: returning spectrum of %d pixels", spectrum.size());
     return spectrum;

@@ -118,3 +118,4 @@ misc (developmental notes)
 - https://www.beyondlogic.org/usbnutshell/usb1.shtml
 - https://www.microchip.com/forums/m437429.aspx#437498
 - https://www.programmersought.com/article/6407765724/
+- https://www.youtube.com/watch?v=pxEMIOASLkg

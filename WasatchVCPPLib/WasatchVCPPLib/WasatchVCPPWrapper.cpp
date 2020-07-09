@@ -72,7 +72,8 @@ int wp_open_all_spectrometers()
 int wp_close_all_spectrometers()
 {
     for (int i = 0; i < driver->getNumberOfSpectrometers(); i++)
-        wp_close_spectrometer(i);
+        wp_close_spectrometer(i); // ignore errors
+    return WP_SUCCESS;
 }
 
 int wp_close_spectrometer(int specIndex)
