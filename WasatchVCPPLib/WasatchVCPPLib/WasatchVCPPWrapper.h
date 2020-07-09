@@ -218,8 +218,8 @@ extern "C"
     //! This is provided as a fast-and-simple way to expose the entire EEPROM to
     //! the caller in one function call.  It would be nice if we could return the
     //! actual EEPROM object with all the fields parsed into native types, but 
-    //! you send objects across the ABI.  It would be nice if we could send a 
-    //! std::map of name-value pairs, but you can't send templates across the 
+    //! you can't send objects across the ABI.  It would be nice if we could send 
+    //! a std::map of name-value pairs, but you can't send templates across the 
     //! ABI.  So we get...this.
     //!
     //! Note this doesn't actually copy any data...all it does is copy the 
