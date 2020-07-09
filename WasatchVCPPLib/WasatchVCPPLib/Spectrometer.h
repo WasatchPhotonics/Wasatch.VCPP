@@ -24,7 +24,6 @@ namespace WasatchVCPP
 
             // convenience attributes
             int pixels = 1024;
-            int timeoutMS = 1000;
             std::vector<double> wavelengths;
             std::vector<double> wavenumbers;
             bool isARM();
@@ -46,6 +45,7 @@ namespace WasatchVCPP
             int pid;
 
             bool readEEPROM();
+            int generateTimeoutMS();
 
             // control messages
             int sendCmd(int request, int value = 0, int index = 0, unsigned char* data = NULL, int len = 0);

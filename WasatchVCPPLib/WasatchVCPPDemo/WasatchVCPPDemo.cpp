@@ -27,6 +27,7 @@
 #include <map>
 
 #define MAX_LOADSTRING 100
+#define LOGFILE_PATH "wasatch_vcpp.log"
 
 using std::string;
 using std::vector;
@@ -89,6 +90,7 @@ void log(const char *fmt, ...)
 
 void doConnect() 
 { 
+    log("searching for spectrometers");
     int count = WasatchVCPP::Proxy::Driver::openAllSpectrometers(); // example
     if (count <= 0)
     {
@@ -96,9 +98,15 @@ void doConnect()
         spectrometer = nullptr;
         return;
     }
-
     log("found %d connected spectrometers", count);
+
     spectrometer = WasatchVCPP::Proxy::Driver::getSpectrometer(0); // example
+    log("connected to %s %s with %d pixels (%.2f, %.2fnm)",
+        spectrometer->model.c_str(),
+        spectrometer->serialNumber.c_str(),
+        spectrometer->pixels,
+        spectrometer->wavelengths[0],
+        spectrometer->wavelengths[spectrometer->pixels - 1]);
 }
 
 void doSetIntegrationTime()
@@ -136,14 +144,15 @@ void doAcquire()
     if (spectrometer == nullptr)
         return;
 
+    log("calling getSpectrum");
     vector<double> spectrum = spectrometer->getSpectrum(); // example
-    if (spectrum.size() < 5)
+    if (spectrum.empty())
     {
         log("doAcquire: ERROR: failed to read spectrum");
         return;
     }
 
-    log("doAcquire: read spectrum of %d pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
+    log("doAcquire: read spectrum of %u pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
         spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
 }
 
@@ -168,12 +177,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     if (!InitInstance (hInstance, nCmdShow))
         return FALSE;
 
-    log("setting logfile path");
-    WasatchVCPP::Proxy::Driver::setLogfile("wasatch_vcpp.log"); // example
+    log("driver logging to %s", LOGFILE_PATH);
+    WasatchVCPP::Proxy::Driver::setLogfile(LOGFILE_PATH); // example
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
-    log("entering GUI event loop");
+    // this is the GUI "event loop" where the UI thread will spin while
+    // processing GUI events (menu selections etc) in background threads
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -183,8 +193,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-    log("exited event loop");
 
+    // after exiting event loop, application will terminate
     return (int) msg.wParam;
 }
 

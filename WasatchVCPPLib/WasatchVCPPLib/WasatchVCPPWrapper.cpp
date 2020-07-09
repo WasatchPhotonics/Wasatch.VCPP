@@ -134,6 +134,9 @@ int wp_get_spectrum(int specIndex, double* spectrum, int len)
         return WP_ERROR_INVALID_SPECTROMETER;
 
     auto intensities = spec->getSpectrum();
+    if (intensities.empty())
+        return WP_ERROR;
+
     for (int i = 0; i < intensities.size(); i++)
         if (i < len)
             spectrum[i] = intensities[i];

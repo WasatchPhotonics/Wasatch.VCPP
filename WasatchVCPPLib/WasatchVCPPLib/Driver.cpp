@@ -81,6 +81,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                                 continue;
                             }
 
+                            logger.debug("adding Spectrometer");
                             spectrometers.push_back(new Spectrometer(udev, pid, logger));
                         }
                         else
@@ -96,7 +97,6 @@ int WasatchVCPP::Driver::openAllSpectrometers()
             }
         }
     }
-
     return (int)spectrometers.size();
 }
 

@@ -42,6 +42,7 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
 
     pixels = eeprom.activePixelsHoriz;
 
+    logger.debug("Spectrometer::ctor: expanding wavecal");
     wavelengths.resize(pixels);
     for (int i = 0; i < pixels; i++)
         wavelengths[i] = eeprom.wavecalCoeffs[0] 
@@ -52,6 +53,7 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
 
     if (eeprom.excitationNM > 0)
     {
+        logger.debug("Spectrometer::ctor: expanding wavenumbers");
         const double nmToCm = 1.0 / 1e7;
         const double laserCm = 1.0 / (eeprom.excitationNM * nmToCm);
 
@@ -64,6 +66,11 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
     }
     else
         wavenumbers.resize(0);
+
+    //! @todo apply gain/offset from EEPROM to FPGA
+    //! @todo apply vertical ROI from EEPROM to FPGA, if isMicro()
+
+    logger.debug("Spectrometer::ctor: done");
 }
 
 bool WasatchVCPP::Spectrometer::close()
@@ -85,10 +92,11 @@ bool WasatchVCPP::Spectrometer::readEEPROM()
 
     if (!eeprom.parse(pages))
     {
-        logger.error("ERROR: unable to parse EEPROM");
+        logger.error("unable to parse EEPROM");
         return false;
     }
 
+    logger.debug("Spectrometer::readEEPROM done");
     return true;
 }
 
@@ -126,6 +134,11 @@ bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
 // Acquisition
 ////////////////////////////////////////////////////////////////////////////////
 
+int WasatchVCPP::Spectrometer::generateTimeoutMS()
+{
+    return 2 * integrationTimeMS + 2000;
+}
+
 //! @todo support 2048-pixel detectors
 std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
@@ -134,18 +147,21 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
     logger.debug("sending ACQUIRE");
     sendCmd(0xad);
 
-    Sleep(integrationTimeMS);
+    // logger.debug("sleeping for %lums", integrationTimeMS);
+    // Sleep(integrationTimeMS);
 
     int ep = 0x82;
     int bytesExpected = pixels * 2;
     int totalBytesRead = 0;
     int bytesLeftToRead = bytesExpected;
+    int timeoutMS = generateTimeoutMS();
 
     char* buf = (char*)malloc(bytesExpected);
 
     while (totalBytesRead < bytesExpected)
     {
-        logger.debug("attempting to read %d bytes from endpoint 0x%02x", bytesLeftToRead, ep);
+        logger.debug("attempting to read %d bytes from endpoint 0x%02x with timeout %dms", 
+            bytesLeftToRead, ep, timeoutMS);
         int bytesRead = usb_bulk_read(udev, ep, buf, bytesLeftToRead, timeoutMS);
         logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
 
@@ -193,7 +209,9 @@ int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, unsign
         len = sizeof(buf);
     }
 
-    logger.debug("sendCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
+    int timeoutMS = 1000;
+    logger.debug("sendCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d, timeout %dms", 
+        request, value, index, len, timeoutMS);
     int result = usb_control_msg(udev, HOST_TO_DEVICE, request, value, index, (char*)data, len, timeoutMS);
     return result;
 }
@@ -204,9 +222,9 @@ int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, vector
     return sendCmd(request, value, index, tmp, (int)data.size());
 }
 
-vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, int index, int len)
+vector<uint8_t> WasatchVCPP::Spectrometer::getCmd(int request, int value, int index, int len)
 {
-    vector<unsigned char> retval;
+    vector<uint8_t> retval;
 
     if (isARM())
         len = max(MIN_ARM_LEN, len);
@@ -214,7 +232,9 @@ vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, 
     char* data = (char*)malloc(len);
     memset(data, 0, len);
 
-    logger.debug("getCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
+    int timeoutMS = 1000;
+    logger.debug("getCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d, timeout %dms", 
+        request, value, index, len, timeoutMS);
     int result = usb_control_msg(udev, DEVICE_TO_HOST, request, value, index, data, len, timeoutMS);
     for (int i = 0; i < result; i++)
         retval.push_back(data[i]);

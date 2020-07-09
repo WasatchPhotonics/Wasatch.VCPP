@@ -40,12 +40,20 @@ string WasatchVCPP::Util::toHex(const std::vector<uint8_t>& data)
     return s;
 }
 
+//! includes milliseconds on Windows
 string WasatchVCPP::Util::timestamp()
 {
+#ifdef _WINDOWS
+    SYSTEMTIME lt;
+    GetLocalTime(&lt);
+    return sprintf("%04d-%02d-%04d %02d:%02d:%02d.%03d",
+        lt.wYear, lt.wMonth, lt.wDay, lt.wHour, lt.wMinute, lt.wSecond, lt.wMilliseconds);
+#else
 	time_t now = time(NULL);
     tm tm;
     localtime_s(&tm, &now);
 	char buffer[32];
-	strftime(buffer, 32, "%%m-%d-%Y %H:%M:%S", &tm);
+	strftime(buffer, 32, "%Y-%m-%d %H:%M:%S", &tm);
 	return string(buffer);
+#endif
 }

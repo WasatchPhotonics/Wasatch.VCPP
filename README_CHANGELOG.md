@@ -5,6 +5,7 @@
     - added Logger
     - exposed stringified EEPROM through Wrapper
     - laser working
+    - getSpectrum works on WP-785-OEM-ARM, but not microRaman?
 - 2020-07-08 0.0.2
     - added Util
     - added EEPROM

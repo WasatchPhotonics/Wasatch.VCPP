@@ -5,6 +5,7 @@
     @note   Users can copy and import this file into their own Visual C++ solutions
 */
 
+#include "framework.h"
 #include "WasatchVCPPProxy.h"
 
 #include "WasatchVCPPWrapper.h"
@@ -70,20 +71,27 @@ WasatchVCPP::Proxy::Spectrometer::Spectrometer(int specIndex)
 {
     this->specIndex = specIndex;
 
-    pixels = wp_get_pixels(specIndex);
+    readEEPROMFields();
+
+    pixels = wp_get_pixels(specIndex); // or eepromFields["activePixelsHoriz"]
     if (pixels <= 0)
         return;
 
+    // pre-allocate a buffer for reading spectra
     spectrumBuf = (double*)malloc(pixels * sizeof(double));
 
-    char tmp[33];
-    if (WP_SUCCESS == wp_get_serial_number(specIndex, tmp, sizeof(tmp)))
-        serialNumber.assign(tmp);
+    model = eepromFields["model"];
+    serialNumber = eepromFields["serialNumber"];
 
-    if (WP_SUCCESS == wp_get_model(specIndex, tmp, sizeof(tmp)))
-        model.assign(tmp);
+    wavelengths.resize(pixels);
+    wp_get_wavelengths(specIndex, &wavelengths[0], pixels);
 
-    readEEPROMFields();
+    excitationNM = (float)atof(eepromFields["excitationNM"].c_str());
+    if (excitationNM > 0)
+    {
+        wavenumbers.resize(pixels);
+        wp_get_wavenumbers(specIndex, &wavenumbers[0], pixels);
+    }
 }
 
 bool WasatchVCPP::Proxy::Spectrometer::readEEPROMFields()
@@ -95,17 +103,18 @@ bool WasatchVCPP::Proxy::Spectrometer::readEEPROMFields()
     const char** names  = (const char**)malloc(count * sizeof(const char*));
     const char** values = (const char**)malloc(count * sizeof(const char*));
 
-    auto ok = WP_SUCCESS == wp_get_eeprom(specIndex, names, values, count);
-
-    free(names);
-    free(values);
-
-    if (!ok)
+    if (WP_SUCCESS != wp_get_eeprom(specIndex, names, values, count))
+    {
+        free(names);
+        free(values);
         return false;
+    }
 
     for (int i = 0; i < count; i++)
         eepromFields.insert(make_pair(string(names[i]), string(values[i])));
 
+    free(names);
+    free(values);
     return true;
 }
 
@@ -134,8 +143,14 @@ vector<double> WasatchVCPP::Proxy::Spectrometer::getSpectrum()
 {
     vector<double> result;
     if (spectrumBuf != nullptr)
+    {
         if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrumBuf, pixels))
-            result = vector<double>(spectrumBuf, spectrumBuf + pixels * sizeof(*spectrumBuf));
+        {
+            // result = vector<double>(spectrumBuf, spectrumBuf + pixels); 
+            for (int i = 0; i < pixels; i++)
+                result.push_back(spectrumBuf[i]);
+        }
+    }
     return result;
 }
 

@@ -49,6 +49,7 @@ namespace WasatchVCPP
 
                 std::vector<double> wavelengths;
                 std::vector<double> wavenumbers;
+                float excitationNM;
 
                 bool setIntegrationTimeMS(unsigned long ms);
                 bool setLaserEnable(bool flag);
