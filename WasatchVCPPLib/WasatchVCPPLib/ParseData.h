@@ -14,7 +14,7 @@
 
 namespace WasatchVCPP
 {
-    //! This class provides methods for reading and writing individual fields 
+    //! Internal class providing methods for reading and writing individual fields 
     //! within the EEPROM.  It is primarily used by EEPROM.parse() and EEPROM.write().
     class ParseData
     {

@@ -1,10 +1,9 @@
 /**
     @file   WasatchVCPPWrapper.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  Declaration of the flattened C API exported by WasatchVCPP.dll
     @note   Users can copy and import this file into their own Visual C++ solutions
             (optionally with WasatchVCPPProxy.h/cpp as well)
-
-    This file declares the flattened C API that WasatchVCPP.dll exports.
 
     It uses legacy C native types (no STL templates or C++ language features)
     to avoid ABI problems when calling the DLL from code which was compiled in
@@ -21,12 +20,43 @@
     This file is still under development; many spectrometer functions have not 
     yet been added, including:
 
-    - enable TEC
-    - read TEC temperature (degC)
-    - set laser power (% or mW)
-    - configure triggering
-    - write EEPROM
-    - etc
+    @todo expose log_level
+    @todo auto-apply offset/gain at open
+    @todo auto-apply integration time at open
+    @todo auto-enable TEC and setpoint at open
+    @todo expose gain/offset at runtime
+    @todo expose TEC control
+    @todo read detector TEC temperature (degC)
+    @todo support scan averaging
+    @todo 2048-pixel support
+    @todo high-gain mode
+    @todo read firmware version
+    @todo read FPGA version
+    @todo apply bad pixel correction
+    @todo set laser power (% or mW)
+    @todo configure triggering
+    @todo write EEPROM
+    @todo read laser TEC temperature (degC)
+    @todo some basic gettors: laser_enabled, integration_time, trigger_source etc
+    @todo Raman Intensity Calibration (ROI / vignetting...)
+
+    Not intended for support:
+        - dark correction
+        - boxcar averaging
+        - transmission / reflectance or absorbance
+        - select ADC
+        - set TEC setpoint
+        - set DFU mode
+        - reset FPGA
+        - actual frame count
+        - area scan 
+        - threshold sensing
+        - configurable throwaways
+        - thread safety
+        - internal background processing / callbacks / inversion of control
+        - ramanMicro features (battery, laser watchdog, vertical ROI etc)
+
+
 */
 
 #pragma once

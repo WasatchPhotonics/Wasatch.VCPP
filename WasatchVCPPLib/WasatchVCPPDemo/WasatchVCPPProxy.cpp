@@ -1,7 +1,7 @@
 /**
     @file   WasatchVCPPProxy.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
-    @brief  implementation of WasatchCPP::Proxy classes
+    @brief  implementation of WasatchVCPP::Proxy classes
     @note   Users can copy and import this file into their own Visual C++ solutions.
 
     Users don't need this file; they can do everything they need via 

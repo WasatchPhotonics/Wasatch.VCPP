@@ -13,7 +13,7 @@
 
 namespace WasatchVCPP
 {
-    //! A simple logger for now.
+    //! Internal logger (outputs to textfile if configured).
     class Logger
     {
         enum Levels { LOG_DEBUG, LOG_INFO, LOG_ERROR };

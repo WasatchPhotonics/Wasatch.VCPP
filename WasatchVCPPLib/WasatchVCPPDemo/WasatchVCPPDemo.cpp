@@ -12,7 +12,9 @@
     adding a dependency on Qt or equivalent.  Graphing demos will likely be provided
     via a standalone C# demo.
 
-    @see README_ARCHITECTURE.md
+    @todo add some kind of charting to graph spectra
+
+    @see README.md
 */
 #include "framework.h"
 #include "InputBox.h"

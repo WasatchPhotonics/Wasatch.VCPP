@@ -14,7 +14,7 @@
 
 namespace WasatchVCPP
 {
-    //! Static utility functions to manage strings and whatnot.
+    //! Internal class providing static utility functions for strings and whatnot.
     class Util
     {
         public:

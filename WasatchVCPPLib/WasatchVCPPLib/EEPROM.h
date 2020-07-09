@@ -19,6 +19,7 @@
 
 namespace WasatchVCPP
 {
+    //! Internal class encapsulating the EEPROM and its fields.
     class EEPROM
     {
         public:

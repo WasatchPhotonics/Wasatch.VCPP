@@ -1,7 +1,7 @@
 /**
     @file   WasatchVCPPProxy.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
-    @brief  interface of WasatchCPP::Proxy classes
+    @brief  interface of WasatchVCPP::Proxy classes
     @note   Users can copy and import this file into their own Visual C++ solutions
 
     Users don't need this file; they can do everything they need via 
@@ -36,8 +36,8 @@ namespace WasatchVCPP
     */
     namespace Proxy
     {
-        //! A Proxy Spectrometer class providing an object-oriented / STL-based
-        //! interface to customer code.
+        //! A proxy customer-facing class providing an object-oriented / STL-based
+        //! interface to command and control spectrometers.
         class Spectrometer
         {
             public:
@@ -66,6 +66,8 @@ namespace WasatchVCPP
                 double* spectrumBuf;
         };
 
+        //! A proxy customer-facing class providing static C++ methods to configure
+        //! and control the library.
         class Driver
         {
             public:

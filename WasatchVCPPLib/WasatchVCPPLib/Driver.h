@@ -20,7 +20,8 @@
 #include <string>
 #include <vector>
 
-//! encapsulates all classes of the WasatchVCPP USB spectrometer driver
+//! Namespace encapsulating the internal implementation of WasatchVCPP; customers
+//! would not normally access these classes or objects directly.
 namespace WasatchVCPP
 {
     class Spectrometer;

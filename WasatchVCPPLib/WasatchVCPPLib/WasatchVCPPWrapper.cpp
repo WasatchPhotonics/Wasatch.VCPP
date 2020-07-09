@@ -1,6 +1,7 @@
 /**
     @file   WasatchVCPPWrapper.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  Implementation of the flattened C API exported by WasatchVCPP.dll
 
     This file implements the "C" interface to the WasatchVCPP library and DLL.
     Customers would not normally have this file in their distribution; they

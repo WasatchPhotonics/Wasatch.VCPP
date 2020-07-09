@@ -12,10 +12,10 @@
 
 namespace WasatchVCPP
 {
-    //! This class encapsulates a 16-bit set of boolean flags which indicate
-    //! whether a given spectrometer has a particular feature or not, without
-    //! expending quite as much storage as, for instance, legacy hasCooling,
-    //! hasLaser or hasBattery bytes.
+    //! Internal class encapsulating a 16-bit set of boolean flags which indicate
+    //! whether a given spectrometer has a particular feature or not.
+    //! 
+    //! Requires less storage than legacy hasCooling, hasLaser or hasBattery fields.
     class FeatureMask
     {
         public:
