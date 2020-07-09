@@ -82,6 +82,31 @@ WasatchVCPP::Proxy::Spectrometer::Spectrometer(int specIndex)
 
     if (WP_SUCCESS == wp_get_model(specIndex, tmp, sizeof(tmp)))
         model.assign(tmp);
+
+    readEEPROMFields();
+}
+
+bool WasatchVCPP::Proxy::Spectrometer::readEEPROMFields()
+{
+    int count = wp_get_eeprom_field_count(specIndex);
+    if (count <= 0)
+        return false;
+
+    const char** names  = (const char**)malloc(count * sizeof(const char*));
+    const char** values = (const char**)malloc(count * sizeof(const char*));
+
+    auto ok = WP_SUCCESS == wp_get_eeprom(specIndex, names, values, count);
+
+    free(names);
+    free(values);
+
+    if (!ok)
+        return false;
+
+    for (int i = 0; i < count; i++)
+        eepromFields.insert(make_pair(string(names[i]), string(values[i])));
+
+    return true;
 }
 
 bool WasatchVCPP::Proxy::Spectrometer::close()

@@ -13,10 +13,10 @@
 #endif
 
 #include "libusb.h"
+#include "Logger.h"
 
 #include <string>
 #include <vector>
-#include <fstream>
 
 //! encapsulates all classes of the WasatchVCPP USB spectrometer driver
 namespace WasatchVCPP
@@ -31,16 +31,13 @@ namespace WasatchVCPP
             int getNumberOfSpectrometers();
             int openAllSpectrometers();
             Spectrometer* getSpectrometer(int index);
-
-            // logging
             bool setLogfile(const std::string& pathname);
-            void log(const char* fmt, ...);
 
         private:
             static Driver* instance;
             Driver(); 
 
-            std::ofstream logfile;
             std::vector<Spectrometer*> spectrometers;
+            Logger logger;
     };
 }

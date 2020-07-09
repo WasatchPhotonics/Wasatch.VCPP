@@ -13,12 +13,15 @@ using std::vector;
 using std::string;
 using std::set;
 
-WasatchVCPP::EEPROM::EEPROM()
+WasatchVCPP::EEPROM::EEPROM(Logger& logger)
+    : logger(logger)
 {
 }
 
 bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages)
 {
+    format = ParseData::toUInt8(pages[0], 63);
+
     model = ParseData::toString(pages[0], 0, 16);
     serialNumber = ParseData::toString(pages[0], 16, 16);
     baudRate = ParseData::toUInt32(pages[0], 32);
@@ -146,76 +149,84 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages)
     if (format >= 9)
         featureMask = FeatureMask(ParseData::toUInt16(pages[0], 39));
 
+    // log what we've read, while adding to the string map 
+    stringifyAll();
+
     return true;
 }
 
 inline const char* toBool(bool b) { return b ? "true" : "false"; }
 
-string WasatchVCPP::EEPROM::toString() const
+void WasatchVCPP::EEPROM::stringify(const string& name, const string& value)
 {
-    string s = "EEPROM:\n";
-    s += Util::sprintf("format                          = %d\n", format);
-    s += Util::sprintf("model                           = %s\n", model.c_str());
-    s += Util::sprintf("serialNumber                    = %s\n", serialNumber.c_str());
-    s += Util::sprintf("baudRate                        = %d\n", baudRate);
-    s += Util::sprintf("hasCooling                      = %s\n", toBool(hasCooling));
-    s += Util::sprintf("hasBattery                      = %s\n", toBool(hasBattery));
-    s += Util::sprintf("hasLaser                        = %s\n", toBool(hasLaser));
-    s += Util::sprintf("bin2x2                          = %s\n", toBool(featureMask.bin2x2));
-    s += Util::sprintf("invertXAxis                     = %s\n", toBool(featureMask.invertXAxis));
-    s += Util::sprintf("excitationNM                    = %.3f\n", excitationNM);
-    s += Util::sprintf("slitSizeUM                      = %u\n", slitSizeUM);
+    stringified.insert(make_pair(name, value));
+    logger.debug("EEPROM: %30s = %s", name.c_str(), value.c_str());
+}
 
-    s += Util::sprintf("startupIntegrationTimeMS        = %u\n", startupIntegrationTimeMS);
-    s += Util::sprintf("startupDetectorTemperatureDegC  = %d\n", startupDetectorTemperatureDegC);
-    s += Util::sprintf("startupTriggeringMode           = %u\n", startupTriggeringMode);
-    s += Util::sprintf("detectorGain                    = %.2f\n", detectorGain);
-    s += Util::sprintf("detectorOffset                  = %d\n", detectorOffset);
-    s += Util::sprintf("detectorGainOdd                 = %.2f\n", detectorGainOdd);
-    s += Util::sprintf("detectorOffsetOdd               = %d\n", detectorOffsetOdd);
+void WasatchVCPP::EEPROM::stringifyAll()
+{
+    stringified.clear();
+
+    stringify("format", Util::sprintf("%d", format));
+    stringify("model", model);
+    stringify("serialNumber", serialNumber);
+    stringify("baudRate", Util::sprintf("%d", baudRate));
+    stringify("hasCooling", toBool(hasCooling));
+    stringify("hasBattery", toBool(hasBattery));
+    stringify("hasLaser", toBool(hasLaser));
+    stringify("bin2x2", toBool(featureMask.bin2x2));
+    stringify("invertXAxis", toBool(featureMask.invertXAxis));
+    stringify("excitationNM", Util::sprintf("%.3f", excitationNM));
+    stringify("slitSizeUM", Util::sprintf("%u", slitSizeUM));
+
+    stringify("startupIntegrationTimeMS", Util::sprintf("%u", startupIntegrationTimeMS));
+    stringify("startupDetectorTemperatureDegC", Util::sprintf("%d", startupDetectorTemperatureDegC));
+    stringify("startupTriggeringMode", Util::sprintf("%u", startupTriggeringMode));
+    stringify("detectorGain", Util::sprintf("%.2f", detectorGain));
+    stringify("detectorOffset", Util::sprintf("%d", detectorOffset));
+    stringify("detectorGainOdd", Util::sprintf("%.2f", detectorGainOdd));
+    stringify("detectorOffsetOdd", Util::sprintf("%d", detectorOffsetOdd));
                                                        
-    for (int i = 0; i < 5; i++)
-        s += Util::sprintf("wavecalCoeffs[%d]                = %g\n", i, wavecalCoeffs[i]);
-    for (int i = 0; i < 3; i++)
-        s += Util::sprintf("degCToDACCoeffs[%d]              = %g\n", i, degCToDACCoeffs[i]);
-    s += Util::sprintf("detectorTempMax                 = %d\n", detectorTempMax);
-    s += Util::sprintf("detectorTempMin                 = %d\n", detectorTempMin);
-    for (int i = 0; i < 3; i++)
-        s += Util::sprintf("adcToDegCCoeffs[%d]              = %g\n", i, adcToDegCCoeffs[i]);
-    s += Util::sprintf("thermistorResistanceAt298K      = %d\n", thermistorResistanceAt298K);
-    s += Util::sprintf("thermistorBeta                  = %d\n", thermistorBeta);
-    s += Util::sprintf("calibrationDate                 = %s\n", calibrationDate.c_str());
-    s += Util::sprintf("calibrationBy                   = %s\n", calibrationBy.c_str());
+    stringify("detectorTempMax", Util::sprintf("%d", detectorTempMax));
+    stringify("detectorTempMin", Util::sprintf("%d", detectorTempMin));
+    stringify("thermistorResistanceAt298K", Util::sprintf("%d", thermistorResistanceAt298K));
+    stringify("thermistorBeta", Util::sprintf("%d", thermistorBeta));
+    stringify("calibrationDate", calibrationDate);
+    stringify("calibrationBy", calibrationBy);
 
-    s += Util::sprintf("detectorName                    = %s\n", detectorName.c_str());
-    s += Util::sprintf("activePixelsHoriz               = %u\n", activePixelsHoriz);
-    s += Util::sprintf("activePixelsVert                = %u\n", activePixelsVert);
-    s += Util::sprintf("minIntegrationTimeMS            = %u\n", minIntegrationTimeMS);
-    s += Util::sprintf("maxIntegrationTimeMS            = %u\n", maxIntegrationTimeMS);
-    s += Util::sprintf("actualPixelsHoriz               = %u\n", actualPixelsHoriz);
-    s += Util::sprintf("ROIHorizStart                   = %u\n", ROIHorizStart);
-    s += Util::sprintf("ROIHorizEnd                     = %u\n", ROIHorizEnd);
-    for (int i = 0; i < 3; i++)
-        s += Util::sprintf("ROIVertRegion[%d]                = (%u, %u)\n", i, ROIVertRegionStart[i], ROIVertRegionEnd[i]);
-    for (int i = 0; i < 5; i++)
-        s += Util::sprintf("linearityCoeffs[%d]              = %g\n", i, linearityCoeffs[i]);
+    stringify("detectorName", detectorName);
+    stringify("activePixelsHoriz", Util::sprintf("%u", activePixelsHoriz));
+    stringify("activePixelsVert", Util::sprintf("%u", activePixelsVert));
+    stringify("minIntegrationTimeMS", Util::sprintf("%u", minIntegrationTimeMS));
+    stringify("maxIntegrationTimeMS", Util::sprintf("%u", maxIntegrationTimeMS));
+    stringify("actualPixelsHoriz", Util::sprintf("%u", actualPixelsHoriz));
+    stringify("ROIHorizStart", Util::sprintf("%u", ROIHorizStart));
+    stringify("ROIHorizEnd", Util::sprintf("%u", ROIHorizEnd));
+    stringify("maxLaserPowerMW", Util::sprintf("%g", maxLaserPowerMW));
+    stringify("minLaserPowerMW", Util::sprintf("%g", minLaserPowerMW));
 
+    stringify("userData", Util::toHex(userData));
+    stringify("userText", userText);
+
+    stringify("badPixels", Util::join(badPixels, "%d"));
+    stringify("productConfiguration", productConfiguration);
+    stringify("avgResolution", Util::sprintf("%.2f", avgResolution));
+
+    stringify("subformat", Util::sprintf("%u", subformat));
+
+    stringify("intensityCorrectionOrder", Util::sprintf("%u", intensityCorrectionOrder));
+    stringify("intensityCorrectionCoeffs", Util::join(intensityCorrectionCoeffs, "%g"));
+
+    for (int i = 0; i < 5; i++)
+        stringify(Util::sprintf("wavecalCoeffs[%d]", i), Util::sprintf("%g", wavecalCoeffs[i]));
+    for (int i = 0; i < 3; i++)
+        stringify(Util::sprintf("degCToDACCoeffs[%d]", i), Util::sprintf("%g", degCToDACCoeffs[i]));
+    for (int i = 0; i < 3; i++)
+        stringify(Util::sprintf("adcToDegCCoeffs[%d]", i), Util::sprintf("%g", adcToDegCCoeffs[i]));
+    for (int i = 0; i < 3; i++)
+        stringify(Util::sprintf("ROIVertRegion[%d]", i), Util::sprintf("(%u, %u)", ROIVertRegionStart[i], ROIVertRegionEnd[i]));
+    for (int i = 0; i < 5; i++)
+        stringify(Util::sprintf("linearityCoeffs[%d]", i), Util::sprintf("%g", linearityCoeffs[i]));
     for (int i = 0; i < 4; i++)
-        s += Util::sprintf("laserPowerCoeffs[%d]             = %g\n", i, laserPowerCoeffs[i]);
-    s += Util::sprintf("maxLaserPowerMW                 = %g\n", maxLaserPowerMW);
-    s += Util::sprintf("minLaserPowerMW                 = %g\n", minLaserPowerMW);
-
-    s += Util::sprintf("userData                        = %s\n", Util::toHex(userData));
-    s += Util::sprintf("userText                        = %s\n", userText.c_str());
-
-    s += Util::sprintf("badPixels                       = { %s }\n", Util::join<set<int16_t> >(badPixels).c_str());
-    s += Util::sprintf("productConfiguration            = %s\n", productConfiguration.c_str());
-    s += Util::sprintf("avgResolution                   = %.2f\n", avgResolution);
-
-    s += Util::sprintf("subformat                       = %u\n", subformat);
-
-    s += Util::sprintf("intensityCorrectionOrder        = %u\n", intensityCorrectionOrder);
-    s += Util::sprintf("intensityCorrectionCoeffs       = { %s }\n", Util::join<vector<float> >(intensityCorrectionCoeffs).c_str());
-
-    return s;
+        stringify(Util::sprintf("laserPowerCoeffs[%d]", i), Util::sprintf("%g", laserPowerCoeffs[i]));
 }

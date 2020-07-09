@@ -4,5 +4,7 @@
 */
 #pragma once
 
-extern "C" char *InputBox(char *Prompt, char *Title = (char *)"", char *Default = (char *)"");
-extern "C" char *PasswordBox(char *Prompt, char *Title = (char *)"", char *Default = (char *)"");
+#include <string>
+
+std::string InputBox(const char *Prompt, const char *Title = "", const char *Default = "");
+std::string PasswordBox(const char *Prompt, const char *Title = "", const char *Default = "");

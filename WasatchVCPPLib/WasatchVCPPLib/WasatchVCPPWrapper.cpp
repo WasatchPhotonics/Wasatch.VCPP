@@ -8,13 +8,18 @@
 #include "WasatchVCPPWrapper.h"
 
 #include <string>
+#include <map>
 
+#include "Util.h"
 #include "Driver.h"
 #include "Spectrometer.h"
 
-using std::string;
+using WasatchVCPP::Util;
 using WasatchVCPP::Driver;
 using WasatchVCPP::Spectrometer;
+
+using std::string;
+using std::map;
 
 ////////////////////////////////////////////////////////////////////////////////
 // globals
@@ -138,9 +143,74 @@ int wp_get_spectrum(int specIndex, double* spectrum, int len)
     return WP_SUCCESS;
 }
 
+int wp_get_eeprom_field_count(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return (int)spec->eeprom.stringified.size();
+}
+
+int wp_get_eeprom(int specIndex, const char** names, const char** values, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+    
+    int count = 0;
+    const map<string, string>& entries = spec->eeprom.stringified;
+    for (map<string, string>::const_iterator i = entries.begin(); i != entries.end(); i++, count++)
+    {
+        if (count >= len)
+            return WP_ERROR_INSUFFICIENT_STORAGE;
+
+        const string& name = i->first;
+        const string& value = i->second;
+
+        names[count] = name.c_str();
+        values[count] = value.c_str();
+    }
+
+    return WP_SUCCESS;
+}
+
+int wp_get_eeprom_field(int specIndex, const char* name, char* valueOut, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    string lc = Util::toLower(name);
+
+    const map<string, string>& entries = spec->eeprom.stringified;
+    for (map<string, string>::const_iterator i = entries.begin(); i != entries.end(); i++)
+    {
+        const string& name = i->first;
+        const string& value = i->second;
+
+        if (lc == Util::toLower(name))
+        {
+            strncpy_s(valueOut, len, value.c_str(), value.size());
+            return WP_SUCCESS;
+        }
+    }
+
+    // field was not found
+    return WP_ERROR;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Settors
 ////////////////////////////////////////////////////////////////////////////////
+
+int wp_set_logfile_path(const char* pathname)
+{
+    if (!driver->setLogfile(pathname))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
 
 int wp_set_integration_time_ms(int specIndex, unsigned long ms)
 {
@@ -166,10 +236,3 @@ int wp_set_laser_enable(int specIndex, int value)
     return WP_SUCCESS;
 }
 
-int wp_set_logfile_path(const char* pathname)
-{
-    if (!driver->setLogfile(pathname))
-        return WP_ERROR;
-
-    return WP_SUCCESS;
-}

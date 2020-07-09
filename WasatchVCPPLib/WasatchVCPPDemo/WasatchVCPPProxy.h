@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 namespace WasatchVCPP
 {
@@ -44,6 +45,8 @@ namespace WasatchVCPP
                 std::string model;
                 std::string serialNumber;
 
+                std::map<std::string, std::string> eepromFields;
+
                 std::vector<double> wavelengths;
                 std::vector<double> wavenumbers;
 
@@ -52,6 +55,7 @@ namespace WasatchVCPP
                 std::vector<double> getSpectrum();
 
             private:
+                bool readEEPROMFields();
                 double* spectrumBuf;
         };
 

@@ -8,17 +8,16 @@
 
 #include "libusb.h"
 #include "EEPROM.h"
+#include "Logger.h"
 
 #include <vector>
 
 namespace WasatchVCPP
 {
-    class Driver;
-
     class Spectrometer
     {
         public:
-            Spectrometer(usb_dev_handle* udev, int pid);
+            Spectrometer(usb_dev_handle* udev, int pid, Logger& logger);
             bool close();
 
             EEPROM eeprom;
@@ -42,10 +41,9 @@ namespace WasatchVCPP
             std::vector<double> getSpectrum();
 
         private:
+            Logger& logger;
             usb_dev_handle* udev;
             int pid;
-
-            Driver* driver;
 
             bool readEEPROM();
 

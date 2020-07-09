@@ -31,6 +31,12 @@
 
 extern "C"
 {
+    //! Sets a pathname for WasatchVCPP to write a debug logfile.
+    //!
+    //! @param pathname (Input) a valid pathname (need not exist, will be overwritten if found)
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_logfile_path(const char* pathname);
+
     //! connects to all enumerated USB spectrometers 
     //! @returns number of spectrometers found
     DLL_API int wp_open_all_spectrometers();
@@ -49,11 +55,11 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param value (Output) pre-allocated buffer of 'len' bytes (33 recommended)
     //! @param len (Input) allocated length of 'value'
-    //! @returns 0 on success, non-zero on error
+    //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_model(int specIndex, char* value, int len);
 
     //! Get the selected spectrometer's serial number.
-    //! @returns 0 on success, non-zero on error
+    //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_serial_number(int specIndex, char* value, int len);
 
     //! Get the selected spectrometer's calibrated wavelength x-axis in nanometers
@@ -61,7 +67,7 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param wavelengths (Output) pre-allocated buffer of 'len' doubles 
     //! @param len (Input) allocated length of 'wavelengths' (should match 'pixels')
-    //! @returns 0 on success, non-zero on error
+    //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_wavelengths(int specIndex, double* wavelengths, int len);
 
     //! Get the selected spectrometer's calibrated x-axis in wavenumbers (1/cm)
@@ -69,11 +75,11 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param wavenumbers (Output) pre-allocated buffer of 'len' doubles 
     //! @param len (Input) allocated length of 'wavenumbers' (should match 'pixels')
-    //! @returns 0 on success, non-zero on error (i.e., no excitation wavelength configured)
+    //! @returns WP_SUCCESS or non-zero on error (i.e., no excitation wavelength configured)
     DLL_API int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len);
 
     //! Set the spectrometer's integration time in milliseconds
-    //! @returns 0 on success, non-zero on error
+    //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_integration_time_ms(int specIndex, unsigned long ms);
 
     //! Read one spectrum from the selected spectrometer
@@ -84,19 +90,40 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param spectrum (Output) pre-allocated buffer of 'len' doubles 
     //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
-    //! @returns 0 on success, non-zero on error
+    //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_spectrum(int specIndex, double* spectrum, int len);
 
-    //! Turns the laser on or off.
     //!
     //! @param specIndex (Input) which spectrometer
     //! @param value (Input) whether laser should be off (zero) or on (non-zero)
-    //! @returns 0 on success, non-zero on error
+    //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_laser_enable(int specIndex, int value);
 
-    //! Sets a pathname for WasatchVCPP to write a debug logfile.
+    ////////////////////////////////////////////////////////////////////////////
+    // EEPROM 
+    ////////////////////////////////////////////////////////////////////////////
+
+    //! @returns how many EEPROM fields are available (negative on error)
     //!
-    //! @param pathname (Input) a valid pathname (need not exist, will be overwritten if found)
-    //! @returns 0 on success, non-zero on error
-    DLL_API int wp_set_logfile_path(const char* pathname);
+    //! This is provided so the caller can correctly size the 'names' and 'values'
+    //! arrays for a call to wp_get_eeprom().
+    DLL_API int wp_get_eeprom_field_count(int specIndex);
+
+    //! Read a table of all EEPROM fields, as strings.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param names (Output) a pre-allocated array of character pointers to hold field names
+    //! @param values (Output) a pre-allocated array of character pointers to hold field values
+    //! @param len (Input) number of elements in names and values arrays
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_eeprom(int specIndex, const char** names, const char** values, int len);
+
+    //! Read one stringified EEPROM field by name.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param name (Input) case-insensitive name of the desired EEPROM field
+    //! @param value (Output) a pre-allocated character array to hold the value
+    //! @param len (Input) length of pre-allocated array
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_eeprom_field(int specIndex, const char* name, char* value, int len);
 }

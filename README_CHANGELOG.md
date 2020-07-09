@@ -2,7 +2,9 @@
 
 - 2020-07-09 0.0.3
     - added Demo InputBox
-    - starting to read EEPROM
+    - added Logger
+    - exposed stringified EEPROM through Wrapper
+    - laser working
 - 2020-07-08 0.0.2
     - added Util
     - added EEPROM

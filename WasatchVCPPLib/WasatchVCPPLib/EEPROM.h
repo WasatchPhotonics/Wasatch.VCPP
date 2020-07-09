@@ -7,11 +7,13 @@
 #pragma once
 
 #include "FeatureMask.h"
+#include "Logger.h"
 
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 
 namespace WasatchVCPP
 {
@@ -42,13 +44,23 @@ namespace WasatchVCPP
             // Methods
             ////////////////////////////////////////////////////////////////////
 
-            EEPROM();
+            EEPROM(Logger& logger);
 
             bool parse(const std::vector<std::vector<uint8_t> >& pages);
             std::string toString() const;
 
+            void stringifyAll();
+            void stringify(const std::string& name, const std::string& value);
+
             ////////////////////////////////////////////////////////////////////
             // Attributes
+            ////////////////////////////////////////////////////////////////////
+
+            Logger& logger;
+            std::map<std::string, std::string> stringified;
+
+            ////////////////////////////////////////////////////////////////////
+            // EEPROM fields
             ////////////////////////////////////////////////////////////////////
 
             uint8_t format;

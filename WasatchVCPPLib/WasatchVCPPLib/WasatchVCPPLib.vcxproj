@@ -160,6 +160,7 @@
     <ClInclude Include="FeatureMask.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="libusb.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="ParseData.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Spectrometer.h" />
@@ -170,6 +171,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EEPROM.cpp" />
     <ClCompile Include="FeatureMask.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="ParseData.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

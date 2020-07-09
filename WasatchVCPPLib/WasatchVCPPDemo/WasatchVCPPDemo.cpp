@@ -24,11 +24,13 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #define MAX_LOADSTRING 100
 
 using std::string;
 using std::vector;
+using std::map;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -44,6 +46,106 @@ string logBuffer;
 const int MAX_LOG_LEN = 16 * 1024; 
 
 WasatchVCPP::Proxy::Spectrometer* spectrometer = nullptr; // example
+
+////////////////////////////////////////////////////////////////////////////////
+// Utilities
+////////////////////////////////////////////////////////////////////////////////
+
+//! A simple log function which updates the scrolling Textbox on the GUI.
+//! @see https://stackoverflow.com/a/30887925/11615696
+void log(const char *fmt, ...)
+{
+    char str[1024];
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(str, sizeof(str), fmt, args);
+    va_end(args);
+
+    // output the string to the Visual Studio output window
+    OutputDebugStringA(str);
+    OutputDebugStringA("\r\n");
+
+    // if the string would overfill the on-screen event log buffer, toss the first half of the buffer
+    if (logBuffer.size() + 2 > MAX_LOG_LEN)
+    {
+        int bytesToDelete = sizeof(logBuffer) / 2;
+        logBuffer.assign(logBuffer.substr(bytesToDelete, logBuffer.size() - bytesToDelete));
+    }
+
+    // append the new message to the (possibly shrunken) buffer, followed by a linefeed
+    if (logBuffer.size() + len + 2 < MAX_LOG_LEN)
+    {
+        logBuffer.append(str);
+        logBuffer.append("\r\n");
+    }
+
+    // update the Textbox
+    SetWindowTextA(hTextbox, logBuffer.c_str());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Spectrometer Callbacks (from the "Spectrometer" menu)
+////////////////////////////////////////////////////////////////////////////////
+
+void doConnect() 
+{ 
+    int count = WasatchVCPP::Proxy::Driver::openAllSpectrometers(); // example
+    if (count <= 0)
+    {
+        log("no spectrometers found");
+        spectrometer = nullptr;
+        return;
+    }
+
+    log("found %d connected spectrometers", count);
+    spectrometer = WasatchVCPP::Proxy::Driver::getSpectrometer(0); // example
+}
+
+void doSetIntegrationTime()
+{
+    if (spectrometer == nullptr)
+        return;
+    int ms = atoi(InputBox("Enter integration time (ms)").c_str());
+    spectrometer->setIntegrationTimeMS(ms); // example
+    log("integration time -> %dms", ms);
+}
+
+void doSetLaserEnable()
+{
+    if (spectrometer == nullptr)
+        return;
+    string response = InputBox("Fire laser (Y/N)");
+    bool enabled = response.size() > 0 && (response[0] == 'y' || response[0] == 'Y');
+    spectrometer->setLaserEnable(enabled); // example
+    log("laser -> %s", enabled ? "on" : "off");
+}
+
+void doReadEEPROM()
+{
+    if (spectrometer == nullptr)
+        return;
+
+    log("EEPROM fields:");
+    for (map<string, string>::const_iterator i = spectrometer->eepromFields.begin();
+        i != spectrometer->eepromFields.end(); i++)
+        log("  %s = %s", i->first.c_str(), i->second.c_str());
+}
+
+void doAcquire()
+{
+    if (spectrometer == nullptr)
+        return;
+
+    vector<double> spectrum = spectrometer->getSpectrum(); // example
+    if (spectrum.size() < 5)
+    {
+        log("doAcquire: ERROR: failed to read spectrum");
+        return;
+    }
+
+    log("doAcquire: read spectrum of %d pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
+        spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -166,6 +268,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     case ID_SPECTROMETER_ACQUIRE: 
                         doAcquire(); 
                         break;
+                    case ID_SPECTROMETER_READEEPROM:
+                        doReadEEPROM();
+                        break;
+                    case ID_SPECTROMETER_SETLASERENABLE:
+                        doSetLaserEnable();
+                        break;
 
                     default: 
                         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -208,87 +316,3 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Spectrometer Callbacks
-////////////////////////////////////////////////////////////////////////////////
-
-// These are the callbacks for the "Spectrometer" menu
-
-void doConnect() 
-{ 
-    int count = WasatchVCPP::Proxy::Driver::openAllSpectrometers(); // example
-    if (count <= 0)
-    {
-        log("no spectrometers found");
-        spectrometer = nullptr;
-        return;
-    }
-
-    log("found %d connected spectrometers", count);
-    spectrometer = WasatchVCPP::Proxy::Driver::getSpectrometer(0); // example
-}
-
-void doSetIntegrationTime()
-{
-    if (spectrometer == nullptr)
-        return;
-
-    char prompt[64];
-    strncpy_s(prompt, "Enter integration time (ms)", sizeof(prompt));
-    string s(InputBox(prompt));
-    int ms = atoi(s.c_str());
-
-    spectrometer->setIntegrationTimeMS(ms); // example
-}
-
-void doAcquire()
-{
-    if (spectrometer == nullptr)
-        return;
-
-    vector<double> spectrum = spectrometer->getSpectrum(); // example
-    if (spectrum.size() < 5)
-    {
-        log("doAcquire: ERROR: failed to read spectrum");
-        return;
-    }
-
-    log("doAcquire: read spectrum of %d pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
-        spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Utilities
-////////////////////////////////////////////////////////////////////////////////
-
-//! A simple log function which updates the scrolling Textbox on the GUI.
-//! @see https://stackoverflow.com/a/30887925/11615696
-void log(const char *fmt, ...)
-{
-    char str[1024];
-    va_list args;
-    va_start(args, fmt);
-    int len = vsnprintf(str, sizeof(str), fmt, args);
-    va_end(args);
-
-    // output the string to the Visual Studio output window
-    OutputDebugStringA(str);
-    OutputDebugStringA("\r\n");
-
-    // if the string would overfill the on-screen event log buffer, toss the first half of the buffer
-    if (logBuffer.size() + 2 > MAX_LOG_LEN)
-    {
-        int bytesToDelete = sizeof(logBuffer) / 2;
-        logBuffer.assign(logBuffer.substr(bytesToDelete, logBuffer.size() - bytesToDelete));
-    }
-
-    // append the new message to the (possibly shrunken) buffer, followed by a linefeed
-    if (logBuffer.size() + len + 2 < MAX_LOG_LEN)
-    {
-        logBuffer.append(str);
-        logBuffer.append("\r\n");
-    }
-
-    // update the Textbox
-    SetWindowTextA(hTextbox, logBuffer.c_str());
-}

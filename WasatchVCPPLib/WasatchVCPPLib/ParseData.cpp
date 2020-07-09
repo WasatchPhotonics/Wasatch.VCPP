@@ -41,7 +41,7 @@ uint16_t WasatchVCPP::ParseData::toUInt16(const vector<uint8_t>& buf, int index)
     if (index + 1 >= buf.size())
         return 0;
 
-    uint16_t raw = (buf[index] << 8) | buf[index + 1];
+    uint16_t raw = (buf[index + 1] << 8) | buf[index];
     return raw;
 }
 
@@ -56,10 +56,10 @@ uint32_t WasatchVCPP::ParseData::toUInt32(const vector<uint8_t>& buf, int index)
     if (index + 3 >= buf.size())
         return 0;
 
-    uint32_t raw = (buf[index + 0] << 24) 
-                 | (buf[index + 1] << 16)
-                 | (buf[index + 2] <<  8)
-                 | (buf[index + 3]);
+    uint32_t raw = (buf[index + 3] << 24) 
+                 | (buf[index + 2] << 16)
+                 | (buf[index + 1] <<  8)
+                 | (buf[index + 0]);
     return raw;
 }
 
@@ -111,8 +111,8 @@ bool WasatchVCPP::ParseData::writeUInt16(uint16_t value, vector<uint8_t>& buf, i
     if (index + 1 >= buf.size())
         return false;
 
-    buf[index + 0] = (value >> 8) & 0xff;
-    buf[index + 1] = (value     ) & 0xff;
+    buf[index + 0] = (value     ) & 0xff;
+    buf[index + 1] = (value >> 8) & 0xff;
 
     return true;
 }
@@ -128,10 +128,10 @@ bool WasatchVCPP::ParseData::writeUInt32(uint32_t value, vector<uint8_t>& buf, i
     if (index + 3 >= buf.size())
         return false;
 
-    buf[index + 0] = (value << 24) & 0xff;
-    buf[index + 1] = (value << 16) & 0xff;
-    buf[index + 2] = (value <<  8) & 0xff;
-    buf[index + 3] = (value      ) & 0xff;
+    buf[index + 0] = (value      ) & 0xff;
+    buf[index + 1] = (value <<  8) & 0xff;
+    buf[index + 2] = (value << 16) & 0xff;
+    buf[index + 3] = (value << 24) & 0xff;
 
     return true;
 }

@@ -165,8 +165,7 @@ static LRESULT CALLBACK InputBoxProc(int nCode, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
-// MZ: I feel these could take const char*
-static char *InputBoxHelper(char *Prompt, char *Title, char *Default)
+static string InputBoxHelper(const char *Prompt, const char *Title, const char *Default)
 {
     HRESULT hr = S_OK;
     hr = CoInitialize(NULL);
@@ -208,19 +207,19 @@ static char *InputBoxHelper(char *Prompt, char *Title, char *Default)
     pScriptSite = NULL;
 
     CoUninitialize();
-    static string strResult;
+    static string strResult; // MZ: note static, not a local temp
     _bstr_t bstrResult = (_bstr_t)result;
     strResult = StringShorten((wchar_t *)bstrResult);
-    return (char *)strResult.c_str();
+    return strResult;
 }
 
-char *InputBox(char *Prompt, char *Title, char *Default)
+string InputBox(const char *Prompt, const char *Title, const char *Default)
 {
     HideInput = false;
     return InputBoxHelper(Prompt, Title, Default);
 }
 
-char *PasswordBox(char *Prompt, char *Title, char *Default)
+string PasswordBox(const char *Prompt, const char *Title, const char *Default)
 {
     HideInput = true;
     return InputBoxHelper(Prompt, Title, Default);

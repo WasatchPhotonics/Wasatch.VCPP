@@ -23,6 +23,14 @@ string WasatchVCPP::Util::sprintf(const char* fmt, ...)
     return string(str);
 }
 
+string WasatchVCPP::Util::toLower(const std::string& s)
+{
+    string lc;
+    for (auto c : s)
+        lc += tolower(c);
+    return lc;
+}
+
 string WasatchVCPP::Util::toHex(const std::vector<uint8_t>& data)
 {
     string s = "0x";

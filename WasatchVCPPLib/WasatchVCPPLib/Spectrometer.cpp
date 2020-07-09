@@ -5,8 +5,8 @@
 */
 
 #include "pch.h"
-#include "Driver.h"
 #include "Spectrometer.h"
+#include "Util.h"
 
 #include <algorithm>
 
@@ -28,13 +28,11 @@ unsigned long MAX_UINT24 = 16777216;
 // Lifecycle
 ////////////////////////////////////////////////////////////////////////////////
 
-WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid)
+WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& logger)
+    : udev(udev), pid(pid), logger(logger), eeprom(logger)
 {
-    this->udev = udev;
-    this->pid = pid;
 
-    driver = Driver::getInstance();
-    driver->log("Spectrometer::ctor: instantiating");
+    logger.debug("Spectrometer::ctor: instantiating");
 
     readEEPROM();
 
@@ -80,19 +78,17 @@ bool WasatchVCPP::Spectrometer::readEEPROM()
     vector<vector<uint8_t> > pages;
     for (int page = 0; page < EEPROM::MAX_PAGES; page++)
     {
-        driver->log("reading EEPROM page %d", page);
         auto buf = getCmd(0xff, 0x01, page, EEPROM::PAGE_SIZE);
         pages.push_back(buf);
+        logger.debug("EEPROM page %d: %s", page, Util::toHex(buf).c_str());
     }
 
     if (!eeprom.parse(pages))
     {
-        driver->log("ERROR: unable to parse EEPROM");
+        logger.error("ERROR: unable to parse EEPROM");
         return false;
     }
 
-    driver->log("EEPROM Contents:\n%s", eeprom.toString().c_str());
-    
     return true;
 }
 
@@ -111,7 +107,7 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
 
     integrationTimeMS = ms;
 
-    driver->log("integrationTimeMS -> %lu", ms);
+    logger.debug("integrationTimeMS -> %lu", ms);
 
     return isSuccess(0xb2, result);
 }
@@ -121,7 +117,7 @@ bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
     int result = sendCmd(0xbe, flag ? 1 : 0);
     laserEnabled = flag;
 
-    driver->log("laserEnable -> %d", flag);
+    logger.debug("laserEnable -> %d", flag);
 
     return isSuccess(0xbe, result);
 }
@@ -135,7 +131,7 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     vector<double> spectrum;
 
-    driver->log("sending ACQUIRE");
+    logger.debug("sending ACQUIRE");
     sendCmd(0xad);
 
     Sleep(integrationTimeMS);
@@ -149,20 +145,19 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 
     while (totalBytesRead < bytesExpected)
     {
-        driver->log("attempting to read %d bytes from endpoint 0x%02x", bytesLeftToRead, ep);
+        logger.debug("attempting to read %d bytes from endpoint 0x%02x", bytesLeftToRead, ep);
         int bytesRead = usb_bulk_read(udev, ep, buf, bytesLeftToRead, timeoutMS);
-        driver->log("read %d bytes from endpoint 0x%02x", bytesRead, ep);
+        logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
 
         if (bytesRead <= 0)
         {
-            driver->log("getSpectrum: error (bytesRead negative or zero), giving up");
-            driver->log("getSpectrum: usb error: %s", usb_strerror());
+            logger.error("getSpectrum: bytesRead negative or zero, giving up (%s)", usb_strerror());
             break;
         }
 
         if (bytesRead % 2 != 0)
         {
-            driver->log("getSpectrum: error: read odd number of bytes (%d)", bytesRead);
+            logger.error("getSpectrum: read odd number of bytes (%d)", bytesRead);
             break;
         }
 
@@ -175,13 +170,13 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
         totalBytesRead += bytesRead;
         bytesLeftToRead -= bytesRead;
 
-        driver->log("getSpectrum: totalBytesRead %d, bytesLeftToRead %d", totalBytesRead, bytesLeftToRead);
+        logger.debug("getSpectrum: totalBytesRead %d, bytesLeftToRead %d", totalBytesRead, bytesLeftToRead);
     }
 
     if (buf != nullptr)
         free(buf);
 
-    driver->log("getSpectrum: returning spectrum of %d pixels", spectrum.size());
+    logger.debug("getSpectrum: returning spectrum of %d pixels", spectrum.size());
     return spectrum;
 }
 
@@ -198,7 +193,7 @@ int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, unsign
         len = sizeof(buf);
     }
 
-    driver->log("sendCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
+    logger.debug("sendCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
     int result = usb_control_msg(udev, HOST_TO_DEVICE, request, value, index, (char*)data, len, timeoutMS);
     return result;
 }
@@ -219,7 +214,7 @@ vector<unsigned char> WasatchVCPP::Spectrometer::getCmd(int request, int value, 
     char* data = (char*)malloc(len);
     memset(data, 0, len);
 
-    driver->log("getCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
+    logger.debug("getCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d", request, value, index, len);
     int result = usb_control_msg(udev, DEVICE_TO_HOST, request, value, index, data, len, timeoutMS);
     for (int i = 0; i < result; i++)
         retval.push_back(data[i]);
