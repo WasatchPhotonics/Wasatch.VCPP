@@ -3,6 +3,11 @@
 Unmanaged Visual C++ driver for Wasatch Photonics spectrometers which does not 
 utilize .NET or COM.
 
+# API
+
+* [C API](https://wasatchphotonics.com/api/Wasatch.VCPP/_wasatch_v_c_p_p_wrapper_8h.html)
+* [C++ API](https://wasatchphotonics.com/api/Wasatch.VCPP/namespace_wasatch_v_c_p_p_1_1_proxy.html)
+
 # Architecture
 
 All namespaces are prefixed with WasatchVCPP, meaning "Wasatch Photonics Visual C++".
