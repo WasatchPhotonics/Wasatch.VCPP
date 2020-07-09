@@ -1,3 +1,9 @@
+/**
+    @file   Driver.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  interface of WasatchCPP::Driver
+*/
+
 #pragma once
 
 #ifdef WASATCHVCPPLIB_EXPORTS
@@ -31,12 +37,9 @@ namespace WasatchVCPP
 
         private:
             static Driver* instance;
-
             Driver(); 
 
             std::ofstream logfile;
-
-            // std::vector<usb_dev_handle*> devices;
             std::vector<Spectrometer*> spectrometers;
     };
 }

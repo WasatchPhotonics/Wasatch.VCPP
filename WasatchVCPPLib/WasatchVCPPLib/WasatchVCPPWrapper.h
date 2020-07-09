@@ -1,3 +1,19 @@
+/**
+    @file   WasatchVCPPWrapper.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @note   Users can copy and import this file into their own Visual C++ solutions
+            (optionally with WasatchVCPPProxy.h/cpp as well)
+
+    This file defines the flattened C API that WasatchVCPP.dll exports.
+
+    It uses legacy C native types (no STL templates or C++ language features)
+    to avoid ABI problems when calling the DLL from code which was compiled in
+    a different compiler (even a different version of Visual Studio).
+
+    Calling code can use these functions directly, or they can use the higher-level
+    WasatchVCPP::Proxy classes defined in WasatchVCPPProxy.h/cpp.
+*/
+
 #pragma once
 
 #ifdef WASATCHVCPPLIB_EXPORTS
@@ -25,7 +41,7 @@ extern "C"
     //! @returns number of spectrometers previously opened
     DLL_API int wp_get_number_of_spectrometers();
 
-    //! @returns the number of pixels in the selected spectrometer (-1 on error)
+    //! @returns the number of pixels in the selected spectrometer (negative on error)
     DLL_API int wp_get_pixels(int specIndex);
 
     //! Get the selected spectrometer's model.

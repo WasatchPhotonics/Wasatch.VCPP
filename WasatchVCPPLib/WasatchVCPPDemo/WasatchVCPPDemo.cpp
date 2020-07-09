@@ -1,3 +1,19 @@
+/**
+    @file   WasatchVCPPDemo.cpp
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+
+    This file demonstrates how the WasatchVCPPProxy class can be used to control
+    Wasatch Photonics spectrometers from Visual C++.
+
+    This is a simple GUI created from a Visual C++ "Desktop Application" template.
+    It has a few menu-bar options (configured using the "Resource View"), and a 
+    scrolling log event viewer.  It doesn't provide an on-screen chart because
+    I haven't figured out a lightweight way to do that from Visual C++ without
+    adding a dependency on Qt or equivalent.  Graphing demos will likely be provided
+    via a standalone C# demo.
+
+    @see README_ARCHITECTURE.md
+*/
 #include "framework.h"
 #include "WasatchVCPPDemo.h"
 
@@ -21,28 +37,12 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
+// for the event long
 HWND hTextbox;
 string logBuffer;
-const int MAX_LOG_LEN = 16 * 1024;
+const int MAX_LOG_LEN = 16 * 1024; 
 
-WasatchVCPP::SpectrometerProxy* spectrometer = nullptr; // example
-
-////////////////////////////////////////////////////////////////////////////////
-// Forward declarations (move to Demo.h)
-////////////////////////////////////////////////////////////////////////////////
-
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-
-// spectrometer
-void doConnect();
-void doSetIntegrationTime();
-void doAcquire();
-
-// util
-void log(const char* format, ...);
+WasatchVCPPProxy::Spectrometer* spectrometer = nullptr; // example
 
 ////////////////////////////////////////////////////////////////////////////////
 // main()
@@ -66,11 +66,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
 
     log("setting logfile path");
-    WasatchVCPP::Driver::setLogfile("wasatch_vcpp.log"); // example
+    WasatchVCPPProxy::Driver::setLogfile("wasatch_vcpp.log"); // example
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
-    log("entering message loop");
+    log("entering GUI event loop");
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -80,13 +80,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-    log("exited message loop");
+    log("exited event loop");
 
     return (int) msg.wParam;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// WinForms Implementation
+// GUI Implementation
 ////////////////////////////////////////////////////////////////////////////////
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
@@ -148,12 +148,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int wmId = LOWORD(wParam);
                 switch (wmId)
                 {
-                    case IDM_ABOUT: DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About); break;
-                    case IDM_EXIT: DestroyWindow(hWnd); break;
-                    case ID_SPECTROMETER_CONNECT: doConnect(); break;
-                    case ID_SPECTROMETER_SETINTEGRATIONTIME: doSetIntegrationTime(); break;
-                    case ID_SPECTROMETER_ACQUIRE: doAcquire(); break;
-                    default: return DefWindowProc(hWnd, message, wParam, lParam);
+                    case IDM_ABOUT: 
+                        DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About); 
+                        break;
+                    case IDM_EXIT: 
+                        DestroyWindow(hWnd); 
+                        break;
+
+                    // add new menu options here
+                    case ID_SPECTROMETER_CONNECT: 
+                        doConnect(); 
+                        break;
+                    case ID_SPECTROMETER_SETINTEGRATIONTIME: 
+                        doSetIntegrationTime(); 
+                        break;
+                    case ID_SPECTROMETER_ACQUIRE: 
+                        doAcquire(); 
+                        break;
+
+                    default: 
+                        return DefWindowProc(hWnd, message, wParam, lParam);
                 }
             }
             break;
@@ -174,7 +188,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// Message handler for about box
+// Message handler for About box
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
@@ -197,9 +211,11 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 // Spectrometer Callbacks
 ////////////////////////////////////////////////////////////////////////////////
 
+// These are the callbacks for the "Spectrometer" menu
+
 void doConnect() 
 { 
-    int count = WasatchVCPP::Driver::openAllSpectrometers(); // example
+    int count = WasatchVCPPProxy::Driver::openAllSpectrometers(); // example
     if (count <= 0)
     {
         log("no spectrometers found");
@@ -208,7 +224,7 @@ void doConnect()
     }
 
     log("found %d connected spectrometers", count);
-    spectrometer = WasatchVCPP::Driver::getSpectrometer(0); // example
+    spectrometer = WasatchVCPPProxy::Driver::getSpectrometer(0); // example
 }
 
 void doSetIntegrationTime()

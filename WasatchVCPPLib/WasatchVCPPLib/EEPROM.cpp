@@ -1,3 +1,9 @@
+/**
+    @file   EEPROM.cpp
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  implementation of WasatchVCPP::EEPROM
+*/
+
 #include "pch.h"
 #include "EEPROM.h"
 #include "ParseData.h"
@@ -143,7 +149,7 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages)
     return true;
 }
 
-const char* toBool(bool b) { return b ? "true" : "false"; }
+inline const char* toBool(bool b) { return b ? "true" : "false"; }
 
 string WasatchVCPP::EEPROM::toString() const
 {

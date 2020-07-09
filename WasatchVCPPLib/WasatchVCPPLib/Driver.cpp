@@ -1,3 +1,8 @@
+/**
+    @file   Driver.cpp
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  implementation of WasatchVCPP::Driver
+*/
 #include "pch.h"
 
 #include "Driver.h"
@@ -10,17 +15,14 @@
 using std::string;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Class Attributes
+// Singleton
 ////////////////////////////////////////////////////////////////////////////////
 
-WasatchVCPP::Driver* WasatchVCPP::Driver::instance = NULL;
+WasatchVCPP::Driver* WasatchVCPP::Driver::instance = nullptr;
 
-////////////////////////////////////////////////////////////////////////////////
-// Class Methods
-////////////////////////////////////////////////////////////////////////////////
 WasatchVCPP::Driver* WasatchVCPP::Driver::getInstance()
 {
-    if (instance == NULL)
+    if (instance == nullptr)
         instance = new WasatchVCPP::Driver();
     return instance;
 }
@@ -37,7 +39,6 @@ int WasatchVCPP::Driver::getNumberOfSpectrometers() { return (int)spectrometers.
 
 int WasatchVCPP::Driver::openAllSpectrometers()
 {
-    this->log("openAllSpectrometers: calling usb_init");
     usb_init();
     usb_find_busses();
     usb_find_devices();
@@ -57,14 +58,14 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                 unsigned pid = dev->descriptor.idProduct;
                 if (pid == 0x1000 || pid == 0x2000 || pid == 0x4000)
                 {
-                    log("openAllSpectrometers: trying to open device");
+                    log("openAllSpectrometers: opening device");
                     struct usb_dev_handle* udev = usb_open(dev);
                     if (udev != nullptr)
                     {
-                        log("openAllSpectrometers: open succeeded");
+                        // log("openAllSpectrometers: open succeeded");
                         if (dev->descriptor.bNumConfigurations)
                         {
-                            log("openAllSpectrometers: setting configuration");
+                            // log("openAllSpectrometers: setting configuration");
                             int configResult = usb_set_configuration(udev, 1);
                             if (configResult != 0)
                             {
@@ -74,7 +75,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                                 continue;
                             }
 
-                            log("openAllSpectrometers: claiming interface");
+                            // log("openAllSpectrometers: claiming interface");
                             int claimResult = usb_claim_interface(udev, 0);
                             if (claimResult != 0)
                             {
@@ -84,17 +85,12 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                                 continue;
                             }
 
-                            log("openAllSpectrometers: instantiating Spectrometer");
+                            // log("openAllSpectrometers: instantiating Spectrometer");
                             Spectrometer* spec = new Spectrometer(udev);
                             if (spec != nullptr)
-                            { 
-                                log("openAllSpectrometers: keeping Spectrometer");
                                 spectrometers.push_back(spec);
-                            }
                             else
-                            {
                                 log("openAllSpectrometers: Spectrometer instantiation failed");
-                            }
                         }
                         else
                         {
@@ -109,6 +105,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
             }
         }
     }
+
     return (int)spectrometers.size();
 }
 
@@ -130,13 +127,13 @@ bool WasatchVCPP::Driver::setLogfile(const string& pathname)
 }
 
 // https://stackoverflow.com/a/30887925/11615696
-void WasatchVCPP::Driver::log(const char *format, ...)
+void WasatchVCPP::Driver::log(const char *fmt, ...)
 {
     char str[1024];
-    va_list argptr;
-    va_start(argptr, format);
-    int len = vsnprintf(str, sizeof(str), format, argptr);
-    va_end(argptr);
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(str, sizeof(str), fmt, args);
+    va_end(args);
     OutputDebugStringA(str);
     OutputDebugStringA("\r\n");
 

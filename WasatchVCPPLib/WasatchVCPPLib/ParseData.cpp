@@ -1,3 +1,9 @@
+/**
+    @file   ParseData.cpp
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  implementation of WasatchVCPP::ParseData
+*/
+
 #include "pch.h"
 #include "ParseData.h"
 

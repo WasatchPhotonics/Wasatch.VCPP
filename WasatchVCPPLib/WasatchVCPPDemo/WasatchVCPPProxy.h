@@ -1,72 +1,75 @@
 /**
     @file   WasatchVCPPProxy.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
-    @date   8-Jul-2020
-    @brief  interface of WasatchCPPProxy
+    @brief  interface of WasatchCPP::Proxy classes
+    @note   Users can copy and import this file into their own Visual C++ solutions
 */
 #pragma once
 
 #include <vector>
 #include <string>
 
-/**
-    @brief namespace encapsulating WasatchVCPPProxy
-
-    Okay, why do we need this namespace, and the classes within it?
-
-    Because DLL boundaries strongly discourage use of any classes, objects, 
-    templates (including STL) of any kind.  In fact, the guidance is basically
-    to avoid C++ types altogether, and define C++ boundaries strictly using
-    legacy C datatypes:
-
-    https://stackoverflow.com/a/22797419/11615696
-
-    That means the WasatchCPPWrapper interface is somewhat clunky old-style
-    C, and that's not the level of elegance and user-friendliness that I want to
-    expose to our customers.
-
-    Therefore, this WasatchVCPPProxy namespace provides an encapsulated way
-    to talk to our spectrometers using modern C++ and STL conventions.
-
-    @see README.md#Architecture
-*/
 namespace WasatchVCPP
 {
-    class SpectrometerProxy
+    /**
+        @brief namespace providing proxy Driver and Spectrometer C++ classes
+
+        Okay, why do we need this namespace, and the classes within it?
+
+        Well, we DON'T technically need it.  You can code against WasatchVCPPWrapper.h
+        directly if you're fine talking over a C API.
+
+        However, the WasatchCPPWrapper interface is somewhat clunky old-style C, and
+        that's not the level of elegance and user-friendliness that I want to expose
+        to our customers (or use myself for that matter).
+
+        Therefore, this WasatchVCPP::Proxy namespace provides a handy object-oriented
+        facade to the flatted C API the DLL exports in order to avoid ABI entanglements.
+
+        @see README_ARCHITECTURE.md
+    */
+    namespace Proxy
     {
-        public:
-            SpectrometerProxy(int specIndex);
-            bool close();
+        //! A Proxy Spectrometer class providing an object-oriented / STL-based
+        //! interface to customer code.
+        class Spectrometer
+        {
+            public:
+                Spectrometer(int specIndex);
+                bool close();
 
-            int specIndex;
-            int pixels;
-            std::string model;
-            std::string serialNumber;
+                int specIndex;
+                int pixels;
+                std::string model;
+                std::string serialNumber;
 
-            std::vector<double> wavelengths;
-            std::vector<double> wavenumbers;
+                std::vector<double> wavelengths;
+                std::vector<double> wavenumbers;
 
-            bool setIntegrationTimeMS(unsigned long ms);
-            bool setLaserEnable(bool flag);
-            std::vector<double> getSpectrum();
+                bool setIntegrationTimeMS(unsigned long ms);
+                bool setLaserEnable(bool flag);
+                std::vector<double> getSpectrum();
 
-        private:
-            double* spectrumBuf;
-    };
+            private:
+                double* spectrumBuf;
+        };
 
-    class Driver
-    {
-        public:
-            static int openAllSpectrometers();
-            static bool closeAllSpectrometers();
-            static int numberOfSpectrometers;
+        class Driver
+        {
+            public:
+                static bool setLogfile(const std::string& pathname);
+                static int openAllSpectrometers();
+                static bool closeAllSpectrometers();
 
-            static SpectrometerProxy* getSpectrometer(int index);
+                //! @warning the caller should not 'delete' or 'free' this pointer;
+                //!          it will be released automatically by closeAllSpectrometers
+                static Spectrometer* getSpectrometer(int index);
 
-            static bool setLogfile(const std::string& pathname);
+                static int numberOfSpectrometers;
 
-        private:
-            static std::vector<SpectrometerProxy> spectrometers;
-    };
+            private:
+                static std::vector<Spectrometer> spectrometers;
+        };
+    }
 }
 

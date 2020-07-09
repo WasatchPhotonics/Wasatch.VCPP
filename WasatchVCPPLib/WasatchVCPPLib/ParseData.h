@@ -1,3 +1,9 @@
+/**
+    @file   ParseData.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  interface of WasatchVCPP::ParseData
+*/
+
 #pragma once
 
 #include <cstdint>
@@ -6,6 +12,8 @@
 
 namespace WasatchVCPP
 {
+    //! this class provides methods for reading and writing individual fields 
+    //! within the EEPROM
     class ParseData
     {
         public:

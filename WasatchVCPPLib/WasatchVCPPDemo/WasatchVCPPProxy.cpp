@@ -1,8 +1,8 @@
 /**
     @file   WasatchVCPPProxy.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
-    @date   8-Jul-2020
-    @brief  implementation of WasatchCPPProxy
+    @brief  implementation of WasatchCPP::Proxy classes
+    @note   Users can copy and import this file into their own Visual C++ solutions
 */
 
 #include "WasatchVCPPProxy.h"
@@ -12,10 +12,16 @@
 using std::vector;
 using std::string;
 
-int WasatchVCPP::Driver::numberOfSpectrometers = 0;
-vector<WasatchVCPP::SpectrometerProxy> WasatchVCPP::Driver::spectrometers;
+int WasatchVCPP::Proxy::Driver::numberOfSpectrometers = 0;
+vector<WasatchVCPP::Proxy::Spectrometer> WasatchVCPP::Proxy::Driver::spectrometers;
 
-int WasatchVCPP::Driver::openAllSpectrometers()
+////////////////////////////////////////////////////////////////////////////////
+// 
+//                               Proxy Driver
+//
+////////////////////////////////////////////////////////////////////////////////
+
+int WasatchVCPP::Proxy::Driver::openAllSpectrometers()
 {
     spectrometers.clear();
 
@@ -24,12 +30,12 @@ int WasatchVCPP::Driver::openAllSpectrometers()
         return 0;
 
     for (int i = 0; i < numberOfSpectrometers; i++)
-        spectrometers.push_back(SpectrometerProxy(i));
+        spectrometers.push_back(Spectrometer(i));
 
     return numberOfSpectrometers;
 }
 
-WasatchVCPP::SpectrometerProxy* WasatchVCPP::Driver::getSpectrometer(int index)
+WasatchVCPP::Proxy::Spectrometer* WasatchVCPP::Proxy::Driver::getSpectrometer(int index)
 {
     if (index >= spectrometers.size())
         return nullptr;
@@ -37,7 +43,7 @@ WasatchVCPP::SpectrometerProxy* WasatchVCPP::Driver::getSpectrometer(int index)
     return &spectrometers[index];
 }
 
-bool WasatchVCPP::Driver::closeAllSpectrometers()
+bool WasatchVCPP::Proxy::Driver::closeAllSpectrometers()
 {
     for (int i = 0; i < numberOfSpectrometers; i++)
         spectrometers[i].close();
@@ -45,14 +51,14 @@ bool WasatchVCPP::Driver::closeAllSpectrometers()
     return true;
 }
 
-bool WasatchVCPP::Driver::setLogfile(const string& pathname)
+bool WasatchVCPP::Proxy::Driver::setLogfile(const string& pathname)
 { 
     return WP_SUCCESS == wp_set_logfile_path(pathname.c_str()); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//                           Spectrometer Proxy
+//                           Proxy Spectrometer 
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +66,7 @@ bool WasatchVCPP::Driver::setLogfile(const string& pathname)
 // Lifecycle
 ////////////////////////////////////////////////////////////////////////////////
 
-WasatchVCPP::SpectrometerProxy::SpectrometerProxy(int specIndex)
+WasatchVCPP::Proxy::Spectrometer::Spectrometer(int specIndex)
 {
     this->specIndex = specIndex;
 
@@ -78,7 +84,7 @@ WasatchVCPP::SpectrometerProxy::SpectrometerProxy(int specIndex)
         model.assign(tmp);
 }
 
-bool WasatchVCPP::SpectrometerProxy::close()
+bool WasatchVCPP::Proxy::Spectrometer::close()
 {
     if (specIndex >= 0)
     {
@@ -99,7 +105,7 @@ bool WasatchVCPP::SpectrometerProxy::close()
 // Acquisition
 ////////////////////////////////////////////////////////////////////////////////
 
-vector<double> WasatchVCPP::SpectrometerProxy::getSpectrum()
+vector<double> WasatchVCPP::Proxy::Spectrometer::getSpectrum()
 {
     vector<double> result;
     if (spectrumBuf != nullptr)
@@ -112,8 +118,8 @@ vector<double> WasatchVCPP::SpectrometerProxy::getSpectrum()
 // simple pass-throughs
 ////////////////////////////////////////////////////////////////////////////////
 
-bool WasatchVCPP::SpectrometerProxy::setIntegrationTimeMS(unsigned long ms)
+bool WasatchVCPP::Proxy::Spectrometer::setIntegrationTimeMS(unsigned long ms)
 { return wp_set_integration_time_ms(specIndex, ms); }
 
-bool WasatchVCPP::SpectrometerProxy::setLaserEnable(bool flag)
+bool WasatchVCPP::Proxy::Spectrometer::setLaserEnable(bool flag)
 { return wp_set_laser_enable(specIndex, flag); }

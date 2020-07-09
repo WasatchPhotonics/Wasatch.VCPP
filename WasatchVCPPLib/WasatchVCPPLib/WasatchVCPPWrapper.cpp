@@ -1,3 +1,9 @@
+/**
+    @file   WasatchVCPPWrapper.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+
+*/
+
 #include "pch.h"
 #include "WasatchVCPPWrapper.h"
 

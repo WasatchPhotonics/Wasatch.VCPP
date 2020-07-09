@@ -1,3 +1,9 @@
+/**
+    @file   Util.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  interface of WasatchVCPP::Util
+*/
+
 #pragma once
 
 #include <string>
@@ -13,18 +19,14 @@ namespace WasatchVCPP
             static std::string toHex(const std::vector<uint8_t>& data);
             static std::string join(const std::set<int16_t>& values);
 
-            template<typename T> static std::string join(const T& values)
+            template<typename T> static std::string join(const T& values, const char* delim = ", ")
             {
                 std::string s;
-                typename T::const_iterator iter = values.begin(); 
-                while (iter != values.end())
-                {
+                for (typename T::const_iterator i = values.begin(); i != values.end(); i++)
                     if (s.size() == 0)
-                        s += sprintf("%g", *iter);
+                        s += sprintf("%g", *i);
                     else
-                        s += sprintf(", %g", *iter);
-                    iter++;
-                }
+                        s += sprintf("%s%g", delim, *i);
                 return s;
             }
     };

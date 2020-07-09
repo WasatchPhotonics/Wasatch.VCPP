@@ -1,3 +1,9 @@
+/**
+    @file   EEPROM.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  interface of WasatchVCPP::EEPROM
+*/
+
 #pragma once
 
 #include "FeatureMask.h"

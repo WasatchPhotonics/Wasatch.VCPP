@@ -1,3 +1,9 @@
+/**
+    @file   Spectrometer.cpp
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  implementation of WasatchVCPP::Spectrometer
+*/
+
 #include "pch.h"
 #include "Driver.h"
 #include "Spectrometer.h"

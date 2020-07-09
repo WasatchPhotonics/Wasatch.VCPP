@@ -1,3 +1,9 @@
+/**
+    @file   FeatureMask.cpp
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  implementation of WasatchVCPP::FeatureMask
+*/
+
 #include "pch.h"
 #include "FeatureMask.h"
 

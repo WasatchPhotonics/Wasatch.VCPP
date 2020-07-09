@@ -1,3 +1,9 @@
+/**
+    @file   Util.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  interface of WasatchVCPP::Util
+*/
+
 #include "pch.h"
 #include "Util.h"
 
@@ -7,10 +13,10 @@ using std::set;
 string WasatchVCPP::Util::sprintf(const char* fmt, ...)
 {
     char str[1024];
-    va_list argptr;
-    va_start(argptr, fmt);
-    int len = vsnprintf(str, sizeof(str), fmt, argptr);
-    va_end(argptr);
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(str, sizeof(str), fmt, args);
+    va_end(args);
 
     return string(str);
 }

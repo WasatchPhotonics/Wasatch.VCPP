@@ -1,3 +1,9 @@
+/**
+    @file   FeatureMask.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  interface of WasatchVCPP::FeatureMask
+*/
+
 #pragma once
 
 #include <cstdint>

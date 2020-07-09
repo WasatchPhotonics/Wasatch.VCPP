@@ -1,3 +1,9 @@
+/**
+    @file   Spectrometer.h
+    @author Mark Zieg <mzieg@wasatchphotonics.com>
+    @brief  implementation of WasatchVCPP::Spectrometer
+*/
+
 #pragma once
 
 #include "libusb.h"
