@@ -1,18 +1,18 @@
 # Overview
 
-Unmanaged Visual C++ driver for Wasatch Photonics spectrometers which does not 
+Unmanaged Visual C++ driver for Wasatch Photonics spectrometers which does not
 utilize .NET or COM.
 
 # Design Remit
 
-All drivers must make a decision as to what is within their remit and where to 
+All drivers must make a decision as to what is within their remit and where to
 "draw the line" on functionality.  If you implement too many features under the hood,
-you risk "bloatware"; if you don't provide enough automation, you scare off 
+you risk "bloatware"; if you don't provide enough automation, you scare off
 would-be spectroscopic innovators who aren't saavy with bitwise manipulation.
 
-This driver exists within a software catalog which already includes a 
+This driver exists within a software catalog which already includes a
 fully-featured driver suite (Wasatch.NET) supporting high-level languages like
-C#, Visual Basic, MATLAB and LabVIEW, as well as an eclectic but functional 
+C#, Visual Basic, MATLAB and LabVIEW, as well as an eclectic but functional
 Python package (Wasatch.PY) capable of supporting GUI applications like ENLIGHTEN.
 
 Therefore, as open-source reference implementations have already been provided
@@ -25,7 +25,7 @@ This boundary remains malleable and may be adjusted per customer request and
 arising use-cases.
 
 It is also noteworthy that the driver is maintained as an open-source project
-on GitHub, so if users wish to add new features themselves, they are encouraged to 
+on GitHub, so if users wish to add new features themselves, they are encouraged to
 fork and submit pull requests :-)
 
 * see [Backlog](README_BACKLOG.md) for a list of the features intended, rejected,
@@ -35,8 +35,8 @@ and undecided for inclusion.
 
 - Visual Studio (tested with 2019 Community Edition)
 
-This library is built atop the same libusb-win32 back-end used by ENLIGHTEN, 
-Wasatch.NET etc.  Therefore, if you have one of those installed, it should "just 
+This library is built atop the same libusb-win32 back-end used by ENLIGHTEN,
+Wasatch.NET etc.  Therefore, if you have one of those installed, it should "just
 work".  Until an installer is added to this project, it is recommended that users
 install ENLIGHTEN first as the quickest way to install and configure the .inf
 files to associate our USB VID and PID with the libusb-win32 low-level driver.
@@ -54,16 +54,16 @@ All namespaces are prefixed with WasatchVCPP, meaning "Wasatch Photonics Visual 
 
 This is the overall architecture as I envision it:
 
-                       _WasatchVCPP::Proxy_      _WasatchVCPP.dll/lib_______________________________________   
-                      |   Driver           |    |                                                           |
-    WasatchVCPPDemo <---> Spectrometer <-----+->| WasatchVCPP.h (exported C API)                            |
-    (C++ example)     |____________________| |  |          ^                                                |
-                                             |  |----------|------------------------------------------------|
-                                             |  |          v                 .--> WasatchVCPP::Driver       |
-    CustomerCode.c <-------------------------+  | WasatchVCPPWrapper.cpp <--:                               |
-                                                |                            `--> WasatchVCPP::Spectrometer |
-                                                |                                 '--> WasatchVCPP::EEPROM  |
-                                                |___________________________________________________________|
+                       _WasatchVCPP.h__________      _WasatchVCPP.dll/lib______________________
+                      |                        |    |                                          |
+     CustomerApp.c <---> wp_foo() <--(C API)-----+---> WasatchVCPPWrapper.cpp                  |
+                      |                        | |  |  `--> WasatchVCPP::Driver                |
+                      |  _WasatchVCPP::Proxy_  | |  |  `--> WasatchVCPP::Spectrometer          |
+                      | |   Driver           | | |  |       `--> WasatchVCPP::EEPROM (etc)     |
+     WasatchVCPPDemo <----> Spectrometer <-------+  |            `--> WasatchVCPP::FeatureMask |
+     (C++ example)    | |____________________| |    |__________________________________________|
+                      |________________________|
+
 # Contents
 
 The WasatchVCPP distribution contains:
@@ -81,26 +81,26 @@ There are basically four ways you can use WasatchVCPP:
 
 1. use the raw C functions (C API) to call precompiled WasatchVCPP.dll via C or C++
 2. use WasatchVCPP::Proxy (C++ API) to call precompiled WasatchVCPP.dll via C++
-3. compile WasatchVCPP.dll yourself, then call WasatchVCPP::Driver and 
+3. compile WasatchVCPP.dll yourself, then call WasatchVCPP::Driver and
    WasatchVCPP::Spectrometer directly (having ensured perfect ABI alignment)
-4. import WasatchVCPP files into your own project, then call them directly 
+4. import WasatchVCPP files into your own project, then call them directly
 
 ## Discussion
 
-The key takeaway for robust C++ DLL design is that DLLs should only export a 
+The key takeaway for robust C++ DLL design is that DLLs should only export a
 "flattened" C API, and not use C++ types, classes, templates, STL etc:
 
 - https://stackoverflow.com/a/22797419/11615696
 
 That requirement drove the creation of WasatchVCPP.h, which provides
-a fully flattened, C-compatible interface.  However, it's not much fun calling C 
-libraries from C++, which led to the creation of WasatchVCPP::Proxy (also 
+a fully flattened, C-compatible interface.  However, it's not much fun calling C
+libraries from C++, which led to the creation of WasatchVCPP::Proxy (also
 defined in WasatchVCCP.h).
 
 If you are calling the pre-compiled DLL and .lib provided in our distribution,
-you can use either API defined in WasatchVCPP.h to access the DLL functions.  
+you can use either API defined in WasatchVCPP.h to access the DLL functions.
 
-Alternately, since the driver itself is open-source, you may choose to simply 
+Alternately, since the driver itself is open-source, you may choose to simply
 compile the DLL yourself, such that it will be fully "ABI-compatible" with your
 application code, so that you can instantiate and call the WasatchVCPP::Driver
 and WasatchVCPP::Spectrometer classes directly.  As long as the entire source
@@ -117,7 +117,7 @@ WasatchVCPP.
 
 A simple Visual C++ GUI project, "WastchVCPPDemo" is included in the solution
 so you can see how these functions can be called through the WasatchVCPP::Proxy
-C++ interface (whose source code itself provides an example to using the 
+C++ interface (whose source code itself provides an example to using the
 underlying C interface).
 
 In short, this is a typical calling sequence:
@@ -126,30 +126,30 @@ In short, this is a typical calling sequence:
     
     // instantiate a Driver object
     WasatchVCPP::Proxy::Driver driver;
-
+    
     // set where you want the logfile written (if any)
-    driver.setLogfile(LOGFILE_PATH); 
-
+    driver.setLogfile(LOGFILE_PATH);
+    
     // open all connected spectrometers
-    int count = driver.openAllSpectrometers(); 
-
+    int count = driver.openAllSpectrometers();
+    
     // take a handle to the first spectrometer found on the bus
-    WasatchVCPP::Proxy::Spectrometer* spectrometer = driver.getSpectrometer(0); 
+    WasatchVCPP::Proxy::Spectrometer* spectrometer = driver.getSpectrometer(0);
     
     // set integration time
-    spectrometer->setIntegrationTimeMS(ms); 
-
+    spectrometer->setIntegrationTimeMS(ms);
+    
     // turn the laser on
-    spectrometer->setLaserEnable(true); 
-
+    spectrometer->setLaserEnable(true);
+    
     // take a spectrum
-    vector<double> spectrum = spectrometer->getSpectrum(); 
-
+    vector<double> spectrum = spectrometer->getSpectrum();
+    
     // turn the laser off
-    spectrometer->setLaserEnable(false); 
+    spectrometer->setLaserEnable(false);
     
     // cleanup
-    driver.closeAllSpectrometers(); 
+    driver.closeAllSpectrometers();
 
 You can see the above lines "in situ" when you grep the demo for "example":
 
