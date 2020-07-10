@@ -43,8 +43,10 @@ files to associate our USB VID and PID with the libusb-win32 low-level driver.
 
 # API
 
-* [C API](https://wasatchphotonics.com/api/Wasatch.VCPP/_wasatch_v_c_p_p_wrapper_8h.html)
+* [C API](https://wasatchphotonics.com/api/Wasatch.VCPP/_wasatch_v_c_p_p_8h.html#func-members)
 * [C++ API](https://wasatchphotonics.com/api/Wasatch.VCPP/namespace_wasatch_v_c_p_p_1_1_proxy.html)
+
+(both declared by ./include/WasatchVCPP.h)
 
 # Architecture
 
