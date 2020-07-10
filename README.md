@@ -52,46 +52,36 @@ All namespaces are prefixed with WasatchVCPP, meaning "Wasatch Photonics Visual 
 
 This is the overall architecture as I envision it:
 
-                       _WasatchVCPP::Proxy_    _WasatchVCPP.dll/lib_______________________________________   
-                      |   Driver           |  |                                                           |
-    WasatchVCPPDemo <---> Spectrometer <----->| WasatchVCPPWrapper.h (exports)                            |
-    (customer code)   |____________________|  |          ^                                                |
-                                              |----------|------------------------------------------------|
-                                              |          v                 .--> WasatchVCPP::Driver       |
-                                              | WasatchVCPPWrapper.cpp <--:                               |
-                                              |                            `--> WasatchVCPP::Spectrometer |
-                                              |                                 '--> WasatchVCPP::EEPROM  |
-                                              |___________________________________________________________|
+                       _WasatchVCPP::Proxy_      _WasatchVCPP.dll/lib_______________________________________   
+                      |   Driver           |    |                                                           |
+    WasatchVCPPDemo <---> Spectrometer <-----+->| WasatchVCPP.h (exported C API)                            |
+    (C++ example)     |____________________| |  |          ^                                                |
+                                             |  |----------|------------------------------------------------|
+                                             |  |          v                 .--> WasatchVCPP::Driver       |
+    CustomerCode.c <-------------------------+  | WasatchVCPPWrapper.cpp <--:                               |
+                                                |                            `--> WasatchVCPP::Spectrometer |
+                                                |                                 '--> WasatchVCPP::EEPROM  |
+                                                |___________________________________________________________|
 # Contents
 
 The WasatchVCPP distribution contains:
 
-- WasatchVCPPWrapper.h (call via this...)
-- WasatchVCPPProxy.h   (...or this)
-- WasatchVCPPProxy.cpp
+- WasatchVCPP.h (provides both C and C++ APIs)
 
 When the WasatchVCPPLib solution is compiled in Visual Studio, it generates:
 
 - WasatchVCPP.dll (compiled driver)
 - WasatchVCPP.lib (needed to link with DLL)
 
-At a later point, the three .h/.cpp files mentioned above may be moved to 
-WasatchVCPP/include (out of the WasatchVCPPLib folder), so it is clear that they
-are "user-copyable" files.
-
-And I should probably eliminate WasatchVCPPProxy.cpp altogether, and make
-WasatchVCPP::Proxy a "header-only" class.
-
 # Usage
 
 There are basically four ways you can use WasatchVCPP:
 
-1. use WasatchVCPPWrapper.h (C API) to call precompiled WasatchVCPP.dll via C or C++
+1. use the raw C functions (C API) to call precompiled WasatchVCPP.dll via C or C++
 2. use WasatchVCPP::Proxy (C++ API) to call precompiled WasatchVCPP.dll via C++
-3. compile WasatchVCPP.dll yourself, then call WasatchVCPP classes directly 
-   (or use either of the above methods)
-4. import WasatchVCPP classes into your own project, then call them directly 
-   (or use any of the above methods)
+3. compile WasatchVCPP.dll yourself, then call WasatchVCPP::Driver and 
+   WasatchVCPP::Spectrometer directly (having ensured perfect ABI alignment)
+4. import WasatchVCPP files into your own project, then call them directly 
 
 ## Discussion
 
@@ -100,18 +90,13 @@ The key takeaway for robust C++ DLL design is that DLLs should only export a
 
 - https://stackoverflow.com/a/22797419/11615696
 
-That requirement drove the creation of WasatchVCPPWrapper.h, which provides
+That requirement drove the creation of WasatchVCPP.h, which provides
 a fully flattened, C-compatible interface.  However, it's not much fun calling C 
-libraries from C++, which led to the creation of WasatchVCPPProxy.
+libraries from C++, which led to the creation of WasatchVCPP::Proxy (also 
+defined in WasatchVCCP.h).
 
 If you are calling the pre-compiled DLL and .lib provided in our distribution,
-you can use either WasatchVCPPWrapper.h or WasatchVCPPProxy to access the DLL
-functions.  The difference is that WasatchVCPPWrapper.h provides a very raw
-"C" API using only legacy C datatypes.  In contrast, WasatchVCPPProxy wraps
-that "C" API on the caller side, exposing a more-modern encapsulated C++ 
-interface using STL containers.  Either interface should yield equivalent
-results, as indeed the WasatchVCPPProxy itself calls WasatchVCPPWrapper.h
-for all operations.
+you can use either API defined in WasatchVCPP.h to access the DLL functions.  
 
 Alternately, since the driver itself is open-source, you may choose to simply 
 compile the DLL yourself, such that it will be fully "ABI-compatible" with your
@@ -131,20 +116,23 @@ WasatchVCPP.
 A simple Visual C++ GUI project, "WastchVCPPDemo" is included in the solution
 so you can see how these functions can be called through the WasatchVCPP::Proxy
 C++ interface (whose source code itself provides an example to using the 
-WasatchVCPPWrapper.h C interface).
+underlying C interface).
 
 In short, this is a typical calling sequence:
 
-    #include "WasatchCPPProxy.h"
+    #include "WasatchCPP.h"
     
+    // instantiate a Driver object
+    WasatchVCPP::Proxy::Driver driver;
+
     // set where you want the logfile written (if any)
-    WasatchVCPP::Proxy::Driver::setLogfile(LOGFILE_PATH); 
+    driver.setLogfile(LOGFILE_PATH); 
 
     // open all connected spectrometers
-    int count = WasatchVCPP::Proxy::Driver::openAllSpectrometers(); 
+    int count = driver.openAllSpectrometers(); 
 
     // take a handle to the first spectrometer found on the bus
-    WasatchVCPP::Proxy::Spectrometer* spectrometer = WasatchVCPP::Proxy::Driver::getSpectrometer(0); 
+    WasatchVCPP::Proxy::Spectrometer* spectrometer = driver.getSpectrometer(0); 
     
     // set integration time
     spectrometer->setIntegrationTimeMS(ms); 
@@ -159,7 +147,7 @@ In short, this is a typical calling sequence:
     spectrometer->setLaserEnable(false); 
     
     // cleanup
-    WasatchVCPP::Proxy::Driver::closeAllSpectrometers(); 
+    driver.closeAllSpectrometers(); 
 
 You can see the above lines "in situ" when you grep the demo for "example":
 

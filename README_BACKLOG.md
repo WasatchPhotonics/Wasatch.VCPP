@@ -18,6 +18,8 @@ Per the "Design Remit" described in README.md:
 - auto-enable TEC and setpoint at open
 - support gain/offset through API
 - support TEC control through API
+- support invertXAxis
+- support bin2x2
 - read firmware version
 - read FPGA version
 - read detector TEC temperature (degC)
@@ -58,23 +60,7 @@ Per the "Design Remit" described in README.md:
 # Architectural Backlog
 
 - add "Release" target
-- change WasatchVCPP::Proxy into a header-only class
-- move WasatchVCPPWrapper.h and WasatchVCPPProxy.h to distribution /include
 - add WasatchCPP (no "V") Makefile tree for POSIX / GCC / CLANG targets
-
-## Merge WasatchVCPPWrapper and WasatchVCPPProxy?
-
-It seems possible to physically merge the contents of WasatchVCPPProxy.h/cpp into 
-WasatchVCPPWrapper.h, such that there's only one header file to include regardless
-of whether you decide to use the C or C++ API.  All of WasatchVCPPProxy.cpp could
-be made into an "inline" class declaration.  As this would be compiled by the
-customer code (as a header file), there would be no ABI issues such as occur with
-the .cpp compiled into the DLL.  
-
-We probably would need to use #ifdef to prevent the WasatchVCPPProxy class from 
-being compiled into the DLL when building a release, so that there aren't 
-"duplicate implementations" (possibly with conflicting ABI) between the customer's
-compiled application and the pre-built DLL.
 
 ## libusb-win32 deprecation
 

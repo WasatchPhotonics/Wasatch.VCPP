@@ -2,8 +2,7 @@
     @file   Logger.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  implementation of WasatchVCPP::Logger
-    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
-            or WasatchVCPP::Proxy instead
+    @note   customers normally wouldn't access this file; use WasatchVCPP.h instead
 */
 
 #include "pch.h"

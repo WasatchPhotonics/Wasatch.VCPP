@@ -80,6 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\dist\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>Z:\work\code\Wasatch.VCPP\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -155,6 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\WasatchVCPP.h" />
     <ClInclude Include="Driver.h" />
     <ClInclude Include="EEPROM.h" />
     <ClInclude Include="FeatureMask.h" />
@@ -165,7 +167,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Spectrometer.h" />
     <ClInclude Include="Util.h" />
-    <ClInclude Include="WasatchVCPPWrapper.h" />
+    <ClInclude Include="WasatchVCPP.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

@@ -2,21 +2,18 @@
     @file   WasatchVCPPWrapper.cpp
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  Implementation of the flattened C API exported by WasatchVCPP.dll
+    @note   customers normally wouldn't access this file; use WasatchVCPP.h instead
 
-    This file implements the "C" interface to the WasatchVCPP library and DLL.
-    Customers would not normally have this file in their distribution; they
-    should be fine with just the header (WasatchVCPPWrapper.h).
+    This file implements the "C" interface to the WasatchVCPP library and DLL
+    which is defined in WasatchCPP.h.
 
-    This file is the one and only place where WasatchVCPP::Driver is actually
-    instantiated (via its Singleton).
-
-    This file is the one place where the "C" API calls into the C++ library
-    internals; "above" this file is only C, while "below" this file is only
-    C++.
+    This file is the one and only place where the WasatchVCPP::Driver Singleton
+    is actually instantiated (meaning it probably doesn't actually have to be
+    a Singleton...)
 */
 
 #include "pch.h"
-#include "WasatchVCPPWrapper.h"
+#include "WasatchVCPP.h"
 
 #include <string>
 #include <map>

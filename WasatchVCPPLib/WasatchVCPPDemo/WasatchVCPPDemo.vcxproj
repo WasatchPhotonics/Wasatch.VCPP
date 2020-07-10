@@ -80,7 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\WasatchVCPPLib;$(IncludePath)</IncludePath>
+    <IncludePath>Z:\work\code\Wasatch.VCPP\include;$(IncludePath)</IncludePath>
     <ExecutablePath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\dist\x64;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,14 +150,12 @@
     <ClInclude Include="InputBox.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Util.h" />
-    <ClInclude Include="WasatchVCPPProxy.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WasatchVCPPDemo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="InputBox.cpp" />
     <ClCompile Include="Util.cpp" />
-    <ClCompile Include="WasatchVCPPProxy.cpp" />
     <ClCompile Include="WasatchVCPPDemo.cpp" />
   </ItemGroup>
   <ItemGroup>

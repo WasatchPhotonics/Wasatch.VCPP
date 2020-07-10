@@ -2,8 +2,7 @@
     @file   ParseData.h
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  interface of WasatchVCPP::ParseData
-    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
-            or WasatchVCPP::Proxy instead
+    @note   customers normally wouldn't access this file; use WasatchVCPP.h instead
 */
 
 #pragma once

@@ -1,8 +1,12 @@
 # Changelog
 
-- 2020-07-?? 0.0.4
+- 2020-07-10 0.0.4
     - added Set Outfile (Demo)
     - validated spectra
+    - merged WasatchVCPPWrapper.h, WasatchVCPPProxy.h and WasatchVCPPProxy.cpp 
+      into ./include/WasatchVCPP.h
+    - changed WasatchVCPP::Proxy::Driver from static to instance
+    - lots of docs
 - 2020-07-09 0.0.3
     - added InputBox (Demo)
     - added Logger

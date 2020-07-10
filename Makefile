@@ -1,7 +1,7 @@
 .PHONY: doc docs
 
 clean: 
-	@rm -rf doxygen.*                                   \
+	@rm -rf doxygen*                                    \
             WasatchVCPPLib/.vs                          \
             WasatchVCPPLib/packages                     \
             WasatchVCPPLib/{x64,Debug}                  \

@@ -3,8 +3,7 @@
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  implementation of WasatchVCPP::Spectrometer
     @see    WasatchVCPPWrapper.h for list of missing features
-    @note   customers normally wouldn't access this file; use WasatchVCPPWrapper.h 
-            or WasatchVCPP::Proxy instead
+    @note   customers normally wouldn't access this file; use WasatchVCPP.h instead
 */
 
 #include "pch.h"

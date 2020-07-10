@@ -20,7 +20,7 @@
 #include "InputBox.h"
 #include "WasatchVCPPDemo.h"
 
-#include "WasatchVCPPProxy.h"
+#include "WasatchVCPP.h"
 
 #include <stdio.h>
 
@@ -49,6 +49,7 @@ HWND hTextbox;
 string logBuffer;
 const int MAX_LOG_LEN = 16 * 1024; 
 
+WasatchVCPP::Proxy::Driver driver;  // example
 WasatchVCPP::Proxy::Spectrometer* spectrometer = nullptr; // example
 std::ofstream outfile;
 
@@ -95,7 +96,7 @@ void log(const char *fmt, ...)
 void doConnect() 
 { 
     log("searching for spectrometers");
-    int count = WasatchVCPP::Proxy::Driver::openAllSpectrometers(); // example
+    int count = driver.openAllSpectrometers(); // example
     if (count <= 0)
     {
         log("no spectrometers found");
@@ -104,13 +105,19 @@ void doConnect()
     }
     log("found %d connected spectrometers", count);
 
-    spectrometer = WasatchVCPP::Proxy::Driver::getSpectrometer(0); // example
-    log("connected to %s %s with %d pixels (%.2f, %.2fnm)",
-        spectrometer->model.c_str(),
-        spectrometer->serialNumber.c_str(),
-        spectrometer->pixels,
-        spectrometer->wavelengths[0],
-        spectrometer->wavelengths[spectrometer->pixels - 1]);
+    spectrometer = driver.getSpectrometer(0); // example
+    if (spectrometer->wavelengths.empty())
+        log("connected to %s %s with %d pixels (no wavecal)",
+            spectrometer->model.c_str(),
+            spectrometer->serialNumber.c_str(),
+            spectrometer->pixels);
+    else
+        log("connected to %s %s with %d pixels (%.2f, %.2fnm)",
+            spectrometer->model.c_str(),
+            spectrometer->serialNumber.c_str(),
+            spectrometer->pixels,
+            spectrometer->wavelengths[0],
+            spectrometer->wavelengths[spectrometer->pixels - 1]);
 }
 
 void doSetIntegrationTime()
@@ -204,7 +211,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
 
     log("driver logging to %s", LOGFILE_PATH);
-    WasatchVCPP::Proxy::Driver::setLogfile(LOGFILE_PATH); // example
+    driver.setLogfile(LOGFILE_PATH); // example
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WASATCHVCPPDEMO));
 
