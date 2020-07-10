@@ -18,47 +18,9 @@
     actually "see" and "talk to."
 
     This file is still under development; many spectrometer functions have not 
-    yet been added, including:
+    yet been added.
 
-    @todo auto-apply offset/gain at open
-    @todo auto-apply integration time at open
-    @todo auto-enable TEC and setpoint at open
-    @todo support gain/offset through API
-    @todo support TEC control through API
-    @todo support internal scan averaging
-    @todo read firmware version
-    @todo read FPGA version
-    @todo read detector TEC temperature (degC)
-    @todo 2048-pixel support
-    @todo high-gain mode (InGaAs)
-    @todo apply bad pixel correction
-    @todo set laser power (%)
-    @todo hardware triggering (ARM)
-    @todo read laser TEC temperature (degC)
-    @todo basic gettors: laser_enabled, integration_time, trigger_source etc
-    @todo Raman Intensity Calibration (ROI / vignetting?)
-    @todo expose log_level
-
-    Not currently envisioned for support (pending customer request):
-
-        - write EEPROM (initially)
-        - set laser power (mW)
-        - dark correction
-        - boxcar averaging
-        - transmission / reflectance or absorbance
-        - select ADC
-        - set TEC setpoint
-        - set DFU mode
-        - reset FPGA
-        - actual frame count
-        - area scan 
-        - threshold sensing
-        - configurable throwaways
-        - thread safety
-        - internal background processing / callbacks / inversion of control
-        - ramanMicro features (battery, laser watchdog, vertical ROI etc)
-
-
+    @see README_BACKLOG.md for implementation status.
 */
 
 #pragma once

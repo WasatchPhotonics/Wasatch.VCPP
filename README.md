@@ -3,6 +3,44 @@
 Unmanaged Visual C++ driver for Wasatch Photonics spectrometers which does not 
 utilize .NET or COM.
 
+# Design Remit
+
+All drivers must make a decision as to what is within their remit and where to 
+"draw the line" on functionality.  If you implement too many features under the hood,
+you risk "bloatware"; if you don't provide enough automation, you scare off 
+would-be spectroscopic innovators who aren't saavy with bitwise manipulation.
+
+This driver exists within a software catalog which already includes a 
+fully-featured driver suite (Wasatch.NET) supporting high-level languages like
+C#, Visual Basic, MATLAB and LabVIEW, as well as an eclectic but functional 
+Python package (Wasatch.PY) capable of supporting GUI applications like ENLIGHTEN.
+
+Therefore, as open-source reference implementations have already been provided
+for every feature available through our USB API (see Wasatch Photonics ENG-0001),
+it is the intent to make the C/C++ driver as small and lightweight as possible.
+Although every _spectrometer_ feature will be available, not every _spectroscopic
+technique_ will be automated.
+
+This boundary remains malleable and may be adjusted per customer request and
+arising use-cases.
+
+It is also noteworthy that the driver is maintained as an open-source project
+on GitHub, so if users wish to add new features themselves, they are encouraged to 
+fork and submit pull requests :-)
+
+* see [Backlog](README_BACKLOG.md) for a list of the features intended, rejected,
+and undecided for inclusion.
+
+# Dependencies
+
+- Visual Studio (tested with 2019 Community Edition)
+
+This library is built atop the same libusb-win32 back-end used by ENLIGHTEN, 
+Wasatch.NET etc.  Therefore, if you have one of those installed, it should "just 
+work".  Until an installer is added to this project, it is recommended that users
+install ENLIGHTEN first as the quickest way to install and configure the .inf
+files to associate our USB VID and PID with the libusb-win32 low-level driver.
+
 # API
 
 * [C API](https://wasatchphotonics.com/api/Wasatch.VCPP/_wasatch_v_c_p_p_wrapper_8h.html)
@@ -28,11 +66,21 @@ This is the overall architecture as I envision it:
 
 The WasatchVCPP distribution contains:
 
-- WasatchVCPP.dll (compiled driver)
-- WasatchVCPP.lib (needed to link with DLL)
 - WasatchVCPPWrapper.h (call via this...)
 - WasatchVCPPProxy.h   (...or this)
 - WasatchVCPPProxy.cpp
+
+When the WasatchVCPPLib solution is compiled in Visual Studio, it generates:
+
+- WasatchVCPP.dll (compiled driver)
+- WasatchVCPP.lib (needed to link with DLL)
+
+At a later point, the three .h/.cpp files mentioned above may be moved to 
+WasatchVCPP/include (out of the WasatchVCPPLib folder), so it is clear that they
+are "user-copyable" files.
+
+And I should probably eliminate WasatchVCPPProxy.cpp altogether, and make
+WasatchVCPP::Proxy a "header-only" class.
 
 # Usage
 
@@ -78,44 +126,48 @@ WasatchVCPP::Driver and WasatchVCPP::Spectrometer classes directly.  This should
 likewise work fine, noting that it may complicate updates to newer releases of
 WasatchVCPP.
 
-# Backlog
+# Examples
 
-- when logging EEPROM fields, change to "register" ala EnlightenMobile
-- add get\_eeprom\_field(str, \*str)
-- add get\_driver\_version(\*str)
+A simple Visual C++ GUI project, "WastchVCPPDemo" is included in the solution
+so you can see how these functions can be called through the WasatchVCPP::Proxy
+C++ interface (whose source code itself provides an example to using the 
+WasatchVCPPWrapper.h C interface).
 
-## Merge WasatchVCPPWrapper and WasatchVCPPProxy?
+In short, this is a typical calling sequence:
 
-It seems possible to physically merge the contents of WasatchVCPPProxy.h/cpp into 
-WasatchVCPPWrapper.h, such that there's only one header file to include regardless
-of whether you decide to use the C or C++ API.  All of WasatchVCPPProxy.cpp could
-be made into an "inline" class declaration.  As this would be compiled by the
-customer code (as a header file), there would be no ABI issues such as occur with
-the .cpp compiled into the DLL.  
+    #include "WasatchCPPProxy.h"
+    
+    // set where you want the logfile written (if any)
+    WasatchVCPP::Proxy::Driver::setLogfile(LOGFILE_PATH); 
 
-We probably would need to use #ifdef to prevent the WasatchVCPPProxy class from 
-being compiled into the DLL when building a release, so that there aren't 
-"duplicate implementations" (possibly with conflicting ABI) between the customer's
-compiled application and the pre-built DLL.
+    // open all connected spectrometers
+    int count = WasatchVCPP::Proxy::Driver::openAllSpectrometers(); 
+
+    // take a handle to the first spectrometer found on the bus
+    WasatchVCPP::Proxy::Spectrometer* spectrometer = WasatchVCPP::Proxy::Driver::getSpectrometer(0); 
+    
+    // set integration time
+    spectrometer->setIntegrationTimeMS(ms); 
+
+    // turn the laser on
+    spectrometer->setLaserEnable(true); 
+
+    // take a spectrum
+    vector<double> spectrum = spectrometer->getSpectrum(); 
+
+    // turn the laser off
+    spectrometer->setLaserEnable(false); 
+    
+    // cleanup
+    WasatchVCPP::Proxy::Driver::closeAllSpectrometers(); 
+
+You can see the above lines "in situ" when you grep the demo for "example":
+
+    $ grep "example" WasatchVCPPLib/WasatchVCPPDemo/WasatchVCPPDemo.cpp
 
 # References
 
 libusb-win32
-- https://sourceforge.net/p/libusb-win32/wiki/Documentation/
-- https://sourceforge.net/p/libusb-win32/wiki/Examples/
 - https://sourceforge.net/p/libusb-win32/wiki/Home/
-
-misc (developmental notes)
-- https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/how-to-write-a-windows-desktop-app-that-communicates-with-a-usb-device
-- https://github.com/libusb/libusb.github.com/issues/1
-- https://github.com/libusb/libusb/issues/419
-- https://github.com/libusb/libusb/wiki/Windows
-- https://github.com/libusb/libusb/wiki/Windows#How_to_use_libusb_on_Windows
-- https://social.msdn.microsoft.com/Forums/sharepoint/en-US/3b083822-120d-41ab-b73b-6428f8ac7927/lnk2019-unresolved-external-symbol-error-in-libusbwin32-test-program?forum=vclanguage
-- https://stackoverflow.com/questions/22529097/how-to-add-libusb-in-microsoft-visual-studio-2013
-- https://stackoverflow.com/questions/24054531/use-libusb-in-visual-studio-2013
-- https://stackoverflow.com/questions/26064090/how-to-import-libusb-dll
-- https://www.beyondlogic.org/usbnutshell/usb1.shtml
-- https://www.microchip.com/forums/m437429.aspx#437498
-- https://www.programmersought.com/article/6407765724/
-- https://www.youtube.com/watch?v=pxEMIOASLkg
+- https://sourceforge.net/p/libusb-win32/wiki/Examples/
+- https://sourceforge.net/p/libusb-win32/wiki/Documentation/
