@@ -28,7 +28,10 @@ namespace WasatchVCPP
             int pixels = 1024;
             std::vector<double> wavelengths;
             std::vector<double> wavenumbers;
+            std::string firmwareVersion;
+            std::string fpgaVersion;
             bool isARM();
+            bool isInGaAs();
 
             // cached properties
             int integrationTimeMS;
@@ -37,6 +40,17 @@ namespace WasatchVCPP
             // opcodes
             bool setIntegrationTimeMS(unsigned long ms);
             bool setLaserEnable(bool flag);
+            bool setDetectorGain(float value);
+            bool setDetectorGainOdd(float value);
+            bool setDetectorOffset(int16_t value);
+            bool setDetectorOffsetOdd(int16_t value);
+            bool setTECEnable(bool flag);
+            bool setDetectorTECSetpointDegC(int value);
+            bool setHighGainMode(bool flag);
+            std::string getFirmwareVersion();
+            std::string getFPGAVersion();
+            int32_t getDetectorTemperatureRaw(); 
+            float getDetectorTemperatureDegC();
 
             // acquisition
             std::vector<double> getSpectrum();

@@ -13,18 +13,10 @@ Per the "Design Remit" described in README.md:
 - dis/enable laser
 
 (not done)
-- auto-apply offset/gain at open
 - auto-apply integration time at open
-- auto-enable TEC and setpoint at open
-- support gain/offset through API
-- support TEC control through API
 - support invertXAxis
 - support bin2x2
-- read firmware version
-- read FPGA version
-- read detector TEC temperature (degC)
 - 2048-pixel support
-- high-gain mode (InGaAs)
 - set laser power (%)
 - hardware triggering (ARM)
 - basic gettors: isLaserEnabled, integrationTimeMS, triggerSource etc

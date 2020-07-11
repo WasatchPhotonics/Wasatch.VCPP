@@ -54,11 +54,25 @@
 // toolchains can link to the library.
 extern "C"
 {
+    ////////////////////////////////////////////////////////////////////////////
+    // Utility
+    ////////////////////////////////////////////////////////////////////////////
+
     //! Sets a pathname for WasatchVCPP to write a debug logfile.
     //!
     //! @param pathname (Input) a valid pathname (need not exist, will be overwritten if found)
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_logfile_path(const char* pathname);
+
+    //! Obtains the version number of the WasatchVCPP library itself.
+    //! @param value (Output) pre-allocated string to receive the value 
+    //! @param len (Input) length of allocated buffer (16 recommended)
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_library_version(char* value, int len);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Lifecycle
+    ////////////////////////////////////////////////////////////////////////////
 
     //! Connects to and initializes all enumerated USB spectrometers.
     //!
@@ -79,7 +93,6 @@ extern "C"
     //! After calling this function, the driver is fully configured and ready
     //! to control all connected spectrometers.  
     //!
-    //!
     //! @returns The number of spectrometers found.  Most other functions in this
     //!          namespace take an integral "spectrometer index" parameter.  That
     //!          "specIndex" relates directly to this "spectrometer count", as 
@@ -89,15 +102,6 @@ extern "C"
     //!          functions with specIndex values from 0-2.
     DLL_API int wp_open_all_spectrometers();
 
-    //! Closes all connected spectrometers.
-    //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_close_all_spectrometers();
-
-    //! Closes the specified spectrometer.
-    //! @param specIndex (Input) which spectrometer
-    //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_close_spectrometer(int specIndex);
-
     //! Returns number of spectrometers previously opened.
     //!
     //! Assumes that wp_open_all_spectrometers has already been called.  Does not
@@ -106,72 +110,14 @@ extern "C"
     //! @returns number of spectrometers 
     DLL_API int wp_get_number_of_spectrometers();
 
-    //! Returns the number of pixels in the selected spectrometer.o
-    //!
-    //! This is critical for correctly sizing arrays sent to other functions like
-    //! get_spectrum or get_wavelengths.  
-    //!
-    //! @note convenience function around eepromFields["activePixelsHoriz"]
-    //! @param specIndex (Input) which spectrometer
-    //! @returns the number of pixels (negative on error)
-    DLL_API int wp_get_pixels(int specIndex);
-
-    //! Get the selected spectrometer's model.
-    //!
-    //! @note convenience function around eepromFields["model"]
-    //! @param specIndex (Input) which spectrometer
-    //! @param value (Output) pre-allocated buffer of 'len' bytes (33 recommended)
-    //! @param len (Input) allocated length of 'value'
+    //! Closes all connected spectrometers.
     //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_get_model(int specIndex, char* value, int len);
+    DLL_API int wp_close_all_spectrometers();
 
-    //! Get the selected spectrometer's serial number.
-    //!
-    //! @note convenience function around eepromFields["serialNumber"]
-    //! @param value (Output) pre-allocated buffer of 'len' bytes (33 recommended)
-    //! @param len (Input) allocated length of 'value'
-    //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_get_serial_number(int specIndex, char* value, int len);
-
-    //! Get the selected spectrometer's calibrated wavelength x-axis in nanometers
-    //!
-    //! @param specIndex (Input) which spectrometer
-    //! @param wavelengths (Output) pre-allocated buffer of 'len' doubles 
-    //! @param len (Input) allocated length of 'wavelengths' (should match 'pixels')
-    //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_get_wavelengths(int specIndex, double* wavelengths, int len);
-
-    //! Get the selected spectrometer's calibrated x-axis in wavenumbers (1/cm)
-    //!
-    //! @param specIndex (Input) which spectrometer
-    //! @param wavenumbers (Output) pre-allocated buffer of 'len' doubles 
-    //! @param len (Input) allocated length of 'wavenumbers' (should match 'pixels')
-    //! @returns WP_SUCCESS or non-zero on error (e.g., no configured excitation)
-    DLL_API int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len);
-
-    //! Set the spectrometer's integration time in milliseconds
-    //!
+    //! Closes the specified spectrometer.
     //! @param specIndex (Input) which spectrometer
     //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_set_integration_time_ms(int specIndex, unsigned long ms);
-
-    //! Read one spectrum from the selected spectrometer
-    //!
-    //! This sends an "ACQUIRE" command, waits for "integration time"
-    //! to pass, then performs a blocking read from the bulk endpoint.
-    //!
-    //! @param specIndex (Input) which spectrometer
-    //! @param spectrum (Output) pre-allocated buffer of 'len' doubles 
-    //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
-    //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_get_spectrum(int specIndex, double* spectrum, int len);
-
-    //! Turns the laser on or off.
-    //!
-    //! @param specIndex (Input) which spectrometer
-    //! @param value (Input) whether laser should be off (zero) or on (non-zero)
-    //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_set_laser_enable(int specIndex, int value);
+    DLL_API int wp_close_spectrometer(int specIndex);
 
     ////////////////////////////////////////////////////////////////////////////
     // EEPROM 
@@ -231,6 +177,191 @@ extern "C"
     //! @param len (Input) length of pre-allocated array
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_eeprom_field(int specIndex, const char* name, char* value, int len);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Convenience accessors
+    ////////////////////////////////////////////////////////////////////////////
+
+    //! Returns the number of pixels in the selected spectrometer.o
+    //!
+    //! This is critical for correctly sizing arrays sent to other functions like
+    //! get_spectrum or get_wavelengths.  
+    //!
+    //! @note convenience function around eepromFields["activePixelsHoriz"]
+    //! @param specIndex (Input) which spectrometer
+    //! @returns the number of pixels (negative on error)
+    DLL_API int wp_get_pixels(int specIndex);
+
+    //! Get the selected spectrometer's model.
+    //!
+    //! @note convenience function around eepromFields["model"]
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Output) pre-allocated buffer of 'len' bytes (33 recommended)
+    //! @param len (Input) allocated length of 'value'
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_model(int specIndex, char* value, int len);
+
+    //! Get the selected spectrometer's serial number.
+    //!
+    //! @note convenience function around eepromFields["serialNumber"]
+    //! @param value (Output) pre-allocated buffer of 'len' bytes (33 recommended)
+    //! @param len (Input) allocated length of 'value'
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_serial_number(int specIndex, char* value, int len);
+
+    //! Get the selected spectrometer's calibrated wavelength x-axis in nanometers
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param wavelengths (Output) pre-allocated buffer of 'len' doubles 
+    //! @param len (Input) allocated length of 'wavelengths' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_wavelengths(int specIndex, double* wavelengths, int len);
+
+    //! Get the selected spectrometer's calibrated x-axis in wavenumbers (1/cm)
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param wavenumbers (Output) pre-allocated buffer of 'len' doubles 
+    //! @param len (Input) allocated length of 'wavenumbers' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error (e.g., no configured excitation)
+    DLL_API int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Acquisition
+    ////////////////////////////////////////////////////////////////////////////
+
+    //! Read one spectrum from the selected spectrometer
+    //!
+    //! This sends an "ACQUIRE" command, waits for "integration time"
+    //! to pass, then performs a blocking read from the bulk endpoint.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param spectrum (Output) pre-allocated buffer of 'len' doubles 
+    //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_spectrum(int specIndex, double* spectrum, int len);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Opcodes
+    ////////////////////////////////////////////////////////////////////////////
+
+    //! Set the spectrometer's integration time in milliseconds
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_integration_time_ms(int specIndex, unsigned long ms);
+
+    //! Turns the laser on or off.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) whether laser should be off (zero) or on (non-zero)
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_laser_enable(int specIndex, int value);
+
+    //! Set detector gain.
+    //!
+    //! This should not be done casually by the user; detector gain is normally
+    //! optimized for a given detector series, and rarely varies significantly
+    //! from component to component.  In the event that detector gain calibration
+    //! is required, it is done at the factory, and the calibrated value is
+    //! stored in the EEPROM ("detectorGain").
+    //!
+    //! There is a lot which can be said about this attribute, which may be
+    //! fleshed-out here at a later date.  The internal data format is somewhat
+    //! odd, essentially a signed bfloat16 (see WasatchNET documentation on
+    //! FunkyFloat).  For historical reasons, many spectrometers are tuned to
+    //! a default gain of 1.9 (0x01e6).  It is a valid question why the 
+    //! calibrated gain is stored on the spectrometer (in the EEPROM) yet needs
+    //! to be applied from software over USB.  
+    //!
+    //! @warning don't call this function unless you really know what you're 
+    //!          doing; experimentation is unlikely to improve measurement quality
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) desired gain (e.g. 1.9)
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_detector_gain(int specIndex, float value);
+
+    //! On InGaAs spectrometers, configures the gain for odd-numbered pixels.
+    //!
+    //! @par Even vs Odd Pixels
+    //!
+    //! Hamamatsu InGaAs detectors use two interleaved arrays of photodiodes,
+    //! where one array controls even-numbered pixels and the other array 
+    //! controls the odd-numbered.  This means that with regard to gain and noise
+    //! characteristics, all even pixels are electrically related, and all odd
+    //! pixels are electrically related, but the two sets may behave differently
+    //! from one another.  Therefore, NIR spectrometers support independent gain
+    //! and offset calibration for the two pixels sets.
+    //!
+    //! @see wp_set_detector_gain for information about detector gain itself
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) desired gain (positive or negative)
+    //! @returns WP_SUCCESS or non-zero on error (such as use with silicon detectors)
+    DLL_API int wp_set_detector_gain_odd(int specIndex, float value);
+    
+    //! Set detector offset.
+    //! 
+    //! @see set_detector_offset for discussion on detector offset
+    //! @see set_detector_gain_odd for discussion on even-vs-odd pixels
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) desired offset (positive or negative)
+    //! @returns WP_SUCCESS or non-zero on error (e.g. silicon detector)
+    DLL_API int wp_set_detector_offset(int specIndex, int16_t value);
+
+    //! On InGaAs spectrometers, configures the offset for odd-numbered pixels.
+    //! 
+    //! @see set_detector_offset for discussion on detector offset
+    //! @see set_detector_gain_odd for discussion on even-vs-odd pixels
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) desired offset (positive or negative)
+    //! @returns WP_SUCCESS or non-zero on error (e.g. silicon detector)
+    DLL_API int wp_set_detector_offset_odd(int specIndex, int16_t value);
+
+    //! Turn the detector TEC on or off.
+    //!
+    //! @note  if TEC setpoint has not yet been set, will automatically set to 
+    //!        EEPROM configured minimum
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) zero for off, non-zero for on
+    //! @returns WP_SUCCESS or non-zero on error (e.g. uncooled spectrometer)
+    DLL_API int wp_set_tec_enable(int specIndex, int value);
+
+    //! Set the detector TEC setpoint.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) desired temperature in degrees Celsius
+    //! @returns WP_SUCCESS or non-zero on error (e.g. uncooled spectrometer)
+    DLL_API int wp_set_detector_tec_setpoint_deg_c(int specIndex, int value);
+
+    //! Enable or disable "high gain" mode on InGaAs detectors.
+    //!
+    //! @note this is enabled by default on suitable detectors
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Input) zero to disable, non-zero to enable
+    //! @returns WP_SUCCESS or non-zero on error (e.g. silicon detector)
+    DLL_API int wp_set_high_gain_mode(int specIndex, int value);
+
+    //! Get the firmware version of the microcontroller (FX2 or ARM).
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Output) pre-allocated character array 
+    //! @param len (Input) allocated size (should be 16+)
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_firmware_version(int specIndex, char* value, int len);
+
+    //! Get the version of the FPGA.
+    //! 
+    //! @param specIndex (Input) which spectrometer
+    //! @param value (Output) pre-allocated character array 
+    //! @param len (Input) allocated size (should be 16+)
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_fpga_version(int specIndex, char* value, int len);
+
+    //! Get the detector temperature.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns -999 on error, else detector temperature in degrees Celsius
+    DLL_API float wp_get_detector_temperature_deg_c(int specIndex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,6 +493,10 @@ namespace WasatchVCPP
                 std::vector<double> wavenumbers;    //!< expanded wavecal in 1/cm (Raman-only)
                 float excitationNM;                 //!< configured laser excitation wavelength (Raman-only)
 
+            ////////////////////////////////////////////////////////////////////
+            // Public methods
+            ////////////////////////////////////////////////////////////////////
+            public:
                 //! set integration time
                 //! @param ms (Input) time in milliseconds
                 //! @return true on success
@@ -396,6 +531,54 @@ namespace WasatchVCPP
                     }
                     return result;
                 }
+
+                //! @see wp_set_detector_gain
+                bool setDetectorGain(float value)
+                { return WP_SUCCESS == wp_set_detector_gain(specIndex, value); }
+
+                //! @see wp_set_detector_gain_odd
+                bool setDetectorGainOdd(float value)
+                { return WP_SUCCESS == wp_set_detector_gain_odd(specIndex, value); }
+
+                //! @see wp_set_detector_offset
+                bool setDetectorOffset(int16_t value)
+                { return WP_SUCCESS == wp_set_detector_offset(specIndex, value); }
+
+                //! @see wp_set_detector_offset_odd
+                bool setDetectorOffsetOdd(int16_t value)
+                { return WP_SUCCESS == wp_set_detector_offset_odd(specIndex, value); }
+
+                //! @see wp_set_tec_enable
+                bool setTECEnable(bool flag)
+                { return WP_SUCCESS == wp_set_tec_enable(specIndex, flag ? 1 : 0); }
+
+                //! @see wp_set_detector_tec_setpoint_deg_c
+                bool setDetectorTECSetpointDegC(int value)
+                { return WP_SUCCESS == wp_set_detector_tec_setpoint_deg_C(specIndex, value); }
+
+                //! @see wp_set_high_gain_mode
+                bool setHighGainMode(bool flag)
+                { return WP_SUCCESS == wp_set_high_gain_mode(specIndex, flag ? 1 : 0); }
+
+                //! @see wp_get_firmware_version
+                std::string getFirmwareVersion()
+                {
+                    char buf[16];
+                    wp_get_firmware_version(specIndex, buf, sizeof(buf));
+                    return string(buf);
+                }
+
+                //! @see wp_get_fpga_version
+                std::string getFPGAVersion()
+                {
+                    char buf[16];
+                    wp_get_fpga_version(specIndex, buf, sizeof(buf));
+                    return string(buf);
+                }
+
+                //! @see wp_get_detector_temperature_deg_c
+                float getDetectorTemperatureDegC()
+                { return wp_get_detector_temperature_deg_c(specIndex); }
 
             private:
                 bool readEEPROMFields()
@@ -448,6 +631,14 @@ namespace WasatchVCPP
                 bool setLogfile(const std::string& pathname)
                 { 
                     return WP_SUCCESS == wp_set_logfile_path(pathname.c_str()); 
+                }
+
+                //! @returns version number of the WasatchVCPP library itself
+                std::string getLibraryVersion()
+                {
+                    char buf[16];
+                    wp_get_library_version(specIndex, buf, sizeof(buf));
+                    return string(buf);
                 }
 
                 //! Open and initialize all connected Wasatch Photonics spectrometers.

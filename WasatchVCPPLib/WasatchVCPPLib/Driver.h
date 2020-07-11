@@ -7,12 +7,6 @@
 
 #pragma once
 
-#ifdef WASATCHVCPPLIB_EXPORTS
-#define WASATCHVCPPLIB_API __declspec(dllexport)
-#else
-#define WASATCHVCPPLIB_API __declspec(dllimport)
-#endif
-
 #include "libusb.h"
 #include "Logger.h"
 
@@ -24,6 +18,8 @@
 namespace WasatchVCPP
 {
     class Spectrometer;
+
+    const static std::string libraryVersion;
 
     /**
         @brief  This is an internal class encapsulating state and control of all
@@ -42,6 +38,7 @@ namespace WasatchVCPP
             int openAllSpectrometers();
             Spectrometer* getSpectrometer(int index);
             bool setLogfile(const std::string& pathname);
+            std::string getLibraryVersion();
 
         private:
             static Driver* instance;

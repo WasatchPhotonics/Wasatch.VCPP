@@ -1,5 +1,18 @@
 # Changelog
 
+- 2020-07-?? 0.0.5
+    - added getLibraryVersion
+    - added setDetectorGain
+    - added setDetectorGainOdd
+    - added setDetectorOffset
+    - added setDetectorOffsetOdd
+    - added setTECEnable
+    - added setDetectorTECSetpointDegC
+    - added setHighGainMode
+    - added getFirmwareVersion
+    - added getFPGAVersion
+    - added getDetectorTemperatureRaw
+    - added getDetectorTemperatureDegC
 - 2020-07-10 0.0.4
     - added Set Outfile (Demo)
     - validated spectra

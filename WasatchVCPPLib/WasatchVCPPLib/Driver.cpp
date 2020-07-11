@@ -20,6 +20,8 @@ using std::string;
 // Singleton
 ////////////////////////////////////////////////////////////////////////////////
 
+const static std::string WasatchVCPP::libraryVersion = "0.0.5";
+
 WasatchVCPP::Driver* WasatchVCPP::Driver::instance = nullptr;
 
 WasatchVCPP::Driver* WasatchVCPP::Driver::getInstance()
@@ -111,3 +113,4 @@ WasatchVCPP::Spectrometer* WasatchVCPP::Driver::getSpectrometer(int index)
 bool WasatchVCPP::Driver::setLogfile(const string& pathname)
 { return logger.setLogfile(pathname); }
 
+string WasatchVCPP::Driver::getLibraryVersion() { return libraryVersion; }

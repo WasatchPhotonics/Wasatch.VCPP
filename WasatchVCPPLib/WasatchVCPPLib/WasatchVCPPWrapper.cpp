@@ -86,6 +86,9 @@ int wp_close_spectrometer(int specIndex)
 // Gettors
 ////////////////////////////////////////////////////////////////////////////////
 
+int wp_get_library_version(char* value, int len)
+{ return exportString(WasatchVCPP::libraryVersion, buf, len); }
+
 int wp_get_number_of_spectrometers()
 {
     return driver->getNumberOfSpectrometers();
@@ -258,4 +261,123 @@ int wp_set_laser_enable(int specIndex, int value)
         return WP_ERROR;
 
     return WP_SUCCESS;
+}
+
+int wp_set_detector_gain(int specIndex, float value)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (!spec->setDetectorGain(value))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
+int wp_set_detector_gain_odd(int specIndex, float value)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (!spec->setDetectorGainOdd(value))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
+int wp_set_detector_offset(int specIndex, int16_t value)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (!spec->setDetectorOffset(value))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
+int wp_set_detector_offset_odd(int specIndex, int16_t value)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (!spec->setDetectorOffsetOdd(value))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
+int wp_set_tec_enable(int specIndex, int value);
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (!spec->setTECEnable(value != 0))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
+int wp_set_detector_tec_setpoint_deg_c(int specIndex, int value);
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (!spec->setTECSetpointDegC(value))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
+int wp_set_high_gain_mode(int specIndex, int value);
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (!spec->setHighGainMode(value != 0))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
+int wp_get_firmware_version(int specIndex, char* value, int len);
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    auto s = spec->getFirmwareVersion();
+    if (s.empty())
+        return WP_ERROR;
+
+    return exportString(s, value, len);
+}
+
+int wp_get_fpga_version(int specIndex, char* value, int len);
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    auto s = spec->getFPGAVersion();
+    if (s.empty()) 
+        return WP_ERROR;
+
+    return exportString(s, value, len);
+}
+
+float wp_get_detector_temperature_deg_c(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return -999;
+
+    return spec->getDetectorTemperatureDegC();
 }

@@ -36,6 +36,13 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
 
     logger.debug("Spectrometer::ctor: instantiating");
 
+    // get firmware versions first (confirms FPGA comms, useful for debugging)
+    initFirmwareVersions();
+
+    ////////////////////////////////////////////////////////////////////////////
+    // EEPROM
+    ////////////////////////////////////////////////////////////////////////////
+
     readEEPROM();
 
     ////////////////////////////////////////////////////////////////////////////
@@ -69,8 +76,17 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
     else
         wavenumbers.resize(0);
 
-    //! @todo apply gain/offset from EEPROM to FPGA
-    //! @todo apply vertical ROI from EEPROM to FPGA, if isMicro()
+    // apply configured gain/offset from EEPROM to FPGA
+    setDetectorGain     (eeprom.detectorGain);
+    setDetectorGainOdd  (eeprom.detectorGainOdd);
+    setDetectorOffset   (eeprom.detectorOffset);
+    setDetectorOffsetOdd(eeprom.detectorOffsetOdd);
+
+    // initialize TEC and setpoint
+    initTEC();
+
+    //! apply vertical ROI from EEPROM to FPGA, if isMicro()
+    initVerticalROI();
 
     logger.debug("Spectrometer::ctor: done");
 }
@@ -116,9 +132,7 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
     int result = sendCmd(0xb2, lsw, msw);
 
     integrationTimeMS = ms;
-
     logger.debug("integrationTimeMS -> %lu", ms);
-
     return isSuccess(0xb2, result);
 }
 
@@ -126,10 +140,153 @@ bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
 {
     int result = sendCmd(0xbe, flag ? 1 : 0);
     laserEnabled = flag;
-
     logger.debug("laserEnable -> %d", flag);
-
     return isSuccess(0xbe, result);
+}
+
+bool WasatchVCPP::Spectrometer::setDetectorGain(float value)
+{
+    const uint8_t op = 0xb7;
+    if (value < 0 || value >= 256)
+        return false;
+
+    uint8_t msb = (int)value & 0xff;
+    uint8_t lsb = (int)((value - msb) * 256) & 0xff;
+    uint16_t word = (msb << 8) | lsb;
+
+    int result = sendCmd(op, word);
+    logger.debug("detectorGain -> 0x%04x (%.2f)", word, value);
+    return isSuccess(op, result);
+}
+
+bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
+{
+    const uint8_t op = 0x9d;
+    if (value < 0 || value >= 256)
+        return false;
+
+    uint8_t msb = (int)value & 0xff;
+    uint8_t lsb = (int)((value - msb) * 256) & 0xff;
+    uint16_t word = (msb << 8) | lsb;
+
+    int result = sendCmd(op, word);
+    logger.debug("detectorGainOdd -> 0x%04x (%.2f)", word, value);
+    return isSuccess(op, result);
+}
+
+bool WasatchVCPP::Spectrometer::setDetectorOffset(int16_t value)
+{
+    const uint8_t op = 0xb6;
+    uint16_t word = *((uint16_t*) &value);
+    int result = sendCmd(op, word);
+    logger.debug("detectorOffset -> 0x%04x (%d)", word, value);
+    return isSuccess(op, result);
+}
+
+bool WasatchVCPP::Spectrometer::setDetectorOffsetOdd(int16_t value)
+{
+    const uint8_t op = 0x9c;
+    uint16_t word = *((uint16_t*) &value);
+    int result = sendCmd(op, word);
+    logger.debug("detectorOffsetOdd -> 0x%04x (%d)", word, value);
+    return isSuccess(op, result);
+}
+
+bool WasatchVCPP::Spectrometer::setTECEnable(bool flag)
+{
+    const uint8_t op = 0xd6;
+    if (!eeprom.hasCooling)
+        return false;
+
+    if (!detectorTECSetpointHasBeenSet)
+    {
+        logger.debug("defaulting TEC setpoint to min");
+        setDetectorTECSetpointDegC(eeprom.minTemperatureDegC);
+    }
+
+    int result = sendCmd(op, flag ? 1 : 0);
+    logger.debug("tecEnable -> %s", flag ? "on" : "off");
+    return isSuccess(op, result);
+}
+
+bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
+{
+    const uint8_t op = 0xd8;
+    if (!eeprom.hasCooling)
+        return false;
+
+    if (degC < eeprom.minTemperatureDegC || degC > eeprom.maxTemperatureDegC)
+        return false;
+
+    float dac = eeprom.degCToDACCoeffs[0]
+              + eeprom.degCToDACCoeffs[1] * degC
+              + eeprom.degCToDACCoeffs[2] * degC * degC;
+
+    uint16_t word = ((uint16_t)(dac + 0.5)) & 0xfff;
+
+    int result = sendCmd(op, word);
+    detectorTECSetpointHasBeenSet = true;
+
+    return isSuccess(op, result);
+}
+
+//! @warning may need to send 8-byte buffer?
+bool WasatchVCPP::Spectrometer::setHighGainMode(bool flag)
+{
+    const uint8_t op = 0xeb;
+    if (!isInGaAs())
+        return false;
+    int result = sendCmd(op, flag ? 1 : 0);
+    return isSuccess(op, result);
+}
+
+std::string WasatchVCPP::Spectrometer::getFirmwareVersion()
+{
+    const uint8_t op = 0xc0;
+    auto data = getCmd(op, flag ? 1 : 0);
+    if (data.size() >= 4)
+        return Util::sprintf("%d.%d.%d.%d", data[3], data[2], data[1], data[0]);
+    return "";
+}
+
+std::string WasatchVCPP::Spectrometer::getFPGAVersion()
+{
+    const uint8_t op = 0xb4;
+    auto data = getCmd(op, flag ? 1 : 0);
+    string s;
+    for ( auto c : data )
+        if (0x20 <= c && c <= 0x7f) // visible ASCII
+            s += (char)c;
+    return s;
+}
+
+//! @returns negative on error, else valid uint16_t
+int32_t WasatchVCPP::Spectrometer::getDetectorTemperatureRaw()
+{
+    const uint8_t op = 0xd7;
+    auto data = getCmd(op);
+    if (data.size() < 2)
+    {
+        logger.error("getDetectorTemperatureRaw: data = %s", Util::toHex(data));
+        return -1;
+    }
+        
+    uint16_t raw = (data[0] << 8) | data[1]; // MSB-LSB
+    return raw;
+}
+
+float WasatchVCPP::Spectrometer::getDetectorTemperatureDegC()
+{
+    int32_t rawOrError = getDetectorTemperatureRaw();
+    if (rawOrError < 0)
+        return -999;
+
+    uint16_t raw = (uint16_t) raw;
+    float degC = eeprom.adcToDegCCoeffs[0]
+               + eeprom.adcToDegCCoeffs[1] * raw
+               + eeprom.adcToDegCCoeffs[2] * raw * raw;
+
+    logger.debug("detectorTemperatureDegC = %.2f (0x%04x raw)", degC, raw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +421,8 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmd(int request, int value, int in
 ////////////////////////////////////////////////////////////////////////////////
 
 bool WasatchVCPP::Spectrometer::isARM() { return pid == 0x4000; }
+
+bool WasatchVCPP::Spectrometer::isInGaAs() { return pid == 0x2000; }
 
 //! @todo use PID to determine appropriate result code by platform
 bool WasatchVCPP::Spectrometer::isSuccess(unsigned char opcode, int result)
