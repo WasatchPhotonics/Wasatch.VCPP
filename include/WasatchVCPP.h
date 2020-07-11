@@ -306,7 +306,7 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param value (Input) desired offset (positive or negative)
     //! @returns WP_SUCCESS or non-zero on error (e.g. silicon detector)
-    DLL_API int wp_set_detector_offset(int specIndex, int16_t value);
+    DLL_API int wp_set_detector_offset(int specIndex, int value);
 
     //! On InGaAs spectrometers, configures the offset for odd-numbered pixels.
     //! 
@@ -315,7 +315,7 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param value (Input) desired offset (positive or negative)
     //! @returns WP_SUCCESS or non-zero on error (e.g. silicon detector)
-    DLL_API int wp_set_detector_offset_odd(int specIndex, int16_t value);
+    DLL_API int wp_set_detector_offset_odd(int specIndex, int value);
 
     //! Turn the detector TEC on or off.
     //!
@@ -554,7 +554,7 @@ namespace WasatchVCPP
 
                 //! @see wp_set_detector_tec_setpoint_deg_c
                 bool setDetectorTECSetpointDegC(int value)
-                { return WP_SUCCESS == wp_set_detector_tec_setpoint_deg_C(specIndex, value); }
+                { return WP_SUCCESS == wp_set_detector_tec_setpoint_deg_c(specIndex, value); }
 
                 //! @see wp_set_high_gain_mode
                 bool setHighGainMode(bool flag)
@@ -565,7 +565,7 @@ namespace WasatchVCPP
                 {
                     char buf[16];
                     wp_get_firmware_version(specIndex, buf, sizeof(buf));
-                    return string(buf);
+                    return std::string(buf);
                 }
 
                 //! @see wp_get_fpga_version
@@ -573,7 +573,7 @@ namespace WasatchVCPP
                 {
                     char buf[16];
                     wp_get_fpga_version(specIndex, buf, sizeof(buf));
-                    return string(buf);
+                    return std::string(buf);
                 }
 
                 //! @see wp_get_detector_temperature_deg_c
@@ -637,8 +637,8 @@ namespace WasatchVCPP
                 std::string getLibraryVersion()
                 {
                     char buf[16];
-                    wp_get_library_version(specIndex, buf, sizeof(buf));
-                    return string(buf);
+                    wp_get_library_version(buf, sizeof(buf));
+                    return std::string(buf);
                 }
 
                 //! Open and initialize all connected Wasatch Photonics spectrometers.

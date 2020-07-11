@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+using std::string;
 using std::vector;
 using std::max;
 
@@ -36,8 +37,10 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
 
     logger.debug("Spectrometer::ctor: instantiating");
 
-    // get firmware versions first (confirms FPGA comms, useful for debugging)
-    initFirmwareVersions();
+    // read firmware versions first (useful for debugging, validates FPGA comms)
+    firmwareVersion = getFirmwareVersion();
+    fpgaVersion = getFPGAVersion();
+    logger.debug("firmware %s, FPGA %s", firmwareVersion.c_str(), fpgaVersion.c_str());
 
     ////////////////////////////////////////////////////////////////////////////
     // EEPROM
@@ -83,10 +86,14 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
     setDetectorOffsetOdd(eeprom.detectorOffsetOdd);
 
     // initialize TEC and setpoint
-    initTEC();
+    if (eeprom.hasCooling)
+        setDetectorTECEnable(true);
 
-    //! apply vertical ROI from EEPROM to FPGA, if isMicro()
-    initVerticalROI();
+    // initialize micro models
+    if (isMicro())
+    {
+        // @todo initVerticalROI();
+    }
 
     logger.debug("Spectrometer::ctor: done");
 }
@@ -103,7 +110,7 @@ bool WasatchVCPP::Spectrometer::readEEPROM()
     vector<vector<uint8_t> > pages;
     for (int page = 0; page < EEPROM::MAX_PAGES; page++)
     {
-        auto buf = getCmd(0xff, 0x01, page, EEPROM::PAGE_SIZE);
+        auto buf = getCmd2(0x01, EEPROM::PAGE_SIZE, page);
         pages.push_back(buf);
         logger.debug("EEPROM page %d: %s", page, Util::toHex(buf).c_str());
     }
@@ -177,7 +184,7 @@ bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
 bool WasatchVCPP::Spectrometer::setDetectorOffset(int16_t value)
 {
     const uint8_t op = 0xb6;
-    uint16_t word = *((uint16_t*) &value);
+    uint16_t word = *((uint16_t*) &value); // send original signed int16 bit pattern
     int result = sendCmd(op, word);
     logger.debug("detectorOffset -> 0x%04x (%d)", word, value);
     return isSuccess(op, result);
@@ -192,7 +199,7 @@ bool WasatchVCPP::Spectrometer::setDetectorOffsetOdd(int16_t value)
     return isSuccess(op, result);
 }
 
-bool WasatchVCPP::Spectrometer::setTECEnable(bool flag)
+bool WasatchVCPP::Spectrometer::setDetectorTECEnable(bool flag)
 {
     const uint8_t op = 0xd6;
     if (!eeprom.hasCooling)
@@ -201,11 +208,11 @@ bool WasatchVCPP::Spectrometer::setTECEnable(bool flag)
     if (!detectorTECSetpointHasBeenSet)
     {
         logger.debug("defaulting TEC setpoint to min");
-        setDetectorTECSetpointDegC(eeprom.minTemperatureDegC);
+        setDetectorTECSetpointDegC(eeprom.detectorTempMin);
     }
 
     int result = sendCmd(op, flag ? 1 : 0);
-    logger.debug("tecEnable -> %s", flag ? "on" : "off");
+    logger.debug("detectorTECEnable -> %s", flag ? "on" : "off");
     return isSuccess(op, result);
 }
 
@@ -215,13 +222,18 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
     if (!eeprom.hasCooling)
         return false;
 
-    if (degC < eeprom.minTemperatureDegC || degC > eeprom.maxTemperatureDegC)
+    if (degC < eeprom.detectorTempMin || degC > eeprom.detectorTempMax)
         return false;
 
     float dac = eeprom.degCToDACCoeffs[0]
               + eeprom.degCToDACCoeffs[1] * degC
               + eeprom.degCToDACCoeffs[2] * degC * degC;
 
+    // clamp and round to 12-bit DAC value
+    if (dac < 0)
+        dac = 0;
+    if (dac > 0xfff)
+        dac = 0xfff;
     uint16_t word = ((uint16_t)(dac + 0.5)) & 0xfff;
 
     int result = sendCmd(op, word);
@@ -240,19 +252,20 @@ bool WasatchVCPP::Spectrometer::setHighGainMode(bool flag)
     return isSuccess(op, result);
 }
 
-std::string WasatchVCPP::Spectrometer::getFirmwareVersion()
+string WasatchVCPP::Spectrometer::getFirmwareVersion()
 {
+    string s;
     const uint8_t op = 0xc0;
-    auto data = getCmd(op, flag ? 1 : 0);
+    auto data = getCmd(op, 4);
     if (data.size() >= 4)
-        return Util::sprintf("%d.%d.%d.%d", data[3], data[2], data[1], data[0]);
-    return "";
+        s = Util::sprintf("%d.%d.%d.%d", data[3], data[2], data[1], data[0]);
+    return s;
 }
 
-std::string WasatchVCPP::Spectrometer::getFPGAVersion()
+string WasatchVCPP::Spectrometer::getFPGAVersion()
 {
     const uint8_t op = 0xb4;
-    auto data = getCmd(op, flag ? 1 : 0);
+    auto data = getCmd(op, 7);
     string s;
     for ( auto c : data )
         if (0x20 <= c && c <= 0x7f) // visible ASCII
@@ -264,7 +277,7 @@ std::string WasatchVCPP::Spectrometer::getFPGAVersion()
 int32_t WasatchVCPP::Spectrometer::getDetectorTemperatureRaw()
 {
     const uint8_t op = 0xd7;
-    auto data = getCmd(op);
+    auto data = getCmd(op, 2);
     if (data.size() < 2)
     {
         logger.error("getDetectorTemperatureRaw: data = %s", Util::toHex(data));
@@ -281,12 +294,13 @@ float WasatchVCPP::Spectrometer::getDetectorTemperatureDegC()
     if (rawOrError < 0)
         return -999;
 
-    uint16_t raw = (uint16_t) raw;
+    uint16_t raw = (uint16_t) rawOrError;
     float degC = eeprom.adcToDegCCoeffs[0]
                + eeprom.adcToDegCCoeffs[1] * raw
                + eeprom.adcToDegCCoeffs[2] * raw * raw;
 
     logger.debug("detectorTemperatureDegC = %.2f (0x%04x raw)", degC, raw);
+    return degC;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +387,13 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 // Control Messages
 ////////////////////////////////////////////////////////////////////////////////
 
-int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, unsigned char* data, int len)
+//! Send data to the spectrometer.
+//!
+//! All "Hungarian notation" parameter names (bRequest, wValue etc) are taken from
+//! public USB specifications to avoid confusion.
+//! 
+//! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
+int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint8_t* data, int len)
 {
     unsigned char buf[MIN_ARM_LEN] = { 0 };
     if (data == nullptr && isARM())
@@ -383,33 +403,86 @@ int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, unsign
     }
 
     int timeoutMS = 1000;
-    logger.debug("sendCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d, timeout %dms", 
-        request, value, index, len, timeoutMS);
-    int result = usb_control_msg(udev, HOST_TO_DEVICE, request, value, index, (char*)data, len, timeoutMS);
+    logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
+        bRequest, wValue, wIndex, len, timeoutMS);
+    int result = usb_control_msg(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, timeoutMS);
     return result;
 }
 
-int WasatchVCPP::Spectrometer::sendCmd(int request, int value, int index, vector<unsigned char> data)
+//! I don't actually remember the use-case for this function
+int WasatchVCPP::Spectrometer::sendData(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, vector<uint8_t> data)
 {
-    unsigned char* tmp = (unsigned char*)&data[0];
-    return sendCmd(request, value, index, tmp, (int)data.size());
+    uint8_t* tmp = (uint8_t*)&data[0];
+    return sendCmd(bRequest, wValue, wIndex, tmp, (int)data.size());
 }
 
-vector<uint8_t> WasatchVCPP::Spectrometer::getCmd(int request, int value, int index, int len)
+//! This is the standard "getter opcode" function.  It doesn't take a "wValue" 
+//! parameter because getters usually don't have one.  (The main exception to 
+//! that rule is so-called "2nd-tier" gettors, for which getCmd2 is provided.)
+//!
+//! @param request (Input) the opcode
+//! @param len (Input) how many bytes the caller actually NEEDS back
+//! @param fullLen (Input) how many bytes we think the spectrometer will actually
+//!        send, with padding
+//! @returns vector of just the 'len' needed bytes
+vector<uint8_t> WasatchVCPP::Spectrometer::getCmd(uint8_t bRequest, int len, uint16_t wIndex, int fullLen)
 {
+    const uint16_t wValue = 0;
+    return getCmdReal(bRequest, wValue, wIndex, len, fullLen);
+}
+
+//! This supports so-called "2nd-tier" gettors, all of which use opcode 0xff and
+//! are instead distinguished by their 'value' parameter.
+//!
+//! @param value (Input) which 2nd-tier spectrometer attribute is being read
+//! @param len (Input) how many bytes the caller actually NEEDS in response
+//! @param fullLen (Input) how many bytes we think the spectrometer will send, 
+//!        with padding
+//! @returns vector of just the 'len' bytes requested
+vector<uint8_t> WasatchVCPP::Spectrometer::getCmd2(uint16_t wValue, int len, uint16_t wIndex, int fullLen)
+{
+    const uint8_t bRequest = 0xff;
+    return getCmdReal(bRequest, wValue, wIndex, len, fullLen);
+}
+
+//! The actual "gettor" function, typically called through either the getCmd or 
+//! getCmd2 facades.
+//!
+//! All "Hungarian notation" parameter names (bRequest, wValue etc) are taken from
+//! public USB specifications to avoid confusion.
+//! 
+//! @see getCmd
+//! @see getCmd2
+//! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
+vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, int len, int fullLen)
+{
+    int bytesToRead = max(len, fullLen);
+    if (isARM())
+        bytesToRead = max(MIN_ARM_LEN, bytesToRead);
+
     vector<uint8_t> retval;
 
-    if (isARM())
-        len = max(MIN_ARM_LEN, len);
-
-    char* data = (char*)malloc(len);
-    memset(data, 0, len);
+    char* data = (char*)malloc(bytesToRead);
+    memset(data, 0, bytesToRead);
 
     int timeoutMS = 1000;
-    logger.debug("getCmd(request 0x%02x, value 0x%04x, index 0x%04x, len %d, timeout %dms", 
-        request, value, index, len, timeoutMS);
-    int result = usb_control_msg(udev, DEVICE_TO_HOST, request, value, index, data, len, timeoutMS);
-    for (int i = 0; i < result; i++)
+    logger.debug("calling getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
+        bRequest, wValue, wIndex, bytesToRead, timeoutMS);
+    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, data, bytesToRead, timeoutMS);
+
+    if (bytesRead < 0)
+    {
+        logger.error("getCmd2 read error (bRequest 0x%02x)", bRequest);
+        return retval;
+    }
+    else if (bytesRead < len) 
+    {
+        logger.error("getCmd2 read incomplete response (%d bytes read, %d needed, %d expected)", 
+            bytesRead, len, bytesToRead);
+        return retval;
+    }
+
+    for (int i = 0; i < len; i++)
         retval.push_back(data[i]);
 
     free(data);
@@ -423,6 +496,11 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmd(int request, int value, int in
 bool WasatchVCPP::Spectrometer::isARM() { return pid == 0x4000; }
 
 bool WasatchVCPP::Spectrometer::isInGaAs() { return pid == 0x2000; }
+
+bool WasatchVCPP::Spectrometer::isMicro()
+{
+    return isARM() && Util::toLower(eeprom.detectorName).find("IMX") != string::npos;
+}
 
 //! @todo use PID to determine appropriate result code by platform
 bool WasatchVCPP::Spectrometer::isSuccess(unsigned char opcode, int result)

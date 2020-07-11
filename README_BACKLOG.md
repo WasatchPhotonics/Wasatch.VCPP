@@ -7,10 +7,22 @@ Per the "Design Remit" described in README.md:
 ## Supported
 
 (done)
-- read EEPROM
-- get spectrum
-- set integration time
-- dis/enable laser
+- readEEPROM
+- getSpectrum
+- setIntegrationTimeMS
+- setLaserEnable
+- getLibraryVersion
+- setDetectorGain
+- setDetectorGainOdd
+- setDetectorOffset
+- setDetectorOffsetOdd
+- setTECEnable
+- setDetectorTECSetpointDegC
+- setHighGainMode
+- getFirmwareVersion
+- getFPGAVersion
+- getDetectorTemperatureRaw
+- getDetectorTemperatureDegC
 
 (not done)
 - auto-apply integration time at open
@@ -29,7 +41,7 @@ Per the "Design Remit" described in README.md:
 - write EEPROM 
 - bad pixel correction
 - internal scan averaging
-- read laser TEC temperature (degC)
+- read laser TEC temperature (degC) (doesn't work well, regardless)
 - ramanMicro features (battery, laser watchdog, vertical ROI etc)
 
 ## Not supported (pending request / use-case)

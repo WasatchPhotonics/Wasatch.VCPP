@@ -87,7 +87,7 @@ int wp_close_spectrometer(int specIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 int wp_get_library_version(char* value, int len)
-{ return exportString(WasatchVCPP::libraryVersion, buf, len); }
+{ return exportString(driver->libraryVersion, value, len); }
 
 int wp_get_number_of_spectrometers()
 {
@@ -287,7 +287,7 @@ int wp_set_detector_gain_odd(int specIndex, float value)
     return WP_SUCCESS;
 }
 
-int wp_set_detector_offset(int specIndex, int16_t value)
+int wp_set_detector_offset(int specIndex, int value)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
@@ -299,7 +299,7 @@ int wp_set_detector_offset(int specIndex, int16_t value)
     return WP_SUCCESS;
 }
 
-int wp_set_detector_offset_odd(int specIndex, int16_t value)
+int wp_set_detector_offset_odd(int specIndex, int value)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
@@ -311,31 +311,31 @@ int wp_set_detector_offset_odd(int specIndex, int16_t value)
     return WP_SUCCESS;
 }
 
-int wp_set_tec_enable(int specIndex, int value);
+int wp_set_tec_enable(int specIndex, int value)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
 
-    if (!spec->setTECEnable(value != 0))
+    if (!spec->setDetectorTECEnable(value != 0))
         return WP_ERROR;
 
     return WP_SUCCESS;
 }
 
-int wp_set_detector_tec_setpoint_deg_c(int specIndex, int value);
+int wp_set_detector_tec_setpoint_deg_c(int specIndex, int value)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
 
-    if (!spec->setTECSetpointDegC(value))
+    if (!spec->setDetectorTECSetpointDegC(value))
         return WP_ERROR;
 
     return WP_SUCCESS;
 }
 
-int wp_set_high_gain_mode(int specIndex, int value);
+int wp_set_high_gain_mode(int specIndex, int value)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
@@ -347,7 +347,7 @@ int wp_set_high_gain_mode(int specIndex, int value);
     return WP_SUCCESS;
 }
 
-int wp_get_firmware_version(int specIndex, char* value, int len);
+int wp_get_firmware_version(int specIndex, char* value, int len)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
@@ -360,7 +360,7 @@ int wp_get_firmware_version(int specIndex, char* value, int len);
     return exportString(s, value, len);
 }
 
-int wp_get_fpga_version(int specIndex, char* value, int len);
+int wp_get_fpga_version(int specIndex, char* value, int len)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)

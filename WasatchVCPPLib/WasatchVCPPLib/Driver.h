@@ -19,8 +19,6 @@ namespace WasatchVCPP
 {
     class Spectrometer;
 
-    const static std::string libraryVersion;
-
     /**
         @brief  This is an internal class encapsulating state and control of all
                 connected spectrometers.
@@ -33,6 +31,8 @@ namespace WasatchVCPP
     {
         public:
             static Driver* getInstance();
+
+            const std::string libraryVersion = "0.0.5";
 
             int getNumberOfSpectrometers();
             int openAllSpectrometers();

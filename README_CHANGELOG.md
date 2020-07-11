@@ -1,6 +1,6 @@
 # Changelog
 
-- 2020-07-?? 0.0.5
+- 2020-07-11 0.0.5
     - added getLibraryVersion
     - added setDetectorGain
     - added setDetectorGainOdd
