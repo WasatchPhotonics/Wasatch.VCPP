@@ -55,24 +55,24 @@ All namespaces are prefixed with WasatchVCPP, meaning "Wasatch Photonics Visual 
 This is the overall architecture as I envision it (including peer libraries 
 Wasatch.NET and Wasatch.PY for comparison).
 
-                       _WasatchVCPP.cs_________
+                       _WasatchVCPP.cs_________ 
                       |                        |
-     WasatchVCPPNet <--> Driver, Spectrometer  |                ___________      ____________      _____________   
-     (C# example)     |________________________|               | ENLIGHTEN |<-->| Wasatch.PY |<-->|    pyusb    |
-                                          ^                    |___________|    |____________|    |_____________|
-                                          |                                                              ^
-                       _WasatchVCPP.h_____v____      _WasatchVCPP.dll/lib______________________          |
-                      |                        |    |                                          |         |
-     CustomerApp.c <---> wp_foo() <---C API------+---> WasatchVCPPWrapper.cpp                  |   ______v_______      ______________
-                      |                        | |  |  `--> WasatchVCPP::Driver                |  |              |    |    Wasatch   |
-                      |  _WasatchVCPP::Proxy_  | |  |  `--> WasatchVCPP::Spectrometer <---------->| libusb-win32 |<-->| spectrometer |
-                      | |   Driver           | | |  |       `--> WasatchVCPP::EEPROM (etc)     |  |______________|    |______________|
-     WasatchVCPPDemo <----> Spectrometer <-------'  |            `--> WasatchVCPP::FeatureMask |         ^     \        /
-     (C++ example)    | |____________________| |    |      (actual library implementation)     |         |      `-.inf-'
-                      |________________________|    |__________________________________________|         |     (VID, PID)
-                                                                                _____________      ______v_______
-                                                                C#, Delphi <-->| Wasatch.NET |<-->| LibUsbDotNet |
-                                                                LabVIEW etc    |_____________|    |______________|
+     WasatchVCPPNet <--> Driver, Spectrometer  |              ___________      ____________      _____________   
+     (C# example)     |________________________|             | ENLIGHTEN |<-->| Wasatch.PY |<-->|    pyusb    |
+                                           ^                 |___________|    |____________|    |_____________|
+                                           |                                                           ^
+                       _WasatchVCPP.h______|___    _WasatchVCPP.dll/lib______________________          |
+                      |   C API            v   |  |                                          |         |
+     CustomerApp.c <---> wp_foo() <--------+-------> WasatchVCPPWrapper.cpp (C impl)         |   ______v_______      ______________
+                      |                    ^   |  |  `--> WasatchVCPP::Driver                |  |              |    |    Wasatch   |
+                      |  _C++ API__________|_  |  |  `--> WasatchVCPP::Spectrometer <---------->| libusb-win32 |<-->| spectrometer |
+                      | |   Driver         | | |  |       `--> WasatchVCPP::EEPROM (etc)     |  |______________|    |______________|
+     WasatchVCPPDemo <----> Spectrometer <-' | |  |            `--> WasatchVCPP::FeatureMask |         ^     \        /
+     (C++ example)    | |____________________| |  |      (actual library implementation)     |         |      `-.inf-'
+                      |________________________|  |__________________________________________|         |     (VID, PID)
+                         (customer ABI)             (DLL ABI)                 _____________      ______v_______
+                                                              C#, Delphi <-->| Wasatch.NET |<-->| LibUsbDotNet |
+                                                              LabVIEW etc    |_____________|    |______________|
 
 # Contents
 
