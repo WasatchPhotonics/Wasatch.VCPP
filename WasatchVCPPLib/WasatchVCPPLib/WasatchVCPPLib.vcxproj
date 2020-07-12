@@ -167,7 +167,6 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Spectrometer.h" />
     <ClInclude Include="Util.h" />
-    <ClInclude Include="WasatchVCPP.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

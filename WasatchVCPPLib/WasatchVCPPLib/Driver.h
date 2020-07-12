@@ -30,21 +30,22 @@ namespace WasatchVCPP
     class Driver
     {
         public:
-            static Driver* getInstance();
+            const std::string libraryVersion = "0.0.6";
 
-            const std::string libraryVersion = "0.0.5";
+            static Driver* getInstance();
 
             int getNumberOfSpectrometers();
             int openAllSpectrometers();
             Spectrometer* getSpectrometer(int index);
-            bool setLogfile(const std::string& pathname);
+
             std::string getLibraryVersion();
+
+            Logger logger;
 
         private:
             static Driver* instance;
             Driver(); 
 
             std::vector<Spectrometer*> spectrometers;
-            Logger logger;
     };
 }

@@ -19,12 +19,14 @@
 #include <map>
 
 #include "Util.h"
+#include "Logger.h"
 #include "Driver.h"
 #include "Spectrometer.h"
 
 using WasatchVCPP::Util;
 using WasatchVCPP::Driver;
 using WasatchVCPP::Spectrometer;
+using WasatchVCPP::Logger;
 
 using std::string;
 using std::map;
@@ -87,7 +89,9 @@ int wp_close_spectrometer(int specIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 int wp_get_library_version(char* value, int len)
-{ return exportString(driver->libraryVersion, value, len); }
+{ 
+    return exportString(driver->libraryVersion, value, len); 
+}
 
 int wp_get_number_of_spectrometers()
 {
@@ -233,9 +237,19 @@ int wp_get_eeprom_field(int specIndex, const char* name, char* valueOut, int len
 
 int wp_set_logfile_path(const char* pathname)
 {
-    if (!driver->setLogfile(pathname))
+    if (!driver->logger.setLogfile(pathname))
         return WP_ERROR;
 
+    return WP_SUCCESS;
+}
+
+int wp_set_log_level(int level)
+{
+    if (level < Logger::Levels::LOG_LEVEL_DEBUG || 
+        level > Logger::Levels::LOG_LEVEL_NEVER)
+        return WP_ERROR;
+
+    driver->logger.level = (Logger::Levels) level;
     return WP_SUCCESS;
 }
 

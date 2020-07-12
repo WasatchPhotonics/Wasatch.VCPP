@@ -85,6 +85,13 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
     setDetectorOffset   (eeprom.detectorOffset);
     setDetectorOffsetOdd(eeprom.detectorOffsetOdd);
 
+    // initialize integration time
+    if (eeprom.startupIntegrationTimeMS >= eeprom.minIntegrationTimeMS &&
+        eeprom.startupIntegrationTimeMS <= eeprom.maxIntegrationTimeMS)
+        setIntegrationTimeMS(eeprom.startupIntegrationTimeMS);
+    else if (eeprom.minIntegrationTimeMS <= 5000)
+        setIntegrationTimeMS(eeprom.minIntegrationTimeMS);
+
     // initialize TEC and setpoint
     if (eeprom.hasCooling)
         setDetectorTECEnable(true);
@@ -95,13 +102,30 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
         // @todo initVerticalROI();
     }
 
+    // initialize acquisition parameters
+    endpoints.push_back(0x82);
+    pixelsPerEndpoint = pixels;
+    if (pixels == 2048 && !isARM())
+    {
+        endpoints.push_back(0x86);
+        pixelsPerEndpoint = 1024;
+    }
+    bufSubspectrum = (uint8_t*)malloc(pixelsPerEndpoint * 2);
+
     logger.debug("Spectrometer::ctor: done");
 }
 
 bool WasatchVCPP::Spectrometer::close()
 {
+    if (bufSubspectrum != nullptr)
+    { 
+        free(bufSubspectrum);
+        bufSubspectrum = nullptr;
+    }
+
     usb_release_interface(udev, 0);
     usb_close(udev);
+
     return true;
 }
 
@@ -317,84 +341,119 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     vector<double> spectrum;
 
+    // send software trigger
     logger.debug("sending ACQUIRE");
     sendCmd(0xad);
 
-    // logger.debug("sleeping for %lums", integrationTimeMS);
+    // this is included in the timeout
     // Sleep(integrationTimeMS);
 
-    int ep = 0x82;
-    int bytesExpected = pixels * 2;
-    int totalBytesRead = 0;
-    int bytesLeftToRead = bytesExpected;
     int timeoutMS = generateTimeoutMS();
-
-    //! @todo make this an instance attribute
-    uint8_t* buf = (uint8_t*)malloc(bytesExpected);
-
-    while (totalBytesRead < bytesExpected)
+    for (auto ep : endpoints)
     {
-        logger.debug("attempting to read %d bytes from endpoint 0x%02x with timeout %dms", 
-            bytesLeftToRead, ep, timeoutMS);
-        int bytesRead = usb_bulk_read(udev, ep, (char*)buf, bytesLeftToRead, timeoutMS);
-        logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
-
-        if (bytesRead <= 0)
+        auto subspectrum = getSubspectrum(ep, timeoutMS);
+        if (subspectrum.size() != pixelsPerEndpoint)
         {
-            logger.error("getSpectrum: bytesRead negative or zero, giving up (%s)", usb_strerror());
-            break;
+            logger.error("failed reading subspectrum (%d of %d pixels read", 
+                subspectrum.size(), pixelsPerEndpoint);
+            return vector<double>();
         }
 
-        if (bytesRead % 2 != 0)
-        {
-            logger.error("getSpectrum: read odd number of bytes (%d)", bytesRead);
-            break;
-        }
+        for (auto word : subspectrum)
+            spectrum.push_back(word);
 
-        for (int i = 0; i + 1 < bytesRead; i += 2)
-        {
-            uint16_t pixel = buf[i] | (buf[i + 1] << 8);
-            spectrum.push_back(pixel);
-        }
-
-        totalBytesRead += bytesRead;
-        bytesLeftToRead -= bytesRead;
-
-        logger.debug("getSpectrum: totalBytesRead %d, bytesLeftToRead %d", totalBytesRead, bytesLeftToRead);
-    }
-
-    if (buf != nullptr)
-        free(buf);
-
-    if (spectrum.empty())
-    {
-        logger.error("getSpectrum: returning empty spectrum");
-        return spectrum;
+        // subsequent endpoints should be nearly instantaneous (USB comms only)
+        timeoutMS = 100;
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // post-processing
     ////////////////////////////////////////////////////////////////////////////
 
-    // stomp first pixel
-    spectrum[0] = spectrum[1];
+    // stomp first pixel -- only required if start-of-frame marker enabled
+    // spectrum[0] = spectrum[1];
+
+    if (eeprom.featureMask.invertXAxis)
+        std::reverse(spectrum.begin(), spectrum.end());
+
+    if (eeprom.featureMask.bin2x2)
+    {
+        vector<double> binned;
+        for (int i = 0; i < spectrum.size() - 1; i++)
+            binned.push_back((spectrum[i] + spectrum[i + 1]) / 2.0);
+        binned.push_back(spectrum[spectrum.size() - 1]);
+    }
 
     logger.debug("getSpectrum: returning spectrum of %d pixels", spectrum.size());
     return spectrum;
+}
+
+std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, int timeoutMS)
+{
+    vector<uint16_t> subspectrum;
+
+    int bytesExpected = pixelsPerEndpoint * 2; // raw pixels are uint16
+    int bytesLeftToRead = bytesExpected;
+    int totalBytesRead = 0;
+
+    while (totalBytesRead < bytesExpected)
+    {
+        logger.debug("attempting to read %d bytes from endpoint 0x%02x with timeout %dms", 
+            bytesLeftToRead, ep, timeoutMS);
+        int bytesRead = usb_bulk_read(udev, ep, (char*)bufSubspectrum, bytesLeftToRead, timeoutMS);
+        logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
+
+        if (bytesRead <= 0)
+        {
+            logger.error("getSubspectrum: bytesRead negative or zero, giving up (%s)", usb_strerror());
+            return subspectrum;
+        }
+
+        if (bytesRead % 2 != 0)
+        {
+            logger.error("getSubspectrum: read odd number of bytes (%d)", bytesRead);
+            return subspectrum;
+        }
+
+        // demarshal little-endian pixels
+        for (int i = 0; i + 1 < bytesRead; i += 2)
+            subspectrum.push_back(bufSubspectrum[i] | (bufSubspectrum[i + 1] << 8));
+
+        totalBytesRead += bytesRead;
+        bytesLeftToRead -= bytesRead;
+
+        if (bytesLeftToRead != 0)
+            logger.debug("getSubspectrum: totalBytesRead %d, bytesLeftToRead %d", 
+                totalBytesRead, bytesLeftToRead);
+    }
+
+    return subspectrum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Control Messages
 ////////////////////////////////////////////////////////////////////////////////
 
-//! Send data to the spectrometer.
+//! Write data to the spectrometer.
 //!
-//! All "Hungarian notation" parameter names (bRequest, wValue etc) are taken from
-//! public USB specifications to avoid confusion.
-//! 
-//! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
+//! @param bRequest (Input) the opcode being sent
+//! @param wValue (Input) in general, the primary argument being sent; can also
+//!        represent the "actual opcode" when bRequest is 0xff, indicating a so-
+//!        called "second-tier command"
+//! @param wIndex (Input) in general, a secondary argument being sent; in the 
+//!        case of "longer" primary arguments (larger than 16 bits), may
+//!        represent an extra 8 or 16 bits of the primary argument; or in the 
+//!        case of "second-tier commands", may represent the "effective primary
+//!        argument" (as the "effective opcode" is being sent as wValue)
+//! @param data (Input) additional payload being sent along with the opcode and
+//!        parameters; in the case of opcodes taking truly long arguments (larger
+//!        than 32 bits, such as the uint40 values used for laser modulation),
+//!        can provide additional bits of precision atop wValue and wIndex
+//! @param len (Input) number of bytes provided in data
+//! @returns number of bytes written (not really indicative of success/failure)
 int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint8_t* data, int len)
 {
+    // ARM firmware expects all commands to include at least 8 payload bytes
     unsigned char buf[MIN_ARM_LEN] = { 0 };
     if (data == nullptr && isARM())
     {
@@ -405,15 +464,14 @@ int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16
     int timeoutMS = 1000;
     logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, len, timeoutMS);
-    int result = usb_control_msg(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, timeoutMS);
-    return result;
+    int bytesWritten = usb_control_msg(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, timeoutMS);
+    return bytesWritten;
 }
 
-//! I don't actually remember the use-case for this function
-int WasatchVCPP::Spectrometer::sendData(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, vector<uint8_t> data)
+//! Convenience wrapper over sendCmd if payload is in a vector.
+int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, vector<uint8_t> data)
 {
-    uint8_t* tmp = (uint8_t*)&data[0];
-    return sendCmd(bRequest, wValue, wIndex, tmp, (int)data.size());
+    return sendCmd(bRequest, wValue, wIndex, &data[0], (int)data.size());
 }
 
 //! This is the standard "getter opcode" function.  It doesn't take a "wValue" 
@@ -456,6 +514,7 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmd2(uint16_t wValue, int len, uin
 //! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
 vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, int len, int fullLen)
 {
+    // ARM firmware expects all commands to provide at least 8 payload bytes
     int bytesToRead = max(len, fullLen);
     if (isARM())
         bytesToRead = max(MIN_ARM_LEN, bytesToRead);

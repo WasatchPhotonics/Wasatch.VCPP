@@ -21,7 +21,7 @@ bool WasatchVCPP::Logger::setLogfile(const string& pathname)
 
 void WasatchVCPP::Logger::debug(const char* fmt, ...)
 {
-    if (level > LOG_DEBUG)
+    if (level > LOG_LEVEL_DEBUG)
         return;
 
     char buf[BUF_SIZE];
@@ -35,7 +35,7 @@ void WasatchVCPP::Logger::debug(const char* fmt, ...)
 
 void WasatchVCPP::Logger::info(const char* fmt, ...)
 {
-    if (level > LOG_INFO)
+    if (level > LOG_LEVEL_INFO)
         return;
 
     char buf[BUF_SIZE];
@@ -49,7 +49,7 @@ void WasatchVCPP::Logger::info(const char* fmt, ...)
 
 void WasatchVCPP::Logger::error(const char* fmt, ...)
 {
-    if (level > LOG_ERROR)
+    if (level > LOG_LEVEL_ERROR)
         return;
 
     char buf[BUF_SIZE];

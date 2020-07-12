@@ -7,59 +7,46 @@ Per the "Design Remit" described in README.md:
 ## Supported
 
 (done)
-- readEEPROM
-- getSpectrum
-- setIntegrationTimeMS
-- setLaserEnable
-- getLibraryVersion
-- setDetectorGain
-- setDetectorGainOdd
-- setDetectorOffset
-- setDetectorOffsetOdd
-- setTECEnable
-- setDetectorTECSetpointDegC
-- setHighGainMode
-- getFirmwareVersion
-- getFPGAVersion
-- getDetectorTemperatureRaw
-- getDetectorTemperatureDegC
+- see WasatchVCPP.h and CHANGELOG
 
 (not done)
-- auto-apply integration time at open
-- support invertXAxis
-- support bin2x2
-- 2048-pixel support
-- set laser power (%)
-- hardware triggering (ARM)
-- basic gettors: isLaserEnabled, integrationTimeMS, triggerSource etc
-- Raman Intensity Calibration (ROI / vignetting?)
-- expose logLevel
+- basic gettors: isLaserEnabled, integrationTimeMS etc
 - installer (including .inf files, etc)
 
-## Undecided 
+## Not supported (pending customer use-case)
 
-- write EEPROM 
-- bad pixel correction
-- internal scan averaging
-- read laser TEC temperature (degC) (doesn't work well, regardless)
-- ramanMicro features (battery, laser watchdog, vertical ROI etc)
-
-## Not supported (pending request / use-case)
-
-- set laser power (mW)
-- dark correction
-- boxcar averaging
-- transmission / reflectance or absorbance
-- selectable ADC
-- set TEC setpoint
-- set DFU mode
-- reset FPGA
-- actual frame count
-- area scan 
-- threshold sensing
-- configurable throwaways
-- rigorous thread safety
-- internal threading / callbacks / inversion of control
+- ARM features
+    - hardware triggering
+- laser power
+    - modulated (%)
+    - calibrated (mW)
+- ramanMicro 
+    - battery
+    - laser watchdog
+    - vertical ROI
+- spectral processing
+    - bad pixel correction
+    - scan averaging
+    - boxcar averaging
+    - dark correction
+    - transmission / reflectance or absorbance
+    - Raman Intensity Calibration (ROI / vignetting?)
+    - peakfinding
+- manufacturing features
+    - write EEPROM 
+    - set TEC setpoint
+    - set DFU mode
+    - reset FPGA
+    - area scan
+- rare features
+    - actual frame count
+    - threshold sensing
+    - configurable throwaways
+    - selectable ADC
+    - read laser TEC temperature (degC) (doesn't work well, regardless)
+- advanced driver features
+    - rigorous thread safety
+    - internal threading / callbacks / inversion of control
 
 # Architectural Backlog
 

@@ -42,11 +42,17 @@
 #endif
 
 // all functions should return one of these codes unless indicated otherwise
-#define WP_SUCCESS                     0
-#define WP_ERROR                      -1
-#define WP_ERROR_INVALID_SPECTROMETER -2
-#define WP_ERROR_INSUFFICIENT_STORAGE -3
-#define WP_ERROR_NO_LASER             -4
+#define WP_SUCCESS                      0
+#define WP_ERROR                       -1
+#define WP_ERROR_INVALID_SPECTROMETER  -2
+#define WP_ERROR_INSUFFICIENT_STORAGE  -3
+#define WP_ERROR_NO_LASER              -4
+
+// supported log levels
+#define WP_LOG_LEVEL_DEBUG              0
+#define WP_LOG_LEVEL_INFO               1
+#define WP_LOG_LEVEL_ERROR              2
+#define WP_LOG_LEVEL_NEVER              3
 
 // Although we're using a C++ compiler (as the library is written in C++), we 
 // want these function symbols to be compiled with C linkage (no C++ mangling). 
@@ -63,6 +69,12 @@ extern "C"
     //! @param pathname (Input) a valid pathname (need not exist, will be overwritten if found)
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_logfile_path(const char* pathname);
+
+    //! Sets driver log level.
+    //! 
+    //! @param level (Input) one of the WP_LOG_LEVEL macros
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_log_level(int level);
 
     //! Obtains the version number of the WasatchVCPP library itself.
     //! @param value (Output) pre-allocated string to receive the value 
@@ -624,16 +636,19 @@ namespace WasatchVCPP
                 //! Instantiate a Proxy::Driver
                 Driver() {}
 
-                //! Enable WasatchVCPP internal debug logging, and direct to a 
-                //! textfile.
-                //!
-                //! @returns true on success
+                //! @see wp_set_logfile_path
                 bool setLogfile(const std::string& pathname)
                 { 
                     return WP_SUCCESS == wp_set_logfile_path(pathname.c_str()); 
                 }
 
-                //! @returns version number of the WasatchVCPP library itself
+                //! @see wp_set_log_level
+                bool setLogLevel(int level)
+                {
+                    return WP_SUCCESS == wp_set_log_level(level);
+                }
+
+                //! @see wp_get_library_level
                 std::string getLibraryVersion()
                 {
                     char buf[16];
@@ -641,11 +656,7 @@ namespace WasatchVCPP
                     return std::string(buf);
                 }
 
-                //! Open and initialize all connected Wasatch Photonics spectrometers.
-                //!
-                //! Must be called before getSpectrometer().
-                //!
-                //! @returns number of spectrometers found (also sets numberOfSpectrometers)
+                //! @see wp_open_all_spectrometers()
                 int openAllSpectrometers()
                 {
                     spectrometers.clear();
@@ -674,8 +685,10 @@ namespace WasatchVCPP
                     return &spectrometers[index];
                 }
 
-                //! Close all spectrometers; call at application shutdown.
-                //! @returns true on success
+                //! @see wp_close_all_spectrometers()
+                //! @note calling wp_close_all_spectrometers() is not sufficient
+                //!       if using WasatchVCPP::Proxy, as Proxy::Spectrometer 
+                //!       resources won't be released
                 bool closeAllSpectrometers()
                 {
                     for (int i = 0; i < numberOfSpectrometers; i++)

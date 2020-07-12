@@ -1,5 +1,11 @@
 # Changelog
 
+- 2020-07-12 0.0.6
+    - added setLogLevel
+    - supported featureMask.invertXAxis
+    - supported featureMask.bin2x2
+    - supported startupIntegrationTimeMS
+    - supported 2048-pixel FX2
 - 2020-07-11 0.0.5
     - added getLibraryVersion
     - added setDetectorGain

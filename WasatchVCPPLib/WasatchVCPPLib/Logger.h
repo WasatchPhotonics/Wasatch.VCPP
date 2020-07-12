@@ -15,10 +15,17 @@ namespace WasatchVCPP
     //! Internal logger (outputs to textfile if configured).
     class Logger
     {
-        enum Levels { LOG_DEBUG, LOG_INFO, LOG_ERROR };
-
         public:
-            Levels level = LOG_DEBUG;
+            //! keep synchronized with like-named macros in WasatchVCPP.h
+            enum Levels 
+            { 
+                LOG_LEVEL_DEBUG = 0, 
+                LOG_LEVEL_INFO  = 1, 
+                LOG_LEVEL_ERROR = 2, 
+                LOG_LEVEL_NEVER = 3
+            };
+
+            Levels level = LOG_LEVEL_DEBUG;
 
             void debug(const char* fmt, ...);
             void info(const char* fmt, ...);

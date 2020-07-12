@@ -108,7 +108,5 @@ WasatchVCPP::Spectrometer* WasatchVCPP::Driver::getSpectrometer(int index)
     return nullptr;
 }
 
-bool WasatchVCPP::Driver::setLogfile(const string& pathname)
-{ return logger.setLogfile(pathname); }
-
 string WasatchVCPP::Driver::getLibraryVersion() { return libraryVersion; }
+
