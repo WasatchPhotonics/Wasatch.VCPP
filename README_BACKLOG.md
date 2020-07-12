@@ -7,7 +7,7 @@ Per the "Design Remit" described in README.md:
 ## Supported
 
 (done)
-- see WasatchVCPP.h and CHANGELOG
+- see WasatchVCPP.h and README_CHANGELOG.md
 
 (not done)
 - basic gettors: isLaserEnabled, integrationTimeMS etc

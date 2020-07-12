@@ -833,6 +833,7 @@ INPUT                  = WasatchVCPPLib         \
                          include                \
                          README.md              \
                          README_BACKLOG.md      \    
+                         README_CHANGELOG.md    \    
                          README_ARCHITECTURE.md
 
 # This tag can be used to specify the character encoding of the source files
