@@ -1,5 +1,7 @@
 # Changelog
 
+- 2020-07-?? 0.0.7
+    - stubbed WasatchVCPPNet
 - 2020-07-12 0.0.6
     - added setLogLevel
     - supported featureMask.invertXAxis
