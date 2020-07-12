@@ -56,7 +56,6 @@ This is the overall architecture as I envision it (including peer libraries
 Wasatch.NET and Wasatch.PY for comparison).
 
                        _WasatchVCPP.cs_________ 
-                      |                        |
      WasatchVCPPNet <--> Driver, Spectrometer  |              ___________      ____________      _____________   
      (C# example)     |________________________|             | ENLIGHTEN |<-->| Wasatch.PY |<-->|    pyusb    |
                                            ^                 |___________|    |____________|    |_____________|
