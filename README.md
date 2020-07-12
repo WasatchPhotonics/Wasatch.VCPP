@@ -52,28 +52,55 @@ files to associate our USB VID and PID with the libusb-win32 low-level driver.
 
 All namespaces are prefixed with WasatchVCPP, meaning "Wasatch Photonics Visual C++".
 
-This is the overall architecture as I envision it:
+This is the overall architecture as I envision it (including peer libraries 
+Wasatch.NET and Wasatch.PY for comparison).
 
-                       _WasatchVCPP.h__________      _WasatchVCPP.dll/lib______________________
-                      |                        |    |                                          |
-     CustomerApp.c <---> wp_foo() <--(C API)-----+---> WasatchVCPPWrapper.cpp                  |
-                      |                        | |  |  `--> WasatchVCPP::Driver                |
-                      |  _WasatchVCPP::Proxy_  | |  |  `--> WasatchVCPP::Spectrometer          |
-                      | |   Driver           | | |  |       `--> WasatchVCPP::EEPROM (etc)     |
-     WasatchVCPPDemo <----> Spectrometer <-------+  |            `--> WasatchVCPP::FeatureMask |
-     (C++ example)    | |____________________| |    |__________________________________________|
-                      |________________________|
+                       _WasatchVCPP.cs_________
+                      |                        |
+     WasatchVCPPNet <--> Driver, Spectrometer  |                ___________      ____________      _____________   
+     (C# example)     |________________________|               | ENLIGHTEN |<-->| Wasatch.PY |<-->|    pyusb    |
+                                          ^                    |___________|    |____________|    |_____________|
+                                          |                                                              ^
+                       _WasatchVCPP.h_____v____      _WasatchVCPP.dll/lib______________________          |
+                      |                        |    |                                          |         |
+     CustomerApp.c <---> wp_foo() <---C API------+---> WasatchVCPPWrapper.cpp                  |   ______v_______      ______________
+                      |                        | |  |  `--> WasatchVCPP::Driver                |  |              |    |    Wasatch   |
+                      |  _WasatchVCPP::Proxy_  | |  |  `--> WasatchVCPP::Spectrometer <---------->| libusb-win32 |<-->| spectrometer |
+                      | |   Driver           | | |  |       `--> WasatchVCPP::EEPROM (etc)     |  |______________|    |______________|
+     WasatchVCPPDemo <----> Spectrometer <-------'  |            `--> WasatchVCPP::FeatureMask |         ^     \        /
+     (C++ example)    | |____________________| |    |      (actual library implementation)     |         |      `-.inf-'
+                      |________________________|    |__________________________________________|         |     (VID, PID)
+                                                                                _____________      ______v_______
+                                                                C#, Delphi <-->| Wasatch.NET |<-->| LibUsbDotNet |
+                                                                LabVIEW etc    |_____________|    |______________|
 
 # Contents
 
 The WasatchVCPP distribution contains:
 
-- WasatchVCPP.h (provides both C and C++ APIs)
+- include/
+    - WasatchVCPP.h (provides both C and C++ APIs)
 
-When the WasatchVCPPLib solution is compiled in Visual Studio, it generates:
+- lib/
+    - x86/
+        - WasatchVCPP.dll (pre-compiled binaries)
+        - WasatchVCPP.lib
+    - x64/
+        - WasatchVCPP.dll
+        - WasatchVCPP.lib
 
-- WasatchVCPP.dll (compiled driver)
-- WasatchVCPP.lib (needed to link with DLL)
+- WasatchVCPPLib/
+    - WasatchVCPPLib/ 
+        - sources to build WasatchVCPP.dll from Visual Studio
+    - WasatchVCPPDemo/ 
+        - Visual C++ GUI demo using WasatchVCPP.dll (no COM, .NET or managed memory)
+
+- WasatchVCPPNet/
+    - C# demo using WasatchVCPP.dll from managed .NET WinForms GUI
+
+- WasatchCPPLib/ (future)
+    - Makefile tree to build WasatchCPP.so or .dylib for POSIX environments using
+      gcc / clang toolchain
 
 # Usage
 
