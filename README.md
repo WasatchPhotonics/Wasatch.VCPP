@@ -52,28 +52,27 @@ files to associate our USB VID and PID with the libusb-win32 low-level driver.
 
 All namespaces are prefixed with WasatchVCPP, meaning "Wasatch Photonics Visual C++".
 
-This is the overall architecture as I envision it (including peer libraries 
+This is the overall architecture as I envision it (including peer libraries
 Wasatch.NET and Wasatch.PY for comparison).
 
-                       _WasatchVCPP.cs_________ 
-                      |                        |
-     WasatchVCPPNet <--> Driver, Spectrometer  |              ___________      ____________      _____________   
-     (C# example)     |________________________|             | ENLIGHTEN |<-->| Wasatch.PY |<-->|    pyusb    |
-                                           ^                 |___________|    |____________|    |_____________|
-                                           |                                                           ^
-                       _WasatchVCPP.h______|___    _WasatchVCPP.dll/lib______________________          |
-                      |   C API            v   |  |                                          |         |
-     CustomerApp.c <---> wp_foo() <--------+-------> WasatchVCPPWrapper.cpp (C impl)         |   ______v_______      ______________
-                      |                    ^   |  |  `--> WasatchVCPP::Driver                |  |              |    |    Wasatch   |
-                      |  _C++ API__________|_  |  |  `--> WasatchVCPP::Spectrometer <---------->| libusb-win32 |<-->| spectrometer |
-                      | |   Proxy::Driver, | | |  |       `--> WasatchVCPP::EEPROM (etc)     |  |______________|    |______________|
-     WasatchVCPPDemo <----> Spectrometer <-' | |  |            `--> WasatchVCPP::FeatureMask |         ^     \        /
-     (C++ example)    | |____________________| |  |      (actual library implementation)     |         |      `-.inf-'
-                      |________________________|  |__________________________________________|         |     (VID, PID)
-                         (customer ABI)             (DLL ABI)                 _____________      ______v_______
-                                                              C#, Delphi <-->| Wasatch.NET |<-->| LibUsbDotNet |
-                                                              LabVIEW etc    |_____________|    |______________|
-
+                       _WasatchVCPP.cs__________
+                      |                         |
+     WasatchVCPPNet <--> Driver, Spectrometer   |              ___________      ____________      _____________
+     (C# example)     |_________________________|             | ENLIGHTEN |<-->| Wasatch.PY |<-->|    pyusb    |
+                                           ^                  |___________|    |____________|    |_____________|
+                                           |                                                            ^
+                       _WasatchVCPP.h______|____    _WasatchVCPP.dll/lib______________________          |
+                      |   C API            v    |  |                                          |         |
+     CustomerApp.c <---> wp_set_laser_enable() <----> WasatchVCPPWrapper.cpp (C API impl)     |   ______v_______      ______________
+                      |                    ^    |  |  `--> WasatchVCPP::Driver                |  | libusb-win32 |    | spectrometer |
+                      |  _C++ API__________|_   |  |  `--> WasatchVCPP::Spectrometer <---------->|  (libusb.h)  |<-->|  (ENG-0001)  |
+                      | |   Proxy::Driver, | |  |  |       `--> WasatchVCPP::EEPROM (etc)     |  |______________|    |______________|
+     WasatchVCPPDemo <----> Spectrometer <-' |  |  |            `--> WasatchVCPP::FeatureMask |         ^     \        /
+     (C++ example)    | |____________________|  |  |      (actual library implementation)     |         |      `-.inf-'
+                      |_________________________|  |__________________________________________|         |     (VID, PID)
+                         (customer ABI)              (DLL ABI)                 _____________      ______v_______
+                                                               C#, Delphi <-->| Wasatch.NET |<-->| LibUsbDotNet |
+                                                               LabVIEW etc    |_____________|    |______________|
 # Contents
 
 The WasatchVCPP distribution contains:
