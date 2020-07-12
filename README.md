@@ -66,7 +66,7 @@ Wasatch.NET and Wasatch.PY for comparison).
      CustomerApp.c <---> wp_foo() <--------+-------> WasatchVCPPWrapper.cpp (C impl)         |   ______v_______      ______________
                       |                    ^   |  |  `--> WasatchVCPP::Driver                |  |              |    |    Wasatch   |
                       |  _C++ API__________|_  |  |  `--> WasatchVCPP::Spectrometer <---------->| libusb-win32 |<-->| spectrometer |
-                      | |   Driver         | | |  |       `--> WasatchVCPP::EEPROM (etc)     |  |______________|    |______________|
+                      | |   Proxy::Driver, | | |  |       `--> WasatchVCPP::EEPROM (etc)     |  |______________|    |______________|
      WasatchVCPPDemo <----> Spectrometer <-' | |  |            `--> WasatchVCPP::FeatureMask |         ^     \        /
      (C++ example)    | |____________________| |  |      (actual library implementation)     |         |      `-.inf-'
                       |________________________|  |__________________________________________|         |     (VID, PID)
