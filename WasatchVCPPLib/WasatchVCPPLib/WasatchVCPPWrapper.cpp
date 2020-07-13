@@ -15,6 +15,7 @@
 #include "pch.h"
 #include "WasatchVCPP.h"
 
+#include <vector>
 #include <string>
 #include <map>
 
@@ -29,6 +30,7 @@ using WasatchVCPP::Spectrometer;
 using WasatchVCPP::Logger;
 
 using std::string;
+using std::vector;
 using std::map;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -394,4 +396,33 @@ float wp_get_detector_temperature_deg_c(int specIndex)
         return -999;
 
     return spec->getDetectorTemperatureDegC();
+}
+
+int wp_send_control_msg(int specIndex, unsigned char bRequest, unsigned int wValue,
+    unsigned int wIndex, unsigned char* data, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->sendCmd(bRequest, wValue, wIndex, data, len);
+}
+
+int wp_read_control_msg(int specIndex, unsigned char bRequest, unsigned int wIndex,
+    unsigned char* data, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    vector<uint8_t> response = spec->getCmd(bRequest, len, wIndex);
+
+    // could use memcpy
+    for (int i = 0; i < len; i++)
+        if (i < response.size())
+            data[i] = response[i];
+        else
+            return WP_ERROR_INSUFFICIENT_STORAGE;
+
+    return (int)response.size();
 }

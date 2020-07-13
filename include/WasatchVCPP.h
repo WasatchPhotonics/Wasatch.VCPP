@@ -374,6 +374,68 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @returns -999 on error, else detector temperature in degrees Celsius
     DLL_API float wp_get_detector_temperature_deg_c(int specIndex);
+
+    //! Provide direct access to writing spectrometer opcodes via USB setup 
+    //! packets (endpoint 0 control 
+    //!
+    //! If a particular spectrometer feature documented in ENG-0001 is not yet
+    //! suppoted by the library, or if you need to test an experimental / un-
+    //! released feature against beta firmware, you can do so with this function.
+    //!
+    //! @warning It is possible to "brick" your spectrometer through careless use
+    //!          of this feature, potentially requiring RMA factory repair.  
+    //!          Consequences can include damaging components by exceeding 
+    //!          temperature or power tolerances, and/or risk of human injury by
+    //!          misconfiguring the laser.  Use of this function voids all factory
+    //!          warranties unless pre-approved through your sales representative.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param bRequest (Input) control packet request (uint8_t)
+    //! @param wValue (Input) control packet wValue (uint16_t)
+    //! @param wIndex (Input) control packet wIndex (uint16_t)
+    //! @param data (Input) control packet payload (uint8_t[])
+    //! @param len (Input) length of control packet payload 
+    //!
+    //! @returns number of bytes written, negative on error
+    //!
+    //! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
+    //! @see https://www.wasatchphotonics.com/eng-0001/
+    DLL_API int wp_send_control_msg(int specIndex, 
+                           unsigned char bRequest, 
+                           unsigned int wValue,
+                           unsigned int wIndex,
+                           unsigned char* data,
+                           int len);
+
+    //! Provide direct access to reading spectrometer opcodes via USB setup 
+    //! packets (endpoint 0 control 
+    //!
+    //! If a particular spectrometer feature documented in ENG-0001 is not yet
+    //! suppoted by the library, or if you need to test an experimental / un-
+    //! released feature against beta firmware, you can do so with this function.
+    //!
+    //! @warning It is possible to "brick" your spectrometer through careless use
+    //!          of this feature, potentially requiring RMA factory repair.  
+    //!          Consequences can include damaging components by exceeding 
+    //!          temperature or power tolerances, and/or risk of human injury by
+    //!          misconfiguring the laser.  Use of this function voids all factory
+    //!          warranties unless pre-approved through your sales representative.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param bRequest (Input) control packet request (uint8_t)
+    //! @param wIndex (Input) control packet wIndex (uint16_t)
+    //! @param data (Output) pre-allocated buffer to hold response (uint8_t[])
+    //! @param len (Input) number of bytes to read (data should be sized accordingly)
+    //!
+    //! @returns number of bytes read, negative on error
+    //!
+    //! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
+    //! @see https://www.wasatchphotonics.com/eng-0001/
+    DLL_API int wp_read_control_msg(int specIndex, 
+                                    unsigned char bRequest, 
+                                    unsigned int wIndex,
+                                    unsigned char* data,
+                                    int len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -591,6 +653,18 @@ namespace WasatchVCPP
                 //! @see wp_get_detector_temperature_deg_c
                 float getDetectorTemperatureDegC()
                 { return wp_get_detector_temperature_deg_c(specIndex); }
+
+                //! @see wp_send_control_msg 
+                //! @warning no seriously, you need to follow that link
+                int sendControlMsg(int specIndex, uint8_t bRequest, uint16_t wValue, uint16_t wIndex,
+                    uint8_t* data, int len)
+                { return wp_send_control_msg(specIndex, bRequest, wValue, wIndex, data, len); }
+
+                //! @see wp_read_control_msg 
+                //! @warning no seriously, you need to follow that link
+                int readControlMsg(int specIndex, uint8_t bRequest, uint16_t wIndex,
+                    uint8_t* data, int len)
+                { return wp_read_control_msg(specIndex, bRequest, wIndex, data, len); }
 
             private:
                 bool readEEPROMFields()

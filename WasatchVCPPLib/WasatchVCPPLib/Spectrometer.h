@@ -58,6 +58,10 @@ namespace WasatchVCPP
             int32_t getDetectorTemperatureRaw(); 
             float getDetectorTemperatureDegC();
 
+            // public to support wp_send/read_control_msg()
+            int sendCmd(uint8_t bRequest, uint16_t wValue = 0, uint16_t wIndex = 0, uint8_t* data = NULL, int len = 0);
+            std::vector<uint8_t> getCmd(uint8_t bRequest, int len, uint16_t wIndex=0, int fullLen=0);
+
             // acquisition
             std::vector<double> getSpectrum();
 
@@ -88,9 +92,7 @@ namespace WasatchVCPP
             int generateTimeoutMS();
 
             // control messages
-            int sendCmd(uint8_t bRequest, uint16_t wValue = 0, uint16_t wIndex = 0, uint8_t* data = NULL, int len = 0);
             int sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, std::vector<uint8_t> data);
-            std::vector<uint8_t> getCmd(uint8_t bRequest, int len, uint16_t wIndex=0, int fullLen=0);
             std::vector<uint8_t> getCmd2(uint16_t wValue, int len, uint16_t wIndex=0, int fullLen=0);
             std::vector<uint8_t> getCmdReal(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, int len, int fullLen);
 
