@@ -10,8 +10,8 @@ Per the "Design Remit" described in README.md:
 - see WasatchVCPP.h and README_CHANGELOG.md
 
 (not done)
-- basic gettors: isLaserEnabled, integrationTimeMS etc
 - installer (including .inf files, etc)
+- WasatchVCPPNet demo (started)
 
 ## Not supported (pending customer use-case)
 

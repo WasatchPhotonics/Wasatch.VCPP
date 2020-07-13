@@ -8,6 +8,7 @@
 
 #include "pch.h"
 #include "Spectrometer.h"
+#include "ParseData.h"
 #include "Util.h"
 
 #include <algorithm>
@@ -263,11 +264,14 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
     int result = sendCmd(op, word);
     detectorTECSetpointHasBeenSet = true;
 
-    return isSuccess(op, result);
+    bool ok = isSuccess(op, result);
+    if (ok)
+        detectorTECSetointDegC = degC;
+    return ok;
 }
 
 //! @warning may need to send 8-byte buffer?
-bool WasatchVCPP::Spectrometer::setHighGainMode(bool flag)
+bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
 {
     const uint8_t op = 0xeb;
     if (!isInGaAs())
@@ -429,6 +433,69 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, int 
 
     return subspectrum;
 }
+
+unsigned long WasatchVCPP::Spectrometer::getIntegrationTimeMS()
+{ return ParseData::toUInt24(getCmd(0xbf, 3, 0, 6)); }
+
+bool WasatchVCPP::Spectrometer::getLaserEnable()
+{
+    if (!eeprom.hasLaser)
+        return false;
+
+    auto data = getCmd(0xe2, 1);
+    if (data.size() < 1)
+    {
+        logger.error("getLaserEnable: no response");
+        return false;
+    }
+
+    return data[0] != 0;
+}
+
+float WasatchVCPP::Spectrometer::deserializeGain(const vector<uint8_t>& data)
+{
+    if (data.size() != 2)
+    {
+        logger.error("deserializeGain: invalid data %s", Util::toHex(data).c_str());
+        return ErrorCodes::InvalidGain;
+    }
+
+    const uint8_t& msb = data[0];
+    const uint8_t& lsb = data[1];
+
+    return msb + (lsb / 256.f);
+}
+
+//! @returns ErrorCodes::InvalidGain on error
+float WasatchVCPP::Spectrometer::getDetectorGain()
+{ return deserializeGain(getCmd(0xc5, 2)); }
+
+//! @returns ErrorCodes::InvalidGain on error
+float WasatchVCPP::Spectrometer::getDetectorGainOdd()
+{ 
+    if (!isInGaAs())
+        return ErrorCodes::NotInGaAs;
+    return deserializeGain(getCmd(0x9f, 2)); 
+}
+
+int WasatchVCPP::Spectrometer::getDetectorOffset()
+{ return ParseData::toInt16(getCmd(0xc4, 2)); }
+
+int WasatchVCPP::Spectrometer::getDetectorOffsetOdd()
+{
+    if (!isInGaAs())
+        return ErrorCodes::InvalidOffset; // ErrorCodes::NotInGaAs is a valid offset :-(
+    return ParseData::toInt16(getCmd(0x9e, 2));
+}
+
+bool WasatchVCPP::Spectrometer::getTECEnable()
+{ return ParseData::toBool(getCmd(0xda, 1)); }
+
+int WasatchVCPP::Spectrometer::getDetectorTECSetpointDegC()
+{ return detectorTECSetointDegC; }
+
+bool WasatchVCPP::Spectrometer::getHighGainModeEnable()
+{ return ParseData::toBool(getCmd(0xec, 1)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Control Messages

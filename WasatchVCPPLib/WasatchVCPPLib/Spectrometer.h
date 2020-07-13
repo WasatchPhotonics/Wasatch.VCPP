@@ -24,6 +24,20 @@ namespace WasatchVCPP
     class Spectrometer
     {
         public:
+            //! keep synchronized with WasatchVCPP.h WP_ERROR_*
+            enum ErrorCodes 
+            {
+                Success             =  0,
+                Error               = -1,
+                InvalidSpectrometer = -2,
+                InsufficientStorage = -3,
+                NoLaser             = -4,
+                NotInGaAs           = -5,
+                InvalidGain         = -256,
+                InvalidTemperature  = -999,
+                InvalidOffset       = -32768 
+            };
+
             Spectrometer(usb_dev_handle* udev, int pid, Logger& logger);
             bool close();
 
@@ -42,6 +56,7 @@ namespace WasatchVCPP
             // cached properties
             int integrationTimeMS;
             bool laserEnabled;
+            int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
 
             // opcodes
             bool setIntegrationTimeMS(unsigned long ms);
@@ -52,11 +67,20 @@ namespace WasatchVCPP
             bool setDetectorOffsetOdd(int16_t value);
             bool setDetectorTECEnable(bool flag);
             bool setDetectorTECSetpointDegC(int value);
-            bool setHighGainMode(bool flag);
+            bool setHighGainModeEnable(bool flag);
             std::string getFirmwareVersion();
             std::string getFPGAVersion();
             int32_t getDetectorTemperatureRaw(); 
             float getDetectorTemperatureDegC();
+            unsigned long getIntegrationTimeMS();
+            bool getLaserEnable();
+            float getDetectorGain();
+            float getDetectorGainOdd();
+            int getDetectorOffset();
+            int getDetectorOffsetOdd();
+            bool getTECEnable();
+            int getDetectorTECSetpointDegC();
+            bool getHighGainModeEnable();
 
             // public to support wp_send/read_control_msg()
             int sendCmd(uint8_t bRequest, uint16_t wValue = 0, uint16_t wIndex = 0, uint8_t* data = NULL, int len = 0);
@@ -99,6 +123,7 @@ namespace WasatchVCPP
             // utility
             bool isSuccess(unsigned char opcode, int result);
             unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
+            float deserializeGain(const std::vector<uint8_t>& data);
 
     };
 }

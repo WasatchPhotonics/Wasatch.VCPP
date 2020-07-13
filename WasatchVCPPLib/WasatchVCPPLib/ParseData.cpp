@@ -31,38 +31,84 @@ uint8_t WasatchVCPP::ParseData::toUInt8(const vector<uint8_t>& buf, int index)
     return buf[index];
 }
 
-int16_t WasatchVCPP::ParseData::toInt16(const vector<uint8_t>& buf, int index)
+//! assumes little endian
+int16_t WasatchVCPP::ParseData::toInt16(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
-    uint16_t raw = toUInt16(buf, index);
+    uint16_t raw = toUInt16(buf, index, bigEndian);
     return *((int16_t*)&raw);
 }
 
-uint16_t WasatchVCPP::ParseData::toUInt16(const vector<uint8_t>& buf, int index)
+//! assumes little endian
+uint16_t WasatchVCPP::ParseData::toUInt16(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
     if (index + 1 >= buf.size())
         return 0;
 
-    uint16_t raw = (buf[index + 1] << 8) | buf[index];
+    uint16_t raw = bigEndian ? ((buf[index] << 8) | buf[index + 1])
+                             : ((buf[index + 1] << 8) | buf[index]);
     return raw;
 }
 
-int32_t WasatchVCPP::ParseData::toInt32(const vector<uint8_t>& buf, int index)
+//! integration time is a 24-bit value
+uint32_t WasatchVCPP::ParseData::toUInt24(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
-    uint32_t raw = toUInt32(buf, index);
+    if (index + 2 >= buf.size())
+        return 0;
+
+    uint32_t raw = bigEndian ? ((buf[index + 2]) | (buf[index + 1] << 8) | (buf[index] << 16))
+                             : ((buf[index + 2] << 16) | (buf[index + 1] <<  8) | (buf[index]));
+    return raw;
+}
+
+//! assumes little endian
+int32_t WasatchVCPP::ParseData::toInt32(const vector<uint8_t>& buf, int index, bool bigEndian)
+{
+    uint32_t raw = toUInt32(buf, index, bigEndian);
     return *((int32_t*)&raw);
 }
 
-uint32_t WasatchVCPP::ParseData::toUInt32(const vector<uint8_t>& buf, int index)
+//! assumes little endian
+uint32_t WasatchVCPP::ParseData::toUInt32(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
     if (index + 3 >= buf.size())
         return 0;
 
-    uint32_t raw = (buf[index + 3] << 24) 
-                 | (buf[index + 2] << 16)
-                 | (buf[index + 1] <<  8)
-                 | (buf[index + 0]);
+    uint32_t raw;
+    if (bigEndian)
+        raw = (buf[index + 3]) 
+            | (buf[index + 2] <<  8)
+            | (buf[index + 1] << 16)
+            | (buf[index + 0] << 24);
+    else
+        raw = (buf[index + 3] << 24) 
+            | (buf[index + 2] << 16)
+            | (buf[index + 1] <<  8)
+            | (buf[index + 0]);
     return raw;
 }
+
+//! used for laser modulation
+uint64_t WasatchVCPP::ParseData::toUInt40(const vector<uint8_t>& buf, int index, bool bigEndian)
+{
+    if (index + 4 >= buf.size())
+        return 0;
+
+    uint64_t raw = 0;
+    if (bigEndian)
+        raw = (((uint64_t)buf[index + 0]) << 32)
+            |            (buf[index + 1]  << 24)
+            |            (buf[index + 2]  << 16)
+            |            (buf[index + 3]  << 8)
+            |            (buf[index + 4]);
+    else
+        raw = (((uint64_t)buf[index + 4]) << 32)
+            |            (buf[index + 3]  << 24)
+            |            (buf[index + 2]  << 16)
+            |            (buf[index + 1]  << 8)
+            |            (buf[index + 0]);
+    return raw;
+}
+
 
 float WasatchVCPP::ParseData::toFloat (const vector<uint8_t>& buf, int index)
 {

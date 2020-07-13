@@ -41,12 +41,19 @@
 #define DLL_API __declspec(dllimport)
 #endif
 
+////////////////////////////////////////////////////////////////////////////////
 // all functions should return one of these codes unless indicated otherwise
-#define WP_SUCCESS                      0
-#define WP_ERROR                       -1
-#define WP_ERROR_INVALID_SPECTROMETER  -2
-#define WP_ERROR_INSUFFICIENT_STORAGE  -3
-#define WP_ERROR_NO_LASER              -4
+////////////////////////////////////////////////////////////////////////////////
+
+#define WP_SUCCESS                      0     //!< the function completed successfully
+#define WP_ERROR                       -1     //!< other unspecified error
+#define WP_ERROR_INVALID_SPECTROMETER  -2     //!< specIndex referenced an invalid / unopen spectrometer
+#define WP_ERROR_INSUFFICIENT_STORAGE  -3     //!< insufficient storage was allocated to receive the full value
+#define WP_ERROR_NO_LASER              -4     //!< command is only valid on models with a laser and/or defined excitation wavelength
+#define WP_ERROR_NOT_INGAAS            -5     //!< command is only valid on models with an InGaAs detector
+#define WP_ERROR_INVALID_GAIN          -256   //!< detector gain could not be determined (impossible value)
+#define WP_ERROR_INVALID_TEMPERATURE   -999   //!< temperature could not be measured (impossible value)
+#define WP_ERROR_INVALID_OFFSET        -32768 //!< offset could not be determined (unreasonable value)
 
 // supported log levels
 #define WP_LOG_LEVEL_DEBUG              0
@@ -351,7 +358,7 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param value (Input) zero to disable, non-zero to enable
     //! @returns WP_SUCCESS or non-zero on error (e.g. silicon detector)
-    DLL_API int wp_set_high_gain_mode(int specIndex, int value);
+    DLL_API int wp_set_high_gain_mode_enable(int specIndex, int value);
 
     //! Get the firmware version of the microcontroller (FX2 or ARM).
     //!
@@ -372,8 +379,19 @@ extern "C"
     //! Get the detector temperature.
     //!
     //! @param specIndex (Input) which spectrometer
-    //! @returns -999 on error, else detector temperature in degrees Celsius
+    //! @returns WP_ERROR_INVALID_TEMPERATURE on error, else detector temperature
+    //!          in degrees Celsius
     DLL_API float wp_get_detector_temperature_deg_c(int specIndex);
+
+    DLL_API long wp_get_integration_time_ms(int specIndex);
+    DLL_API int wp_get_laser_enable(int specIndex);
+    DLL_API float wp_get_detector_gain(int specIndex);
+    DLL_API float wp_get_detector_gain_odd(int specIndex);
+    DLL_API int wp_get_detector_offset(int specIndex);
+    DLL_API int wp_get_detector_offset_odd(int specIndex);
+    DLL_API int wp_get_tec_enable(int specIndex);
+    DLL_API int wp_get_detector_tec_setpoint_deg_c(int specIndex);
+    DLL_API int wp_get_high_gain_mode_enable(int specIndex);
 
     //! Provide direct access to writing spectrometer opcodes via USB setup 
     //! packets (endpoint 0 control 
@@ -452,7 +470,7 @@ extern "C"
 //
 // It is important to prevent these from being compiled into the DLL, because
 // otherwise the customer could end up with two "copies" of the same classes
-// (one compiled into the DLL, the other instanted into their own application
+// (one compiled into the DLL, the other instantiated into their own application
 // when they include this header).  That could create linkage collisions down
 // the road.  It MIGHT not be an issue, as long as we don't "dllexport" these
 // declarations (and we're not), but I'd rather not take the chance.
@@ -485,6 +503,8 @@ namespace WasatchVCPP
         oriented facade to the flatted C API the DLL exports in order to avoid 
         ABI entanglements.
 
+        @todo throw exceptions on error, as some of the C functions currently 
+              float-up better error information than the C++ wrappers
         @see README_ARCHITECTURE.md
     */
     namespace Proxy
@@ -583,29 +603,6 @@ namespace WasatchVCPP
                 bool setLaserEnable(bool flag)
                 { return wp_set_laser_enable(specIndex, flag); }
 
-                //! Retrieve one spectrum from the spectrometer.
-                //!
-                //! Sends an ACQUIRE command, then enters BLOCKING read on bulk endpoint.
-                //! Demarshalls retreived little-endian pixel values.  Applies minimal
-                //! post-processing (see WasatchVCPP::Spectrometer::getSpectrum for details).
-                //!
-                //! @returns spectrum as vector of doubles
-                std::vector<double> getSpectrum()
-                {
-                    std::vector<double> result;
-                    if (spectrumBuf != nullptr)
-                    {
-                        if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrumBuf, pixels))
-                        {
-                            // This seems to work, but doing manually for now:
-                            // result = vector<double>(spectrumBuf, spectrumBuf + pixels); 
-                            for (int i = 0; i < pixels; i++)
-                                result.push_back(spectrumBuf[i]);
-                        }
-                    }
-                    return result;
-                }
-
                 //! @see wp_set_detector_gain
                 bool setDetectorGain(float value)
                 { return WP_SUCCESS == wp_set_detector_gain(specIndex, value); }
@@ -632,7 +629,48 @@ namespace WasatchVCPP
 
                 //! @see wp_set_high_gain_mode
                 bool setHighGainMode(bool flag)
-                { return WP_SUCCESS == wp_set_high_gain_mode(specIndex, flag ? 1 : 0); }
+                { return WP_SUCCESS == wp_set_high_gain_mode_enable(specIndex, flag ? 1 : 0); }
+
+                //! @see wp_get_detector_temperature_deg_c
+                float getDetectorTemperatureDegC()
+                { return wp_get_detector_temperature_deg_c(specIndex); }
+
+                //! @see wp_get_integration_time_ms
+                long getIntegrationTimeMS() { return wp_get_integration_time_ms(specIndex); }
+
+                //! @see wp_get_laser_enable
+                bool getLaserEnable() { return 0 != wp_get_laser_enable(specIndex); }
+
+                //! @see wp_get_detector_gain
+                float getDetectorGain() { return wp_get_detector_gain(specIndex); }
+
+                //! @see wp_get_detector_gain_odd
+                float getDetectorGainOdd() { return wp_get_detector_gain_odd(specIndex); }
+
+                //! @see wp_get_detector_offset
+                int getDetectorOffset() { return wp_get_detector_offset(specIndex); }
+
+                //! @see wp_get_detector_offset_odd
+                int getDetectorOffsetOdd() { return wp_get_detector_offset_odd(specIndex); }
+
+                //! @see wp_get_tec_enable
+                bool getTECEnable() { return 0 != wp_get_tec_enable(specIndex); }
+
+                //! @see wp_get_detector_tec_setpoint_deg_c
+                int getDetectorTECSetpointDegC() { return wp_get_detector_tec_setpoint_deg_c(specIndex); }
+
+                //! @see wp_get_high_gain_mode_enable
+                bool getHighGainModeEnable() { return wp_get_high_gain_mode_enable(specIndex); }
+
+                //! @see wp_send_control_msg 
+                //! @warning no seriously, you need to follow that link
+                int sendControlMsg(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint8_t* data, int len)
+                { return wp_send_control_msg(specIndex, bRequest, wValue, wIndex, data, len); }
+
+                //! @see wp_read_control_msg 
+                //! @warning no seriously, you need to follow that link
+                int readControlMsg(uint8_t bRequest, uint16_t wIndex, uint8_t* data, int len)
+                { return wp_read_control_msg(specIndex, bRequest, wIndex, data, len); }
 
                 //! @see wp_get_firmware_version
                 std::string getFirmwareVersion()
@@ -650,21 +688,29 @@ namespace WasatchVCPP
                     return std::string(buf);
                 }
 
-                //! @see wp_get_detector_temperature_deg_c
-                float getDetectorTemperatureDegC()
-                { return wp_get_detector_temperature_deg_c(specIndex); }
+                //! Retrieve one spectrum from the spectrometer.
+                //!
+                //! Sends an ACQUIRE command, then enters BLOCKING read on bulk endpoint.
+                //! Demarshalls retreived little-endian pixel values.  Applies minimal
+                //! post-processing (see WasatchVCPP::Spectrometer::getSpectrum for details).
+                //!
+                //! @returns spectrum as vector of doubles
+                std::vector<double> getSpectrum()
+                {
+                    std::vector<double> result;
+                    if (spectrumBuf != nullptr)
+                    {
+                        if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrumBuf, pixels))
+                        {
+                            // This seems to work, but doing manually for now:
+                            // result = vector<double>(spectrumBuf, spectrumBuf + pixels); 
+                            for (int i = 0; i < pixels; i++)
+                                result.push_back(spectrumBuf[i]);
+                        }
+                    }
+                    return result;
+                }
 
-                //! @see wp_send_control_msg 
-                //! @warning no seriously, you need to follow that link
-                int sendControlMsg(int specIndex, uint8_t bRequest, uint16_t wValue, uint16_t wIndex,
-                    uint8_t* data, int len)
-                { return wp_send_control_msg(specIndex, bRequest, wValue, wIndex, data, len); }
-
-                //! @see wp_read_control_msg 
-                //! @warning no seriously, you need to follow that link
-                int readControlMsg(int specIndex, uint8_t bRequest, uint16_t wIndex,
-                    uint8_t* data, int len)
-                { return wp_read_control_msg(specIndex, bRequest, wIndex, data, len); }
 
             private:
                 bool readEEPROMFields()

@@ -10,6 +10,8 @@
     This file is the one and only place where the WasatchVCPP::Driver Singleton
     is actually instantiated (meaning it probably doesn't actually have to be
     a Singleton...)
+
+    @todo   rename to WasatchVCPP.cpp, as the impl to WasatchVCPP.h?
 */
 
 #include "pch.h"
@@ -357,7 +359,7 @@ int wp_set_high_gain_mode(int specIndex, int value)
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
 
-    if (!spec->setHighGainMode(value != 0))
+    if (!spec->setHighGainModeEnable(value != 0))
         return WP_ERROR;
 
     return WP_SUCCESS;
@@ -393,10 +395,92 @@ float wp_get_detector_temperature_deg_c(int specIndex)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
-        return -999;
+        return WP_ERROR_INVALID_TEMPERATURE;
 
     return spec->getDetectorTemperatureDegC();
 }
+
+long wp_get_integration_time_ms(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getIntegrationTimeMS();
+}
+
+int wp_get_laser_enable(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getLaserEnable() ? 1 : 0;
+}
+
+float wp_get_detector_gain(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getDetectorGain();
+}
+
+float wp_get_detector_gain_odd(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getDetectorGainOdd();
+}
+
+int wp_get_detector_offset(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getDetectorOffset();
+}
+
+int wp_get_detector_offset_odd(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getDetectorOffsetOdd();
+}
+
+int wp_get_tec_enable(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getTECEnable() ? 1 : 0;
+}
+
+int wp_get_detector_tec_setpoint_deg_c(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getDetectorTECSetpointDegC();
+}
+
+int wp_get_high_gain_mode_enable(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    return spec->getHighGainModeEnable() ? 1 : 0;
+}
+
 
 int wp_send_control_msg(int specIndex, unsigned char bRequest, unsigned int wValue,
     unsigned int wIndex, unsigned char* data, int len)

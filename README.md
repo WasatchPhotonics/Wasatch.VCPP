@@ -73,6 +73,25 @@ Wasatch.NET and Wasatch.PY for comparison).
                          (customer ABI)              (DLL ABI)                 _____________      ______v_______
                                                                C#, Delphi <-->| Wasatch.NET |<-->| LibUsbDotNet |
                                                                LabVIEW etc    |_____________|    |______________|
+
+## Future Bindings
+
+Some may wonder, if WasatchVCPPNet can call into WasatchVCPP, then could not 
+Wasatch.NET do the same, making Wasatch.NET much smaller, and consolidating all 
+business logic, opcodes, marshalling, endian fiddling etc into a single library?
+
+And since Python can obviously call into C libraries, could not Wasatch.PY not
+do the same, such that we only have one actual (C/C++) "application driver," 
+wrapped by multiple lightweight language bindings?
+
+Yes, we could do that.  And it's not out of bounds that we may someday do that.
+But that's not currently in scope or required, and it's not what we're doing 
+right now.
+
+(Also, it can be useful to have "native" driver logic in C#, for instance to
+access USB spectrometers from Xamarin on Android...a C library would actually
+be less convenient for mobile platforms.  So there is that.)
+
 # Contents
 
 The WasatchVCPP distribution contains:

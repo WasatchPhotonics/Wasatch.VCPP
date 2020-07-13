@@ -14,17 +14,25 @@
 namespace WasatchVCPP
 {
     //! Internal class providing methods for reading and writing individual fields 
-    //! within the EEPROM.  It is primarily used by EEPROM.parse() and EEPROM.write().
+    //! within the EEPROM.  
+    //! 
+    //! It is used by EEPROM.parse() and EEPROM.write() (generally with non-zero values 
+    //! for index).  However, this class is also used to demarsharl little-endian gettors
+    //! from WasatchVCPP::Spectrometer.
+    //! 
+    //! @note all serialized data is presumed little-endian unless specified otherwise
     class ParseData
     {
         public:
-            static bool         toBool  (const std::vector<uint8_t>& buf, int index);
-            static uint8_t      toUInt8 (const std::vector<uint8_t>& buf, int index);
-            static int16_t      toInt16 (const std::vector<uint8_t>& buf, int index);
-            static uint16_t     toUInt16(const std::vector<uint8_t>& buf, int index);
-            static int32_t      toInt32 (const std::vector<uint8_t>& buf, int index);
-            static uint32_t     toUInt32(const std::vector<uint8_t>& buf, int index);
-            static float        toFloat (const std::vector<uint8_t>& buf, int index);
+            static bool         toBool  (const std::vector<uint8_t>& buf, int index = 0);
+            static uint8_t      toUInt8 (const std::vector<uint8_t>& buf, int index = 0);
+            static int16_t      toInt16 (const std::vector<uint8_t>& buf, int index = 0, bool bigEndian = false);
+            static uint16_t     toUInt16(const std::vector<uint8_t>& buf, int index = 0, bool bigEndian = false);
+            static uint32_t     toUInt24(const std::vector<uint8_t>& buf, int index = 0, bool bigEndian = false);
+            static int32_t      toInt32 (const std::vector<uint8_t>& buf, int index = 0, bool bigEndian = false);
+            static uint32_t     toUInt32(const std::vector<uint8_t>& buf, int index = 0, bool bigEndian = false);
+            static uint64_t     toUInt40(const std::vector<uint8_t>& buf, int index = 0, bool bigEndian = false);
+            static float        toFloat (const std::vector<uint8_t>& buf, int index = 0);
             static std::string  toString(const std::vector<uint8_t>& buf, int index = 0, int len = 0);
 
             static bool writeBool   (bool               value, std::vector<uint8_t>& buf, int index);

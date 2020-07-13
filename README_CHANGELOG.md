@@ -1,5 +1,15 @@
 # Changelog
 
+- 2020-07-13 0.0.8
+    - added getIntegrationTimeMS
+    - added getLaserEnable
+    - added getDetectorGain
+    - added getDetectorGainOdd
+    - added getDetectorOffset
+    - added getDetectorOffsetOdd
+    - added getTECEnable
+    - added getDetectorTECSetpointDegC
+    - added getHighGainModeEnable
 - 2020-07-12 0.0.7
     - stubbed WasatchVCPPNet
     - added sendControlMsg
