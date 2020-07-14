@@ -1,13 +1,14 @@
 .PHONY: doc docs
 
 clean: 
-	@rm -rf doxygen*                                    \
-            WasatchVCPPLib/.vs                          \
-            WasatchVCPPLib/packages                     \
-            WasatchVCPPLib/{x64,Debug}                  \
-            WasatchVCPPLib/WasatchVCPPLib/{x64,Debug}   \
-            WasatchVCPPLib/WasatchVCPPDemo/{x64,Debug}  \
-            bin/*.{exe,dll}                             \
+	@rm -rf doxygen*                                            \
+            WasatchVCPPLib/.vs                                  \
+            WasatchVCPPLib/packages                             \
+            WasatchVCPPLib/{Setup32,Setup64}/{Debug,Release}    \
+            WasatchVCPPLib/{Debug,Release}                      \
+            WasatchVCPPLib/WasatchVCPPLib/{Debug,Release}       \
+            WasatchVCPPLib/WasatchVCPPDemo/{Debug,Release}      \
+            bin/*.{exe,dll}                                     \
             lib/{x86,x64}/*.{lib,dll}
 
 doc docs:
