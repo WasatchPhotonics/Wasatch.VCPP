@@ -126,7 +126,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\dist\x64\libusb0.dll $(TargetDir)</Command>
+      <Command>copy $(SolutionDir)\dist\x64\libusb0.dll $(TargetDir)
+copy $(SolutionDir)\dist\x64\libusb0.dll $(SolutionDir)\..\bin
+copy $(TargetDir)\WasatchVCPPDemo.exe $(SolutionDir)\..\bin
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

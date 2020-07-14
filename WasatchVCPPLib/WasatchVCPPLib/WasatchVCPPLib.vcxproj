@@ -81,6 +81,7 @@
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\dist\x64;$(LibraryPath)</LibraryPath>
     <IncludePath>Z:\work\code\Wasatch.VCPP\include;$(IncludePath)</IncludePath>
+    <TargetName>WasatchVCPP</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -135,6 +136,11 @@
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>libusb.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetDir)\WasatchVCPP.dll $(SolutionDir)\..\lib\x64
+copy $(TargetDir)\WasatchVCPP.lib $(SolutionDir)\..\lib\x64
+copy $(SolutionDir)\dist\x64\libusb0.dll $(SolutionDir)\..\lib\x64</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
