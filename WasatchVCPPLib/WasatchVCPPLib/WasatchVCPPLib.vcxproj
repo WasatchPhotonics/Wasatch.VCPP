@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(SolutionDir)dist\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..\dist\x86;$(LibraryPath)</LibraryPath>
     <TargetName>WasatchVCPP</TargetName>
     <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -80,17 +80,17 @@
     <LinkIncremental>false</LinkIncremental>
     <TargetName>WasatchVCPP</TargetName>
     <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)dist\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..\dist\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(SolutionDir)dist\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..\dist\x64;$(LibraryPath)</LibraryPath>
     <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
     <TargetName>WasatchVCPP</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(SolutionDir)dist\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)..\dist\x64;$(LibraryPath)</LibraryPath>
     <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
     <TargetName>WasatchVCPP</TargetName>
   </PropertyGroup>

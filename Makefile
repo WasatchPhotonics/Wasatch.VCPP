@@ -5,8 +5,11 @@ clean:
             WasatchVCPPLib/.vs                                  \
             WasatchVCPPLib/packages                             \
             WasatchVCPPLib/{Setup32,Setup64}/{Debug,Release}    \
+            WasatchVCPPLib/{x64,Win32}                          \
             WasatchVCPPLib/{Debug,Release}                      \
+            WasatchVCPPLib/WasatchVCPPLib/{x64,Win32}           \
             WasatchVCPPLib/WasatchVCPPLib/{Debug,Release}       \
+            WasatchVCPPLib/WasatchVCPPDemo/{x64,Win32}          \
             WasatchVCPPLib/WasatchVCPPDemo/{Debug,Release}      \
             bin/*.{exe,dll}                                     \
             lib/{x86,x64}/*.{lib,dll}

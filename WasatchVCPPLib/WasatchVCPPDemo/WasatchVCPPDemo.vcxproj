@@ -100,8 +100,8 @@
     <PostBuildEvent>
       <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
 copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x86\libusb0.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x86\libusb0.dll $(TargetDir)
+copy $(SolutionDir)..\dist\x86\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)..\dist\x86\libusb0.dll $(TargetDir)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -123,8 +123,8 @@ copy $(SolutionDir)dist\x86\libusb0.dll $(TargetDir)
     <PostBuildEvent>
       <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
 copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x86\libusb0.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x86\libusb0.dll $(TargetDir)
+copy $(SolutionDir)..\dist\x86\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)..\dist\x86\libusb0.dll $(TargetDir)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -142,8 +142,8 @@ copy $(SolutionDir)dist\x86\libusb0.dll $(TargetDir)
     <PostBuildEvent>
       <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
 copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x64\libusb0.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x64\libusb0.dll $(TargetDir)
+copy $(SolutionDir)..\dist\x64\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)..\dist\x64\libusb0.dll $(TargetDir)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -165,8 +165,8 @@ copy $(SolutionDir)dist\x64\libusb0.dll $(TargetDir)
     <PostBuildEvent>
       <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
 copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x64\libusb0.dll $(SolutionDir)..\bin
-copy $(SolutionDir)dist\x64\libusb0.dll $(TargetDir)</Command>
+copy $(SolutionDir)..\dist\x64\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)..\dist\x64\libusb0.dll $(TargetDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
