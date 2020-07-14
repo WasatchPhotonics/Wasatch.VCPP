@@ -10,6 +10,28 @@
 #                                                                              #
 ################################################################################
 
+# @todo add WasatchVCPPNet installers
+function renameAndPost()
+{
+    for PROJ in Setup32 Setup64
+    do
+        for TARGET in Debug Release
+        do
+            LOCAL_PATH="WasatchVCPPLib/$PROJ/$TARGET/WasatchVCPP-$VERSION-$PROJ.msi"
+            REMOTE_FILE="WasatchVCPP-$VERSION-$PROJ-$TARGET.msi"
+            if [ -f $LOCAL_PATH ]
+            then
+                scp -v $LOCAL_PATH $USERNAME@$REMOTE_HOST:$REMOTE_PATH/
+            else
+                echo "not found: $LOCAL_PATH"
+            fi
+        done
+    done
+}
+
+REMOTE_HOST="wasatchphotonics.com"
+REMOTE_PATH="www/binaries/drivers/Wasatch.VCPP"
+
 read -p "Username: " USERNAME
 read -p "Version:  " VERSION 
 
