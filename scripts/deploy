@@ -17,11 +17,11 @@ function renameAndPost()
     do
         for TARGET in Debug Release
         do
-            LOCAL_PATH="WasatchVCPPLib/$PROJ/$TARGET/WasatchVCPP-$VERSION-$PROJ.msi"
+            LOCAL_PATH="WasatchVCPPLib/$PROJ/$TARGET/WasatchVCPP-$PROJ-$VERSION.msi"
             REMOTE_FILE="WasatchVCPP-$VERSION-$PROJ-$TARGET.msi"
             if [ -f $LOCAL_PATH ]
             then
-                scp -v $LOCAL_PATH $USERNAME@$REMOTE_HOST:$REMOTE_PATH/
+                scp -v $LOCAL_PATH $USERNAME@$REMOTE_HOST:$REMOTE_PATH/$REMOTE_FILE
             else
                 echo "not found: $LOCAL_PATH"
             fi
