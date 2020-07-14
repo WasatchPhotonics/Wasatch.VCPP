@@ -72,19 +72,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\dist\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)dist\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\dist\x64;$(LibraryPath)</LibraryPath>
-    <IncludePath>Z:\work\code\Wasatch.VCPP\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)dist\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
     <TargetName>WasatchVCPP</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>$(SolutionDir)dist\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
+    <TargetName>WasatchVCPP</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -137,9 +140,9 @@
       <AdditionalDependencies>libusb.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetDir)\WasatchVCPP.dll $(SolutionDir)\..\lib\x64
-copy $(TargetDir)\WasatchVCPP.lib $(SolutionDir)\..\lib\x64
-copy $(SolutionDir)\dist\x64\libusb0.dll $(SolutionDir)\..\lib\x64</Command>
+      <Command>copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\lib\x64
+copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64
+copy $(SolutionDir)dist\x64\libusb0.dll $(SolutionDir)..\lib\x64</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -159,6 +162,7 @@ copy $(SolutionDir)\dist\x64\libusb0.dll $(SolutionDir)\..\lib\x64</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>libusb.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

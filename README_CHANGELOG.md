@@ -1,7 +1,8 @@
 # Changelog
 
 - 2020-07-13 0.0.9
-    - post-build events for Debug/x64
+    - build cleanup for Debug/x64
+    - build configuration Release/x64
 - 2020-07-13 0.0.8
     - added getIntegrationTimeMS
     - added getLaserEnable

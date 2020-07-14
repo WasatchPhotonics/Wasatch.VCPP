@@ -27,9 +27,6 @@
     <ClInclude Include="WasatchVCPPDemo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="WasatchVCPPProxy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="InputBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -39,9 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WasatchVCPPDemo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WasatchVCPPProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InputBox.cpp">
