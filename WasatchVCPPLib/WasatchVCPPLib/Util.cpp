@@ -35,7 +35,7 @@ string WasatchVCPP::Util::toLower(const std::string& s)
 string WasatchVCPP::Util::toHex(const std::vector<uint8_t>& data)
 {
     string s = "0x";
-    for (int i = 0; i < data.size(); i++)
+    for (int i = 0; i < (int)data.size(); i++)
         s += sprintf("%02x ", data[i]);
 
     return s;

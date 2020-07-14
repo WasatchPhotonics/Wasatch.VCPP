@@ -383,7 +383,7 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
     if (eeprom.featureMask.bin2x2)
     {
         vector<double> binned;
-        for (int i = 0; i < spectrum.size() - 1; i++)
+        for (int i = 0; i < (int)spectrum.size() - 1; i++)
             binned.push_back((spectrum[i] + spectrum[i + 1]) / 2.0);
         binned.push_back(spectrum[spectrum.size() - 1]);
     }

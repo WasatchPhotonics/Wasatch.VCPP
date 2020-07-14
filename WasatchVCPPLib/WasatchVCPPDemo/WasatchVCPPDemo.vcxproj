@@ -72,11 +72,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\WasatchVCPPLib;$(IncludePath)</IncludePath>
-    <LibraryPath>Z:\work\code\Wasatch.VCPP\WasatchVCPPLib\dist\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)..\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -97,6 +97,11 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
+copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
+copy $(TargetDir)libusb.dll $(SolutionDir)..\bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -113,6 +118,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
+copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
+copy $(TargetDir)libusb.dll $(SolutionDir)..\bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

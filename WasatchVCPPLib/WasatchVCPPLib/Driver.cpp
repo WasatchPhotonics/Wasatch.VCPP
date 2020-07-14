@@ -103,7 +103,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
 
 WasatchVCPP::Spectrometer* WasatchVCPP::Driver::getSpectrometer(int index)
 {
-    if (index >= 0 && index < spectrometers.size())
+    if (index >= 0 && index < (int)spectrometers.size())
         return spectrometers[index];
     return nullptr;
 }

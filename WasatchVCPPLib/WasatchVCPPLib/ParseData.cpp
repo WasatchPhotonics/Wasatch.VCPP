@@ -17,7 +17,7 @@ using std::vector;
 
 bool WasatchVCPP::ParseData::toBool(const vector<uint8_t>& buf, int index)
 {
-    if (index >= buf.size())
+    if (index >= (int)buf.size())
         return false;
 
     return buf[index] != 0;
@@ -25,7 +25,7 @@ bool WasatchVCPP::ParseData::toBool(const vector<uint8_t>& buf, int index)
 
 uint8_t WasatchVCPP::ParseData::toUInt8(const vector<uint8_t>& buf, int index)
 {
-    if (index >= buf.size())
+    if (index >= (int)buf.size())
         return 0;
 
     return buf[index];
@@ -41,7 +41,7 @@ int16_t WasatchVCPP::ParseData::toInt16(const vector<uint8_t>& buf, int index, b
 //! assumes little endian
 uint16_t WasatchVCPP::ParseData::toUInt16(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
-    if (index + 1 >= buf.size())
+    if (index + 1 >= (int)buf.size())
         return 0;
 
     uint16_t raw = bigEndian ? ((buf[index] << 8) | buf[index + 1])
@@ -52,7 +52,7 @@ uint16_t WasatchVCPP::ParseData::toUInt16(const vector<uint8_t>& buf, int index,
 //! integration time is a 24-bit value
 uint32_t WasatchVCPP::ParseData::toUInt24(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
-    if (index + 2 >= buf.size())
+    if (index + 2 >= (int)buf.size())
         return 0;
 
     uint32_t raw = bigEndian ? ((buf[index + 2]) | (buf[index + 1] << 8) | (buf[index] << 16))
@@ -70,7 +70,7 @@ int32_t WasatchVCPP::ParseData::toInt32(const vector<uint8_t>& buf, int index, b
 //! assumes little endian
 uint32_t WasatchVCPP::ParseData::toUInt32(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
-    if (index + 3 >= buf.size())
+    if (index + 3 >= (int)buf.size())
         return 0;
 
     uint32_t raw;
@@ -90,7 +90,7 @@ uint32_t WasatchVCPP::ParseData::toUInt32(const vector<uint8_t>& buf, int index,
 //! used for laser modulation
 uint64_t WasatchVCPP::ParseData::toUInt40(const vector<uint8_t>& buf, int index, bool bigEndian)
 {
-    if (index + 4 >= buf.size())
+    if (index + 4 >= (int)buf.size())
         return 0;
 
     uint64_t raw = 0;
@@ -123,7 +123,7 @@ string WasatchVCPP::ParseData::toString(const vector<uint8_t>& buf, int index, i
 
     std::string s;
     for (int i = 0; i < len; i++)
-        if (index + i < buf.size())
+        if (index + i < (int)buf.size())
             if (buf[index + 1] == 0)
                 break;
             else
@@ -137,7 +137,7 @@ string WasatchVCPP::ParseData::toString(const vector<uint8_t>& buf, int index, i
 
 bool WasatchVCPP::ParseData::writeBool(bool value, vector<uint8_t>& buf, int index)
 {
-    if (index >= buf.size())
+    if (index >= (int)buf.size())
         return false;
 
     buf[index] = value ? 1 : 0;
@@ -146,7 +146,7 @@ bool WasatchVCPP::ParseData::writeBool(bool value, vector<uint8_t>& buf, int ind
 
 bool WasatchVCPP::ParseData::writeUInt8(uint8_t value, vector<uint8_t>& buf, int index)
 {
-    if (index >= buf.size())
+    if (index >= (int)buf.size())
         return false;
 
     buf[index] = value;
@@ -155,7 +155,7 @@ bool WasatchVCPP::ParseData::writeUInt8(uint8_t value, vector<uint8_t>& buf, int
 
 bool WasatchVCPP::ParseData::writeUInt16(uint16_t value, vector<uint8_t>& buf, int index)
 {
-    if (index + 1 >= buf.size())
+    if (index + 1 >= (int)buf.size())
         return false;
 
     buf[index + 0] = (value     ) & 0xff;
@@ -172,7 +172,7 @@ bool WasatchVCPP::ParseData::writeInt16(int16_t value, vector<uint8_t>& buf, int
 
 bool WasatchVCPP::ParseData::writeUInt32(uint32_t value, vector<uint8_t>& buf, int index)
 {
-    if (index + 3 >= buf.size())
+    if (index + 3 >= (int)buf.size())
         return false;
 
     buf[index + 0] = (value      ) & 0xff;
@@ -203,7 +203,7 @@ bool WasatchVCPP::ParseData::writeString(const string& value, vector<uint8_t>& b
     {
         // handle empty strings (write NULLs)
         for (int i = 0; i < maxLen; i++)
-            if (index + i < buf.size())
+            if (index + i < (int)buf.size())
                 buf[index + i] = 0;
             else
                 break;
@@ -211,9 +211,9 @@ bool WasatchVCPP::ParseData::writeString(const string& value, vector<uint8_t>& b
     else
     {
         for (int i = 0; i < maxLen; i++)
-            if (index + i < buf.size())
+            if (index + i < (int)buf.size())
             {
-                if (i < value.size())
+                if (i < (int)value.size())
                     buf[index + i] = (uint8_t)value[i];
                 else
                     buf[index + i] = 0;

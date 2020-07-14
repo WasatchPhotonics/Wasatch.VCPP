@@ -54,7 +54,7 @@ Driver* driver = Driver::getInstance();
 int exportString(string s, char* buf, int len)
 {
     memset(buf, 0, len);
-    for (int i = 0; i < s.size(); i++)
+    for (int i = 0; i < (int)s.size(); i++)
         if (i < len)
             buf[i] = s[i];
         else
@@ -132,7 +132,7 @@ int wp_get_wavelengths(int specIndex, double* wavelengths, int len)
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
 
-    for (int i = 0; i < spec->wavelengths.size(); i++)
+    for (int i = 0; i < (int)spec->wavelengths.size(); i++)
         if (i < len)
             wavelengths[i] = spec->wavelengths[i];
         else
@@ -150,7 +150,7 @@ int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len)
     if (spec->eeprom.excitationNM <= 0)
         return WP_ERROR_NO_LASER;
 
-    for (int i = 0; i < spec->wavenumbers.size(); i++)
+    for (int i = 0; i < (int)spec->wavenumbers.size(); i++)
         if (i < len)
             wavenumbers[i] = spec->wavenumbers[i];
         else
@@ -169,7 +169,7 @@ int wp_get_spectrum(int specIndex, double* spectrum, int len)
     if (intensities.empty())
         return WP_ERROR;
 
-    for (int i = 0; i < intensities.size(); i++)
+    for (int i = 0; i < (int)intensities.size(); i++)
         if (i < len)
             spectrum[i] = intensities[i];
         else
@@ -503,7 +503,7 @@ int wp_read_control_msg(int specIndex, unsigned char bRequest, unsigned int wInd
 
     // could use memcpy
     for (int i = 0; i < len; i++)
-        if (i < response.size())
+        if (i < (int)response.size())
             data[i] = response[i];
         else
             return WP_ERROR_INSUFFICIENT_STORAGE;

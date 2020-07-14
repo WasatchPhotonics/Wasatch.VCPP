@@ -799,7 +799,7 @@ namespace WasatchVCPP
                 //! @returns handle to Proxy::Spectrometer
                 Spectrometer* getSpectrometer(int index)
                 {
-                    if (index >= spectrometers.size())
+                    if (index >= (int)spectrometers.size())
                         return nullptr;
 
                     return &spectrometers[index];
