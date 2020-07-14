@@ -94,31 +94,44 @@ be less convenient for mobile platforms.  So there is that.)
 
 # Contents
 
-The WasatchVCPP distribution contains:
+The WasatchVCPP distribution is structured as follows.  (Files ending in \*
+are populated at build.)
 
 - include/
     - WasatchVCPP.h (provides both C and C++ APIs)
 
 - lib/
     - x86/
-        - WasatchVCPP.dll (pre-compiled binaries)
-        - WasatchVCPP.lib
+        - WasatchVCPP.dll*
+        - WasatchVCPP.lib*
+        - libusb0.dll*
     - x64/
-        - WasatchVCPP.dll
-        - WasatchVCPP.lib
+        - WasatchVCPP.dll*
+        - WasatchVCPP.lib*
+        - libusb0.dll*
+
+- bin/
+    - WasatchVCPPDemo.exe\*
+    - libusb0.dll\*
+
+- dist/  (pre-compiled versions of libusb from the libusb-win32 distribution)
+    - x86/
+    - x64/
 
 - WasatchVCPPLib/
     - WasatchVCPPLib/ 
         - sources to build WasatchVCPP.dll from Visual Studio
     - WasatchVCPPDemo/ 
         - Visual C++ GUI demo using WasatchVCPP.dll (no COM, .NET or managed memory)
+    - Setup32/ 
+    - Setup64/ 
 
 - WasatchVCPPNet/
     - C# demo using WasatchVCPP.dll from managed .NET WinForms GUI
 
 - WasatchCPPLib/ (future)
-    - Makefile tree to build WasatchCPP.so or .dylib for POSIX environments using
-      gcc / clang toolchain
+    - Makefile tree to build WasatchCPP.so or WasatchCPP.dylib for POSIX 
+      environments using gcc / clang toolchain
 
 # Usage
 
