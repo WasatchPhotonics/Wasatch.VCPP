@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WasatchVCPPLib", "WasatchVC
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WasatchVCPPDemo", "WasatchVCPPDemo\WasatchVCPPDemo.vcxproj", "{5FC1382A-DB39-408D-A7DC-E1113EE3B7DF}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup32", "Setup32\Setup32.vdproj", "{F97EE8C4-1D3C-4807-960F-3F344E66AA7E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,12 @@ Global
 		{5FC1382A-DB39-408D-A7DC-E1113EE3B7DF}.Release|x64.Build.0 = Debug|x64
 		{5FC1382A-DB39-408D-A7DC-E1113EE3B7DF}.Release|x86.ActiveCfg = Release|Win32
 		{5FC1382A-DB39-408D-A7DC-E1113EE3B7DF}.Release|x86.Build.0 = Release|Win32
+		{F97EE8C4-1D3C-4807-960F-3F344E66AA7E}.Debug|x64.ActiveCfg = Debug
+		{F97EE8C4-1D3C-4807-960F-3F344E66AA7E}.Debug|x86.ActiveCfg = Debug
+		{F97EE8C4-1D3C-4807-960F-3F344E66AA7E}.Debug|x86.Build.0 = Debug
+		{F97EE8C4-1D3C-4807-960F-3F344E66AA7E}.Release|x64.ActiveCfg = Release
+		{F97EE8C4-1D3C-4807-960F-3F344E66AA7E}.Release|x86.ActiveCfg = Release
+		{F97EE8C4-1D3C-4807-960F-3F344E66AA7E}.Release|x86.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
