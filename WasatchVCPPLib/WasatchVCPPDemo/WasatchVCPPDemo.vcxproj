@@ -100,7 +100,9 @@
     <PostBuildEvent>
       <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
 copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
-copy $(TargetDir)libusb.dll $(SolutionDir)..\bin</Command>
+copy $(SolutionDir)dist\x86\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)dist\x86\libusb0.dll $(TargetDir)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -121,7 +123,9 @@ copy $(TargetDir)libusb.dll $(SolutionDir)..\bin</Command>
     <PostBuildEvent>
       <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
 copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
-copy $(TargetDir)libusb.dll $(SolutionDir)..\bin</Command>
+copy $(SolutionDir)dist\x86\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)dist\x86\libusb0.dll $(TargetDir)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -136,9 +140,10 @@ copy $(TargetDir)libusb.dll $(SolutionDir)..\bin</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\dist\x64\libusb0.dll $(TargetDir)
-copy $(SolutionDir)\dist\x64\libusb0.dll $(SolutionDir)\..\bin
-copy $(TargetDir)\WasatchVCPPDemo.exe $(SolutionDir)\..\bin
+      <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
+copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
+copy $(SolutionDir)dist\x64\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)dist\x64\libusb0.dll $(TargetDir)
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -157,6 +162,12 @@ copy $(TargetDir)\WasatchVCPPDemo.exe $(SolutionDir)\..\bin
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetDir)WasatchVCPPDemo.exe $(SolutionDir)..\bin
+copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\bin
+copy $(SolutionDir)dist\x64\libusb0.dll $(SolutionDir)..\bin
+copy $(SolutionDir)dist\x64\libusb0.dll $(TargetDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />

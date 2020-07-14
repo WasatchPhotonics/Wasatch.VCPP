@@ -155,8 +155,7 @@ copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x86</Command>
     </Link>
     <PostBuildEvent>
       <Command>copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\lib\x64
-copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64
-copy $(SolutionDir)dist\x64\libusb0.dll $(SolutionDir)..\lib\x64</Command>
+copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -178,6 +177,10 @@ copy $(SolutionDir)dist\x64\libusb0.dll $(SolutionDir)..\lib\x64</Command>
       <EnableUAC>false</EnableUAC>
       <AdditionalDependencies>libusb.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetDir)WasatchVCPP.dll $(SolutionDir)..\lib\x64
+copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\WasatchVCPP.h" />
