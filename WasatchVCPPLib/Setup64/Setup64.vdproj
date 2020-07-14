@@ -169,7 +169,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Wasatch.VCPP"
         "ProductCode" = "8:{672807D5-CF88-4CDE-B905-DBF3BE505AEC}"
-        "PackageCode" = "8:{3B7DC167-AB4A-4C5C-AB1A-FE2ACE18CC1F}"
+        "PackageCode" = "8:{77A7B3DD-01A7-45E2-8454-760143C1486D}"
         "UpgradeCode" = "8:{B3A4E2EB-5AAA-482A-91A1-1C958F74C45A}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -192,7 +192,7 @@
         "UseSystemSearchPath" = "11:TRUE"
         "TargetPlatform" = "3:1"
         "PreBuildEvent" = "8:"
-        "PostBuildEvent" = "8:FOR /F \"tokens=2 delims== \" %%V IN ('FINDSTR /B /R /C:\" *\\\"ProductVersion\\\"\" \"$(ProjectDir)Setup32.vdproj\"') DO FOR %%I IN (\"$(BuiltOuputPath)\") DO ren \"$(BuiltOuputPath)\" \"%%~nI-%%~nxV%%~xI\""
+        "PostBuildEvent" = "8:FOR /F \"tokens=2 delims== \" %%V IN ('FINDSTR /B /R /C:\" *\\\"ProductVersion\\\"\" \"$(ProjectDir)Setup64.vdproj\"') DO FOR %%I IN (\"$(BuiltOuputPath)\") DO ren \"$(BuiltOuputPath)\" \"%%~nI-%%~nxV%%~xI\""
         "RunPostBuildEvent" = "3:0"
         }
         "Registry"
