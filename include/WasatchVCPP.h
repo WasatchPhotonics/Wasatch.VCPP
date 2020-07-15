@@ -273,7 +273,7 @@ extern "C"
     //!
     //! Note that while this function will return instantly, the current
     //! operation is guaranteed to complete within the currently configured
-    //! "maximum timeout" as set through wp_set_maximum_timeout_ms.
+    //! "maximum timeout" as set through wp_set_max_timeout_ms.
     //!
     //! @warning new firmware will be required to support this at the hardware level
     //!
