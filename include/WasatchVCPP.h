@@ -184,6 +184,16 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_eeprom(int specIndex, const char** names, const char** values, int len);
 
+    //! Read one page of the EEPROM in raw binary form.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param page (Input) which page (0-7)
+    //! @param buf (Output) pre-allocated array of bytes to hold the page
+    //! @param len (Input) size of allocated buffer (should be 64)
+    //! @return WP_SUCCESS or non-zero on error
+    //! @see ENG-0034
+    DLL_API int wp_get_eeprom_page(int specIndex, int page, unsigned char* buf, int len);
+
     //! Read one stringified EEPROM field by name.
     //!
     //! If you don't want to call wp_get_eeprom and only want one or two fields
@@ -258,6 +268,43 @@ extern "C"
     //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_spectrum(int specIndex, double* spectrum, int len);
+
+    //! If an acquisition is currently in progress, cancel it.
+    //!
+    //! Note that while this function will return instantly, the current
+    //! operation is guaranteed to complete within the currently configured
+    //! "maximum timeout" as set through wp_set_maximum_timeout_ms.
+    //!
+    //! @warning new firmware will be required to support this at the hardware level
+    //!
+    //! @see wp_set_max_timeout_ms
+    //! @param specIndex (Input) which spectrometer
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_cancel_operation(int specIndex);
+
+    //! Configure the maximum internal timeout when waiting on blocking USB 
+    //! operations.
+    //!
+    //! Note this value can be less than integration time.  If a configured 
+    //! integration time is longer than the maximum timeout, then the "wait"
+    //! on the requested spectrum will be performed through a series of 
+    //! individual reads, each no longer than the configured maximum timeout.
+    //!
+    //! That is, if maxTimeoutMS is 1000, and a 5sec integration is requested,
+    //! The library will loop through five 1sec blocking reads before the
+    //! spectrum is expected to return.  (The library will internally wait even
+    //! longer than that, to account for USB latency and other timing delays,
+    //! but no individual blocking read will wait longer than the configured 
+    //! maximum.)
+    //!
+    //! This function essentially configures the maximum window before a call
+    //! to wp_cancel_operation will be expected to take effect.
+    //!
+    //! @see wp_cancel_operation
+    //! @param specIndex (Input) which spectrometer
+    //! @param maxTimeoutMS (Input) maximum timeout in milliseconds
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_max_timeout_ms(int specIndex, int maxTimeoutMS);
 
     ////////////////////////////////////////////////////////////////////////////
     // Opcodes
@@ -343,7 +390,7 @@ extern "C"
     //! @param specIndex (Input) which spectrometer
     //! @param value (Input) zero for off, non-zero for on
     //! @returns WP_SUCCESS or non-zero on error (e.g. uncooled spectrometer)
-    DLL_API int wp_set_tec_enable(int specIndex, int value);
+    DLL_API int wp_set_detector_tec_enable(int specIndex, int value);
 
     //! Set the detector TEC setpoint.
     //!
@@ -383,14 +430,58 @@ extern "C"
     //!          in degrees Celsius
     DLL_API float wp_get_detector_temperature_deg_c(int specIndex);
 
+    //! Get the curent integration time.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns current integration time in ms (negative for error)
     DLL_API long wp_get_integration_time_ms(int specIndex);
+
+    //! Reports whether laser is currently enabled (firing, or configured to do so).
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns 1 if enabled, 0 if disabled, negative on error
     DLL_API int wp_get_laser_enable(int specIndex);
+
+    //! Get the current detector gain (on InGaAs, even pixels only).
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns configured gain or WP_ERROR_INVALID_GAIN on error
     DLL_API float wp_get_detector_gain(int specIndex);
+
+    //! Get the current detector gain for odd InGaAs pixels.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns configured gain or WP_ERROR_INVALID_GAIN on error
     DLL_API float wp_get_detector_gain_odd(int specIndex);
+
+    //! Get the current detector offset (on InGaAs, even pixels only).
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns configured gain or WP_ERROR_INVALID_OFFSET on error
     DLL_API int wp_get_detector_offset(int specIndex);
+
+    //! Get the current detector offset for odd InGaAs pixels.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns configured gain or WP_ERROR_INVALID_OFFSET on error
     DLL_API int wp_get_detector_offset_odd(int specIndex);
-    DLL_API int wp_get_tec_enable(int specIndex);
+
+    //! Reports whether the detector TEC is enabled.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns 1 if enabled, 0 if disabled, negative on error
+    DLL_API int wp_get_detector_tec_enable(int specIndex);
+
+    //! Get the current detector TEC setpoint in degrees Celsius.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns cached value most recently set
     DLL_API int wp_get_detector_tec_setpoint_deg_c(int specIndex);
+
+    //! Reports whether "high-gain mode" is currently enabled on InGaAs detectors.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns 1 if enabled, 0 if disabled, negative on error
     DLL_API int wp_get_high_gain_mode_enable(int specIndex);
 
     //! Provide direct access to writing spectrometer opcodes via USB setup 
@@ -517,6 +608,9 @@ namespace WasatchVCPP
 
         //! A proxy customer-facing class providing an object-oriented / STL-based
         //! interface to command and control an individual Spectrometer.
+        //!
+        //! By default, methods returning a boolean report 'true' on success and 
+        //! 'false' on error unless specified otherwise.
         class Spectrometer
         {
             ////////////////////////////////////////////////////////////////////
@@ -619,15 +713,15 @@ namespace WasatchVCPP
                 bool setDetectorOffsetOdd(int16_t value)
                 { return WP_SUCCESS == wp_set_detector_offset_odd(specIndex, value); }
 
-                //! @see wp_set_tec_enable
-                bool setTECEnable(bool flag)
-                { return WP_SUCCESS == wp_set_tec_enable(specIndex, flag ? 1 : 0); }
+                //! @see wp_set_detector_tec_enable
+                bool setDetectorTECEnable(bool flag)
+                { return WP_SUCCESS == wp_set_detector_tec_enable(specIndex, flag ? 1 : 0); }
 
                 //! @see wp_set_detector_tec_setpoint_deg_c
                 bool setDetectorTECSetpointDegC(int value)
                 { return WP_SUCCESS == wp_set_detector_tec_setpoint_deg_c(specIndex, value); }
 
-                //! @see wp_set_high_gain_mode
+                //! @see wp_set_high_gain_mode_enable
                 bool setHighGainMode(bool flag)
                 { return WP_SUCCESS == wp_set_high_gain_mode_enable(specIndex, flag ? 1 : 0); }
 
@@ -653,8 +747,8 @@ namespace WasatchVCPP
                 //! @see wp_get_detector_offset_odd
                 int getDetectorOffsetOdd() { return wp_get_detector_offset_odd(specIndex); }
 
-                //! @see wp_get_tec_enable
-                bool getTECEnable() { return 0 != wp_get_tec_enable(specIndex); }
+                //! @see wp_get_detector_tec_enable
+                bool getDetectorTECEnable() { return 0 != wp_get_detector_tec_enable(specIndex); }
 
                 //! @see wp_get_detector_tec_setpoint_deg_c
                 int getDetectorTECSetpointDegC() { return wp_get_detector_tec_setpoint_deg_c(specIndex); }
@@ -671,6 +765,12 @@ namespace WasatchVCPP
                 //! @warning no seriously, you need to follow that link
                 int readControlMsg(uint8_t bRequest, uint16_t wIndex, uint8_t* data, int len)
                 { return wp_read_control_msg(specIndex, bRequest, wIndex, data, len); }
+
+                bool setMaxTimeoutMS(int maxTimeoutMS)
+                { return WP_SUCCESS == wp_set_max_timeout_ms(specIndex, maxTimeoutMS); }
+
+                bool cancelOperation()
+                { return WP_SUCCESS == wp_cancel_operation(specIndex); }
 
                 //! @see wp_get_firmware_version
                 std::string getFirmwareVersion()
@@ -711,6 +811,21 @@ namespace WasatchVCPP
                     return result;
                 }
 
+                //! @see wp_get_eeprom_page
+                std::vector<uint8_t> getEEPROMPage(int page)
+                {
+                    const int len = 64;
+                    std::vector<uint8_t> result;
+                    uint8_t buf[len] = { 0 };
+
+                    if (WP_SUCCESS != wp_get_eeprom_page(specIndex, page, buf, len))
+                        return result;
+
+                    result.resize(len);
+                    for (int i = 0; i < len; i++)
+                        result[i] = buf[i];
+                    return result;
+                }
 
             private:
                 bool readEEPROMFields()
@@ -768,7 +883,7 @@ namespace WasatchVCPP
                     return WP_SUCCESS == wp_set_log_level(level);
                 }
 
-                //! @see wp_get_library_level
+                //! @see wp_get_library_version
                 std::string getLibraryVersion()
                 {
                     char buf[16];

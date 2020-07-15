@@ -49,7 +49,6 @@ namespace WasatchVCPP
             EEPROM(Logger& logger);
 
             bool parse(const std::vector<std::vector<uint8_t> >& pages);
-            std::string toString() const;
 
             void stringifyAll();
             void stringify(const std::string& name, const std::string& value);
@@ -60,6 +59,7 @@ namespace WasatchVCPP
 
             Logger& logger;
             std::map<std::string, std::string> stringified;
+            std::vector<std::vector<uint8_t> > pages;
 
             ////////////////////////////////////////////////////////////////////
             // EEPROM fields

@@ -21,7 +21,7 @@ function renameAndPost()
             REMOTE_FILE="WasatchVCPP-$VERSION-$PROJ-$TARGET.msi"
             if [ -f $LOCAL_PATH ]
             then
-                scp -v $LOCAL_PATH $USERNAME@$REMOTE_HOST:$REMOTE_PATH/$REMOTE_FILE
+                scp $LOCAL_PATH $USERNAME@$REMOTE_HOST:$REMOTE_PATH/$REMOTE_FILE
             else
                 echo "not found: $LOCAL_PATH"
             fi
@@ -54,6 +54,15 @@ else
     exit 1
 fi
 
+# verify C headers match C# 
+DIFF=`make check_headers`
+echo "$DIFF"
+if [ "$DIFF" != "" ]
+then
+    echo "Error: C and C# header mismatch"
+    exit 1
+fi
+
 # render documentation 
 export VERSION
 make doc
@@ -64,4 +73,7 @@ rsync --archive doxygen/html/ ${USERNAME}@wasatchphotonics.com:www/api/Wasatch.V
 echo
 echo "View via:"
 echo
-echo "    http://www.wasatchphotonics.com/api/Wasatch.VCPP/"
+echo "    https://www.wasatchphotonics.com/api/Wasatch.VCPP/"
+echo
+
+renameAndPost

@@ -15,6 +15,8 @@
 
 namespace WasatchVCPP
 {
+    class Driver;
+
     //! Internal class encapsulating state and control of one spectrometer.
     //!
     //! All "Hungarian notation" parameter names (bRequest, wValue etc) are taken 
@@ -42,18 +44,21 @@ namespace WasatchVCPP
             bool close();
 
             EEPROM eeprom;
+            Driver* driver;
 
-            // convenience attributes
-            int pixels = 1024;
+            // public metadata
             std::vector<double> wavelengths;
             std::vector<double> wavenumbers;
-            std::string firmwareVersion;
-            std::string fpgaVersion;
             bool isARM();
             bool isInGaAs();
             bool isMicro();
+            int maxTimeoutMS = 1000;
+            bool operationCancelled;
 
             // cached properties
+            int pixels = 1024;
+            std::string firmwareVersion;
+            std::string fpgaVersion;
             int integrationTimeMS;
             bool laserEnabled;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
@@ -78,7 +83,7 @@ namespace WasatchVCPP
             float getDetectorGainOdd();
             int getDetectorOffset();
             int getDetectorOffsetOdd();
-            bool getTECEnable();
+            bool getDetectorTECEnable();
             int getDetectorTECSetpointDegC();
             bool getHighGainModeEnable();
 
@@ -112,8 +117,8 @@ namespace WasatchVCPP
             bool readEEPROM();
 
             // acquisition 
-            std::vector<uint16_t> getSubspectrum(uint8_t ep, int timeoutMS);
-            int generateTimeoutMS();
+            std::vector<uint16_t> getSubspectrum(uint8_t ep, long allocatedMS);
+            long generateTotalWaitMS();
 
             // control messages
             int sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, std::vector<uint8_t> data);

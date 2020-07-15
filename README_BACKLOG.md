@@ -1,5 +1,8 @@
 # Backlog
 
+Tracking for features planned for implementation, and explicit listing of 
+features considered _and rejected_ for implementation (at least at present).
+
 # Feature Matrix
 
 Per the "Design Remit" described in README.md:
@@ -10,8 +13,9 @@ Per the "Design Remit" described in README.md:
 - see WasatchVCPP.h and README_CHANGELOG.md
 
 (not done)
-- installer (including .inf files, etc)
 - WasatchVCPPNet demo (started)
+- added .inf files to installer
+- re-entrant thread-safety
 
 ## Not supported (pending customer use-case)
 

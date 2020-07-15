@@ -454,13 +454,13 @@ int wp_get_detector_offset_odd(int specIndex)
     return spec->getDetectorOffsetOdd();
 }
 
-int wp_get_tec_enable(int specIndex)
+int wp_get_detector_tec_enable(int specIndex)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
 
-    return spec->getTECEnable() ? 1 : 0;
+    return spec->getDetectorTECEnable() ? 1 : 0;
 }
 
 int wp_get_detector_tec_setpoint_deg_c(int specIndex)
@@ -479,6 +479,26 @@ int wp_get_high_gain_mode_enable(int specIndex)
         return WP_ERROR_INVALID_SPECTROMETER;
 
     return spec->getHighGainModeEnable() ? 1 : 0;
+}
+
+int wp_cancel_operation(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    spec->operationCancelled = true;
+    return WP_SUCCESS;
+}
+
+int wp_set_max_timeout_ms(int specIndex, int maxTimeoutMS)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    spec->maxTimeoutMS = maxTimeoutMS;
+    return WP_SUCCESS;
 }
 
 

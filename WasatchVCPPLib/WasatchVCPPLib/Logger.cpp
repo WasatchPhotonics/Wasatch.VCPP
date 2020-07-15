@@ -3,6 +3,8 @@
     @author Mark Zieg <mzieg@wasatchphotonics.com>
     @brief  implementation of WasatchVCPP::Logger
     @note   customers normally wouldn't access this file; use WasatchVCPP.h instead
+
+    @see usb_set_debug(int level)
 */
 
 #include "pch.h"

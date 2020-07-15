@@ -7,11 +7,13 @@
 */
 
 #include "pch.h"
+#include "Driver.h"
 #include "Spectrometer.h"
 #include "ParseData.h"
 #include "Util.h"
 
 #include <algorithm>
+#include <chrono>
 
 using std::string;
 using std::vector;
@@ -37,6 +39,8 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
 {
 
     logger.debug("Spectrometer::ctor: instantiating");
+
+    driver = Driver::getInstance();
 
     // read firmware versions first (useful for debugging, validates FPGA comms)
     firmwareVersion = getFirmwareVersion();
@@ -335,9 +339,17 @@ float WasatchVCPP::Spectrometer::getDetectorTemperatureDegC()
 // Acquisition
 ////////////////////////////////////////////////////////////////////////////////
 
-int WasatchVCPP::Spectrometer::generateTimeoutMS()
+//! Determine how long we should wait for an acquisition to return the spectrum.
+//!
+//! Note that this is the "full period" we should wait, which may end up being
+//! implemented through a series of shorter waits, allowing length operations to
+//! be cancelled.
+long WasatchVCPP::Spectrometer::generateTotalWaitMS()
 {
-    return 2 * integrationTimeMS + 2000;
+    int numberOfSpectrometers = driver->getNumberOfSpectrometers();
+    return 100 * numberOfSpectrometers 
+         + 2 * integrationTimeMS 
+         + 500;
 }
 
 //! @todo support 2048-pixel detectors
@@ -345,29 +357,33 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     vector<double> spectrum;
 
+    operationCancelled = false;
+
     // send software trigger
     logger.debug("sending ACQUIRE");
     sendCmd(0xad);
 
-    // this is included in the timeout
-    // Sleep(integrationTimeMS);
+    // how long we'll wait for the FIRST subspectrum
+    int subspectrumTimeoutMS = generateTotalWaitMS();
 
-    int timeoutMS = generateTimeoutMS();
     for (auto ep : endpoints)
     {
-        auto subspectrum = getSubspectrum(ep, timeoutMS);
+        auto subspectrum = getSubspectrum(ep, subspectrumTimeoutMS);
         if (subspectrum.size() != pixelsPerEndpoint)
         {
-            logger.error("failed reading subspectrum (%d of %d pixels read", 
-                subspectrum.size(), pixelsPerEndpoint);
+            if (!operationCancelled)
+                logger.error("failed reading subspectrum (%d of %d pixels read", 
+                    subspectrum.size(), pixelsPerEndpoint);
+            operationCancelled = false;
             return vector<double>();
         }
 
         for (auto word : subspectrum)
             spectrum.push_back(word);
 
-        // subsequent endpoints should be nearly instantaneous (USB comms only)
-        timeoutMS = 100;
+        // subspectra from subsequent endpoints should be nearly instantaneous 
+        // (USB comms only)
+        subspectrumTimeoutMS = 100 * driver->getNumberOfSpectrometers();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -392,32 +408,91 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
     return spectrum;
 }
 
-std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, int timeoutMS)
+//! @param allocatedMS (Input) total time allocated in milliseconds (wall-clock)
+//! @returns either a populated subspectrum of exactly 'pixelsPerEndpoint' 
+//!          deserialized pixels, or an empty vector on error
+std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long allocatedMS)
 {
+    //! @see https://sourceforge.net/p/libusb-win32/code/HEAD/tree/trunk/libusb/src/windows.c#l493
+    //! @see https://sourceforge.net/p/libusb-win32/code/HEAD/tree/trunk/libusb/src/error.h#l41
+    const int LIBUSB_WIN32_ERROR_TIMEOUT = -116;
+
     vector<uint16_t> subspectrum;
 
     int bytesExpected = pixelsPerEndpoint * 2; // raw pixels are uint16
     int bytesLeftToRead = bytesExpected;
     int totalBytesRead = 0;
 
+    // break the total allotted time (e.g. 5min) into shorter reads (e.g. 1sec),
+    // between which we can check for external cancellation events
+    
+    // of the total time allocated for this read, how much is left?
+    long remainingMS = allocatedMS;
+
+    // what is the size of the individual reads we're going to perform (allowing
+    // interruptions between, but not during each)?
+    long periodMS = min(allocatedMS, maxTimeoutMS);
+
+    // what is the WALLCLOCK elapsed time we've spent so far on this venture?
+    long elapsedMS = 0;
+
+    // iterate over multiple reads until we have all this subspectrum's pixels,
+    // or we run out of time
     while (totalBytesRead < bytesExpected)
     {
+        int timeoutMS = min(periodMS, remainingMS);
+        auto timeReadStart = std::chrono::high_resolution_clock::now();
+
         logger.debug("attempting to read %d bytes from endpoint 0x%02x with timeout %dms", 
             bytesLeftToRead, ep, timeoutMS);
         int bytesRead = usb_bulk_read(udev, ep, (char*)bufSubspectrum, bytesLeftToRead, timeoutMS);
         logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
 
-        if (bytesRead <= 0)
+        // update timing
+        auto timeReadEnd = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsedThisRead = timeReadEnd - timeReadStart;
+        long elapsedThisReadMS = (long)(elapsedThisRead.count() * 1000 + 0.5);
+        elapsedMS += elapsedThisReadMS;
+        remainingMS -= elapsedThisReadMS;
+
+        // have we been cancelled?
+        if (operationCancelled)
         {
-            logger.error("getSubspectrum: bytesRead negative or zero, giving up (%s)", usb_strerror());
-            return subspectrum;
+            logger.error("getSubspectrum: cancellation detected");
+            return vector<uint16_t>();
         }
 
+        // did an error occur?
+        if (bytesRead <= 0)
+        {
+            // was it a timeout?
+            if (bytesRead == LIBUSB_WIN32_ERROR_TIMEOUT)
+            {
+                // do we still have time to spend on this?
+                if (remainingMS > 0)
+                {
+                    logger.debug("getSubspectrum: still waiting after timeout (allocated %ldms, period %dms, elapsed %ldms, remaining %ldms",
+                        allocatedMS, periodMS, elapsedMS, remainingMS);
+                    continue;
+                }
+            }
+
+            // either it wasn't a timeout, or we're out of time
+            logger.error("getSubspectrum: bytesRead negative or zero, giving up (allocated %ldms, period %dms, elapsed %ldms, remaining %ldms (%s)", 
+                allocatedMS, periodMS, elapsedMS, remainingMS, usb_strerror());
+            return vector<uint16_t>();
+        }
+
+        // doesn't seem worth supporting this case; doubt it occurs
         if (bytesRead % 2 != 0)
         {
             logger.error("getSubspectrum: read odd number of bytes (%d)", bytesRead);
-            return subspectrum;
+            return vector<uint16_t>();
         }
+
+        ////////////////////////////////////////////////////////////////////////
+        // we received aligned data, so demarshall
+        ////////////////////////////////////////////////////////////////////////
 
         // demarshal little-endian pixels
         for (int i = 0; i + 1 < bytesRead; i += 2)
@@ -472,30 +547,22 @@ float WasatchVCPP::Spectrometer::getDetectorGain()
 
 //! @returns ErrorCodes::InvalidGain on error
 float WasatchVCPP::Spectrometer::getDetectorGainOdd()
-{ 
-    if (!isInGaAs())
-        return ErrorCodes::NotInGaAs;
-    return deserializeGain(getCmd(0x9f, 2)); 
-}
+{ return isInGaAs() ? deserializeGain(getCmd(0x9f, 2)) : ErrorCodes::NotInGaAs; }
 
 int WasatchVCPP::Spectrometer::getDetectorOffset()
 { return ParseData::toInt16(getCmd(0xc4, 2)); }
 
 int WasatchVCPP::Spectrometer::getDetectorOffsetOdd()
-{
-    if (!isInGaAs())
-        return ErrorCodes::InvalidOffset; // ErrorCodes::NotInGaAs is a valid offset :-(
-    return ParseData::toInt16(getCmd(0x9e, 2));
-}
+{ return isInGaAs() ? ParseData::toInt16(getCmd(0x9e, 2)) : ErrorCodes::InvalidOffset; }
 
-bool WasatchVCPP::Spectrometer::getTECEnable()
-{ return ParseData::toBool(getCmd(0xda, 1)); }
+bool WasatchVCPP::Spectrometer::getDetectorTECEnable()
+{ return eeprom.hasCooling ? ParseData::toBool(getCmd(0xda, 1)) : false; }
 
 int WasatchVCPP::Spectrometer::getDetectorTECSetpointDegC()
-{ return detectorTECSetointDegC; }
+{ return eeprom.hasCooling ? detectorTECSetointDegC : ErrorCodes::InvalidTemperature; }
 
 bool WasatchVCPP::Spectrometer::getHighGainModeEnable()
-{ return ParseData::toBool(getCmd(0xec, 1)); }
+{ return isInGaAs() ? ParseData::toBool(getCmd(0xec, 1)) : false; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Control Messages
@@ -528,10 +595,9 @@ int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16
         len = sizeof(buf);
     }
 
-    int timeoutMS = 1000;
     logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
-        bRequest, wValue, wIndex, len, timeoutMS);
-    int bytesWritten = usb_control_msg(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, timeoutMS);
+        bRequest, wValue, wIndex, len, maxTimeoutMS);
+    int bytesWritten = usb_control_msg(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, maxTimeoutMS);
     return bytesWritten;
 }
 
@@ -591,10 +657,9 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t
     char* data = (char*)malloc(bytesToRead);
     memset(data, 0, bytesToRead);
 
-    int timeoutMS = 1000;
     logger.debug("calling getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
-        bRequest, wValue, wIndex, bytesToRead, timeoutMS);
-    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, data, bytesToRead, timeoutMS);
+        bRequest, wValue, wIndex, bytesToRead, maxTimeoutMS);
+    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, data, bytesToRead, maxTimeoutMS);
 
     if (bytesRead < 0)
     {

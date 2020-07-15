@@ -1,7 +1,11 @@
 # Changelog
 
-- 2020-07-13 0.0.9
+- 2020-07-15 0.0.9
     - build configurations for Debug/Release on x86/x64
+    - added "make check\_headers"
+    - added getEEPROMPage
+    - added setMaxTimeoutMS
+    - added cancelOperation
 - 2020-07-13 0.0.8
     - added getIntegrationTimeMS
     - added getLaserEnable
@@ -9,7 +13,7 @@
     - added getDetectorGainOdd
     - added getDetectorOffset
     - added getDetectorOffsetOdd
-    - added getTECEnable
+    - added getDetectorTECEnable
     - added getDetectorTECSetpointDegC
     - added getHighGainModeEnable
 - 2020-07-12 0.0.7

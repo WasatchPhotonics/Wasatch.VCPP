@@ -19,8 +19,11 @@ WasatchVCPP::EEPROM::EEPROM(Logger& logger)
 {
 }
 
-bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages)
+bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
 {
+    // cache so caller can retrieve if desired
+    pages = pages_in;
+
     format = ParseData::toUInt8(pages[0], 63);
 
     model = ParseData::toString(pages[0], 0, 16);

@@ -17,3 +17,11 @@ clean:
 
 doc docs:
 	@(cat Doxyfile ; echo "PROJECT_NUMBER = $$VERSION") | doxygen - 1>doxygen.out 2>doxygen.err
+
+# diff wp_foo() declarations in C vs C# APIs
+check_headers:
+	@TMPFILE="make-check-headers" ; \
+    egrep -o 'wp_[a-z0-9_]+' include/WasatchVCPP.h | sort -u > $$TMPFILE.h ; \
+    egrep -o 'wp_[a-z0-9_]+' WasatchVCPPNet/WasatchVCPP.cs | sort -u > $$TMPFILE.cs ; \
+    diff $$TMPFILE.h $$TMPFILE.cs | egrep '^[<>]' | sort -u ; \
+    rm -f $$TMPFILE.*
