@@ -15,7 +15,6 @@ Per the "Design Remit" described in README.md:
 (not done)
 - WasatchVCPPNet demo (started)
 - added .inf files to installer
-- re-entrant thread-safety
 
 ## Not supported (pending customer use-case)
 

@@ -34,11 +34,11 @@ unsigned long MAX_UINT24 = 16777216;
 // Lifecycle
 ////////////////////////////////////////////////////////////////////////////////
 
-WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& logger)
-    : udev(udev), pid(pid), logger(logger), eeprom(logger)
+WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, int index, Logger& logger)
+    : udev(udev), pid(pid), index(index), logger(logger), eeprom(logger)
 {
 
-    logger.debug("Spectrometer::ctor: instantiating");
+    logger.debug("Spectrometer::ctor: instantiating index %d (pid 0x%04x)", index, pid);
 
     driver = Driver::getInstance();
 
@@ -115,22 +115,24 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, Logger& l
         endpoints.push_back(0x86);
         pixelsPerEndpoint = 1024;
     }
-    bufSubspectrum = (uint8_t*)malloc(pixelsPerEndpoint * 2);
+    bufSubspectrum.resize(pixelsPerEndpoint * 2);
 
     logger.debug("Spectrometer::ctor: done");
 }
 
+WasatchVCPP::Spectrometer::~Spectrometer()
+{
+    close();
+}
+
 bool WasatchVCPP::Spectrometer::close()
 {
-    if (bufSubspectrum != nullptr)
-    { 
-        free(bufSubspectrum);
-        bufSubspectrum = nullptr;
+    if (udev != nullptr)
+    {
+        usb_release_interface(udev, 0);
+        usb_close(udev);
+        udev = nullptr;
     }
-
-    usb_release_interface(udev, 0);
-    usb_close(udev);
-
     return true;
 }
 
@@ -339,6 +341,26 @@ float WasatchVCPP::Spectrometer::getDetectorTemperatureDegC()
 // Acquisition
 ////////////////////////////////////////////////////////////////////////////////
 
+bool WasatchVCPP::Spectrometer::cancelOperation(bool blocking)
+{
+    if (!acquiring)
+        return false;
+
+    operationCancelled = true;
+
+    if (blocking)
+    {
+        // check at least 1Hz
+        int sleepMS = min(maxTimeoutMS, 1000); 
+        while (acquiring)
+        {
+            logger.debug("cancelOperation: blocking while acquiring");
+            Util::sleepMS(sleepMS);
+        }
+    }
+    return true;
+}
+
 //! Determine how long we should wait for an acquisition to return the spectrum.
 //!
 //! Note that this is the "full period" we should wait, which may end up being
@@ -355,9 +377,18 @@ long WasatchVCPP::Spectrometer::generateTotalWaitMS()
 //! @todo support 2048-pixel detectors
 std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
+    mutAcquisition.lock();
     vector<double> spectrum;
+    if (acquiring)
+    {
+        // just in case
+        logger.error("Spectrometer %s already acquiring", eeprom.serialNumber.c_str());
+        mutAcquisition.unlock();
+        return spectrum;
+    }
 
     operationCancelled = false;
+    acquiring = true;
 
     // send software trigger
     logger.debug("sending ACQUIRE");
@@ -371,10 +402,14 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
         auto subspectrum = getSubspectrum(ep, subspectrumTimeoutMS);
         if (subspectrum.size() != pixelsPerEndpoint)
         {
-            if (!operationCancelled)
-                logger.error("failed reading subspectrum (%d of %d pixels read", 
+            if (operationCancelled)
+                logger.debug("getSpectrum: operation cancelled");
+            else
+                logger.error("failed reading subspectrum (%d of %d pixels read)", 
                     subspectrum.size(), pixelsPerEndpoint);
             operationCancelled = false;
+            acquiring = false;
+            mutAcquisition.unlock();
             return vector<double>();
         }
 
@@ -405,6 +440,8 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
     }
 
     logger.debug("getSpectrum: returning spectrum of %d pixels", spectrum.size());
+    acquiring = false;
+    mutAcquisition.unlock();
     return spectrum;
 }
 
@@ -419,7 +456,7 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
 
     vector<uint16_t> subspectrum;
 
-    int bytesExpected = pixelsPerEndpoint * 2; // raw pixels are uint16
+    int bytesExpected = (int)bufSubspectrum.size();
     int bytesLeftToRead = bytesExpected;
     int totalBytesRead = 0;
 
@@ -445,7 +482,7 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
 
         logger.debug("attempting to read %d bytes from endpoint 0x%02x with timeout %dms", 
             bytesLeftToRead, ep, timeoutMS);
-        int bytesRead = usb_bulk_read(udev, ep, (char*)bufSubspectrum, bytesLeftToRead, timeoutMS);
+        int bytesRead = usb_bulk_read(udev, ep, (char*)&bufSubspectrum[0], bytesLeftToRead, timeoutMS);
         logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
 
         // update timing
@@ -595,9 +632,11 @@ int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16
         len = sizeof(buf);
     }
 
+    mutComm.lock();
     logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, len, maxTimeoutMS);
     int bytesWritten = usb_control_msg(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, maxTimeoutMS);
+    mutComm.unlock();
     return bytesWritten;
 }
 
@@ -647,19 +686,22 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmd2(uint16_t wValue, int len, uin
 //! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
 vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, int len, int fullLen)
 {
+    // this is what we'll return
+    vector<uint8_t> retval;
+
     // ARM firmware expects all commands to provide at least 8 payload bytes
     int bytesToRead = max(len, fullLen);
     if (isARM())
         bytesToRead = max(MIN_ARM_LEN, bytesToRead);
 
-    vector<uint8_t> retval;
+    // this is our temporary (often somewhat larger) buffer
+    vector<uint8_t> data(bytesToRead); 
 
-    char* data = (char*)malloc(bytesToRead);
-    memset(data, 0, bytesToRead);
-
+    mutComm.lock();
     logger.debug("calling getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, bytesToRead, maxTimeoutMS);
-    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, data, bytesToRead, maxTimeoutMS);
+    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, (char*)&data[0], bytesToRead, maxTimeoutMS);
+    mutComm.unlock();
 
     if (bytesRead < 0)
     {
@@ -673,10 +715,10 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t
         return retval;
     }
 
+    retval.resize(len);
     for (int i = 0; i < len; i++)
         retval.push_back(data[i]);
 
-    free(data);
     return retval;
 }
 
@@ -695,10 +737,9 @@ bool WasatchVCPP::Spectrometer::isMicro()
 
 //! @todo use PID to determine appropriate result code by platform
 bool WasatchVCPP::Spectrometer::isSuccess(unsigned char opcode, int result)
-{
-    return true;
-}
+{ return true; }
 
+//! @todo move to Util?
 unsigned long WasatchVCPP::Spectrometer::clamp(unsigned long value, unsigned long min, unsigned long max)
 {
     if (value < min)

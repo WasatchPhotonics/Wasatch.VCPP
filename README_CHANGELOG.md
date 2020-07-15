@@ -1,5 +1,7 @@
 # Changelog
 
+- 2020-07-?? 0.0.10
+    - basic support for reentrant thread-safety
 - 2020-07-15 0.0.9
     - build configurations for Debug/Release on x86/x64
     - added "make check\_headers"

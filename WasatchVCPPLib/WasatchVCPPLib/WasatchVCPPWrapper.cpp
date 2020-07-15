@@ -72,20 +72,18 @@ int wp_open_all_spectrometers()
     return driver->openAllSpectrometers();
 }
 
-int wp_close_all_spectrometers()
-{
-    for (int i = 0; i < driver->getNumberOfSpectrometers(); i++)
-        wp_close_spectrometer(i); // ignore errors
-    return WP_SUCCESS;
-}
-
 int wp_close_spectrometer(int specIndex)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
 
-    return spec->close();
+    return driver->removeSpectrometer(specIndex) ? WP_SUCCESS : WP_ERROR;
+}
+
+int wp_close_all_spectrometers()
+{
+    return driver->closeAllSpectrometers() ? WP_SUCCESS : WP_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,14 +479,13 @@ int wp_get_high_gain_mode_enable(int specIndex)
     return spec->getHighGainModeEnable() ? 1 : 0;
 }
 
-int wp_cancel_operation(int specIndex)
+int wp_cancel_operation(int specIndex, int blocking)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
 
-    spec->operationCancelled = true;
-    return WP_SUCCESS;
+    return spec->cancelOperation(blocking != 0) ? WP_SUCCESS : WP_ERROR;
 }
 
 int wp_set_max_timeout_ms(int specIndex, int maxTimeoutMS)

@@ -12,6 +12,7 @@
 #include "Logger.h"
 
 #include <vector>
+#include <mutex>
 
 namespace WasatchVCPP
 {
@@ -40,20 +41,22 @@ namespace WasatchVCPP
                 InvalidOffset       = -32768 
             };
 
-            Spectrometer(usb_dev_handle* udev, int pid, Logger& logger);
+            Spectrometer(usb_dev_handle* udev, int pid, int index, Logger& logger);
+            ~Spectrometer();
             bool close();
 
             EEPROM eeprom;
             Driver* driver;
 
             // public metadata
+            int pid;
+            int index;
             std::vector<double> wavelengths;
             std::vector<double> wavenumbers;
             bool isARM();
             bool isInGaAs();
             bool isMicro();
             int maxTimeoutMS = 1000;
-            bool operationCancelled;
 
             // cached properties
             int pixels = 1024;
@@ -93,19 +96,23 @@ namespace WasatchVCPP
 
             // acquisition
             std::vector<double> getSpectrum();
+            bool cancelOperation(bool blocking);
 
         ////////////////////////////////////////////////////////////////////////
         // Private attributes
         ////////////////////////////////////////////////////////////////////////
         private:
             usb_dev_handle* udev;
-            int pid;
 
             std::vector<uint8_t> endpoints;
+            std::vector<uint8_t> bufSubspectrum; 
             int pixelsPerEndpoint;
-            uint8_t* bufSubspectrum;
 
             bool detectorTECSetpointHasBeenSet;
+            bool acquiring;
+            bool operationCancelled;
+            std::mutex mutAcquisition;
+            std::mutex mutComm;
 
             Logger& logger;
 

@@ -275,12 +275,14 @@ extern "C"
     //! operation is guaranteed to complete within the currently configured
     //! "maximum timeout" as set through wp_set_max_timeout_ms.
     //!
-    //! @warning new firmware will be required to support this at the hardware level
+    //! @warning new firmware is required to support this at the hardware level
     //!
-    //! @see wp_set_max_timeout_ms
+    //! @see should block at most the value configured in wp_set_max_timeout_ms
     //! @param specIndex (Input) which spectrometer
+    //! @param block (Input) whether the function should block until the current
+    //!        operation completes (0 for non-blocking, non-zero for blocking)
     //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_cancel_operation(int specIndex);
+    DLL_API int wp_cancel_operation(int specIndex, int blocking);
 
     //! Configure the maximum internal timeout when waiting on blocking USB 
     //! operations.
@@ -297,12 +299,16 @@ extern "C"
     //! but no individual blocking read will wait longer than the configured 
     //! maximum.)
     //!
+    //! This value also represents the longest that wp_cancel_operation(true)
+    //! should block.
+    //!
     //! This function essentially configures the maximum window before a call
     //! to wp_cancel_operation will be expected to take effect.
     //!
     //! @see wp_cancel_operation
     //! @param specIndex (Input) which spectrometer
-    //! @param maxTimeoutMS (Input) maximum timeout in milliseconds
+    //! @param maxTimeoutMS (Input) maximum timeout in milliseconds (default 1000;
+    //!        probably should not be < 200)
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_max_timeout_ms(int specIndex, int maxTimeoutMS);
 
@@ -630,7 +636,7 @@ namespace WasatchVCPP
                         return;
 
                     // pre-allocate a buffer for reading spectra
-                    spectrumBuf = (double*)malloc(pixels * sizeof(double));
+                    spectrumBuf = new double[pixels];
 
                     model = eepromFields["model"];
                     serialNumber = eepromFields["serialNumber"];
@@ -646,6 +652,11 @@ namespace WasatchVCPP
                     }
                 }
 
+                ~Spectrometer()
+                {
+                    close();
+                }
+
                 //! release resources associated with this spectrometer
                 //! @returns true on success
                 bool close()
@@ -658,7 +669,7 @@ namespace WasatchVCPP
 
                     if (spectrumBuf != nullptr)
                     {
-                        free(spectrumBuf);
+                        delete[] spectrumBuf;
                         spectrumBuf = nullptr;
                     }
 
@@ -769,8 +780,8 @@ namespace WasatchVCPP
                 bool setMaxTimeoutMS(int maxTimeoutMS)
                 { return WP_SUCCESS == wp_set_max_timeout_ms(specIndex, maxTimeoutMS); }
 
-                bool cancelOperation()
-                { return WP_SUCCESS == wp_cancel_operation(specIndex); }
+                bool cancelOperation(bool blocking=false)
+                { return WP_SUCCESS == wp_cancel_operation(specIndex, blocking ? 1 : 0); }
 
                 //! @see wp_get_firmware_version
                 std::string getFirmwareVersion()
@@ -799,15 +810,9 @@ namespace WasatchVCPP
                 {
                     std::vector<double> result;
                     if (spectrumBuf != nullptr)
-                    {
                         if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrumBuf, pixels))
-                        {
-                            // This seems to work, but doing manually for now:
-                            // result = vector<double>(spectrumBuf, spectrumBuf + pixels); 
                             for (int i = 0; i < pixels; i++)
                                 result.push_back(spectrumBuf[i]);
-                        }
-                    }
                     return result;
                 }
 
@@ -929,7 +934,8 @@ namespace WasatchVCPP
                     for (int i = 0; i < numberOfSpectrometers; i++)
                         spectrometers[i].close();
                     spectrometers.clear();
-                    return true;
+
+                    return WP_SUCCESS == wp_close_all_spectrometers();
                 }
 
             ////////////////////////////////////////////////////////////////////
@@ -943,7 +949,9 @@ namespace WasatchVCPP
             ////////////////////////////////////////////////////////////////////
             // Private attributes
             ////////////////////////////////////////////////////////////////////
+
             private:
+                //! make this a map, like WasatchVCPP::Driver::spectrometers?
                 std::vector<Spectrometer> spectrometers;
         };
     }

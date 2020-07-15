@@ -14,7 +14,9 @@
 #include <string>
 #include <iostream>
 
+using std::vector;
 using std::string;
+using std::make_pair;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Singleton
@@ -41,6 +43,14 @@ int WasatchVCPP::Driver::getNumberOfSpectrometers() { return (int)spectrometers.
 
 int WasatchVCPP::Driver::openAllSpectrometers()
 {
+    mutLifecycle.lock();
+    if (!spectrometers.empty())
+    {
+        logger.error("Driver::openAllSpectrometers: please call closeAllSpectrometers before re-calling");
+        mutLifecycle.unlock();
+        return -1;
+    }
+
     usb_init();
     usb_find_busses();
     usb_find_devices();
@@ -82,8 +92,11 @@ int WasatchVCPP::Driver::openAllSpectrometers()
                                 continue;
                             }
 
-                            logger.debug("adding Spectrometer");
-                            spectrometers.push_back(new Spectrometer(udev, pid, logger));
+                            int index = (int)spectrometers.size();
+                            auto spec = new Spectrometer(udev, pid, index, logger);
+                            logger.debug("adding Spectrometer as index %d", index);
+
+                            spectrometers.insert(make_pair(index, spec));
                         }
                         else
                         {
@@ -98,14 +111,49 @@ int WasatchVCPP::Driver::openAllSpectrometers()
             }
         }
     }
+
+    mutLifecycle.unlock();
     return (int)spectrometers.size();
 }
 
 WasatchVCPP::Spectrometer* WasatchVCPP::Driver::getSpectrometer(int index)
 {
-    if (index >= 0 && index < (int)spectrometers.size())
+    if (spectrometers.find(index) != spectrometers.end())
         return spectrometers[index];
     return nullptr;
+}
+
+bool WasatchVCPP::Driver::removeSpectrometer(int index)
+{
+    mutLifecycle.lock();
+    auto spec = getSpectrometer(index);
+    if (spec == nullptr)
+    {
+        mutLifecycle.unlock();
+        return false;
+    }
+    
+    // release resources
+    bool ok = spec->close();
+    delete spec;
+
+    spectrometers.erase(index);
+    mutLifecycle.unlock();
+    return ok;
+}
+
+bool WasatchVCPP::Driver::closeAllSpectrometers()
+{
+    mutLifecycle.lock();
+    vector<int> indices;
+    for (auto i = spectrometers.begin(); i != spectrometers.end(); i++)
+        indices.push_back(i->first);
+    mutLifecycle.unlock();
+
+    for (auto index : indices)
+        removeSpectrometer(index);
+
+    return true;
 }
 
 string WasatchVCPP::Driver::getLibraryVersion() { return libraryVersion; }

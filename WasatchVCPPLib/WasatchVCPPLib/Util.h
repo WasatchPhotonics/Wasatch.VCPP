@@ -14,6 +14,8 @@
 namespace WasatchVCPP
 {
     //! Internal class providing static utility functions for strings and whatnot.
+    //!
+    //! Some of these methods are defined to wrap platform-specific implementation.
     class Util
     {
         public:
@@ -21,6 +23,7 @@ namespace WasatchVCPP
             static std::string toHex(const std::vector<uint8_t>& data);
             static std::string toLower(const std::string& s);
             static std::string timestamp();
+            static void sleepMS(int ms);
 
             //! Joins an iterable containter to a delimited string.
             //!

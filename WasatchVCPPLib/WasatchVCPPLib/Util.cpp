@@ -58,3 +58,10 @@ string WasatchVCPP::Util::timestamp()
 	return string(buffer);
 #endif
 }
+
+void WasatchVCPP::Util::sleepMS(int ms)
+{
+#ifdef _WINDOWS
+    Sleep(ms);
+#endif
+}
