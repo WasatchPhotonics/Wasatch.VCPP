@@ -134,5 +134,8 @@ class WasatchVCPP
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   wp_set_laser_enable(int specIndex, int value);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   wp_set_log_level(int level);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   wp_set_logfile_path(ref byte pathname);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   wp_cancel_operation(int specIndex);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   wp_set_max_timeout_ms(int specIndex, int maxTimeoutMS);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   wp_get_eeprom_page(int specIndex, int page, ref byte buf, int len);
 }
 
