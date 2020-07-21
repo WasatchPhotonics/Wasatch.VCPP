@@ -82,7 +82,7 @@ void WasatchVCPP::Logger::hexdump(const string& prefix, const vector<uint8_t>& d
         return;
 
     string line = prefix + ": 0x";
-    for (int i = 0; i < data.size(); i++)
+    for (int i = 0; i < (int)data.size(); i++)
         line += Util::sprintf("%02x ", data[i]);
     debug("%s", line.c_str());
 }
