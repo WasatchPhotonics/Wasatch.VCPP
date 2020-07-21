@@ -167,19 +167,28 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
     unsigned short lsw = ms & 0xffff;
     unsigned short msw = (ms >> 16) & 0x00ff;
 
-    int result = sendCmd(0xb2, lsw, msw);
+    auto bytesWritten = sendCmd(0xb2, lsw, msw);
 
     integrationTimeMS = ms;
     logger.debug("integrationTimeMS -> %lu", ms);
-    return isSuccess(0xb2, result);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
 {
-    int result = sendCmd(0xbe, flag ? 1 : 0);
+    auto bytesWritten = sendCmd(0xbe, flag ? 1 : 0);
     laserEnabled = flag;
     logger.debug("laserEnable -> %d", flag);
-    return isSuccess(0xbe, result);
+    return true;
+}
+
+// not declared in class because doesn't use logger
+uint16_t serializeGain(float value)
+{
+    uint8_t msb = (int)value & 0xff;
+    uint8_t lsb = ((uint16_t)((value - msb) * 256.0 + 0.5)) & 0xff;
+    uint16_t word = (msb << 8) | lsb;
+    return word;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorGain(float value)
@@ -188,13 +197,11 @@ bool WasatchVCPP::Spectrometer::setDetectorGain(float value)
     if (value < 0 || value >= 256)
         return false;
 
-    uint8_t msb = (int)value & 0xff;
-    uint8_t lsb = (int)((value - msb) * 256) & 0xff;
-    uint16_t word = (msb << 8) | lsb;
+    uint16_t word = serializeGain(value);
 
-    int result = sendCmd(op, word);
+    auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorGain -> 0x%04x (%.2f)", word, value);
-    return isSuccess(op, result);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
@@ -203,31 +210,29 @@ bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
     if (value < 0 || value >= 256)
         return false;
 
-    uint8_t msb = (int)value & 0xff;
-    uint8_t lsb = (int)((value - msb) * 256) & 0xff;
-    uint16_t word = (msb << 8) | lsb;
+    uint16_t word = serializeGain(value);
 
-    int result = sendCmd(op, word);
+    auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorGainOdd -> 0x%04x (%.2f)", word, value);
-    return isSuccess(op, result);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorOffset(int16_t value)
 {
     const uint8_t op = 0xb6;
     uint16_t word = *((uint16_t*) &value); // send original signed int16 bit pattern
-    int result = sendCmd(op, word);
+    auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorOffset -> 0x%04x (%d)", word, value);
-    return isSuccess(op, result);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorOffsetOdd(int16_t value)
 {
     const uint8_t op = 0x9c;
     uint16_t word = *((uint16_t*) &value);
-    int result = sendCmd(op, word);
+    auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorOffsetOdd -> 0x%04x (%d)", word, value);
-    return isSuccess(op, result);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorTECEnable(bool flag)
@@ -242,9 +247,9 @@ bool WasatchVCPP::Spectrometer::setDetectorTECEnable(bool flag)
         setDetectorTECSetpointDegC(eeprom.detectorTempMin);
     }
 
-    int result = sendCmd(op, flag ? 1 : 0);
+    auto bytesWritten = sendCmd(op, flag ? 1 : 0);
     logger.debug("detectorTECEnable -> %s", flag ? "on" : "off");
-    return isSuccess(op, result);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
@@ -265,15 +270,14 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
         dac = 0;
     if (dac > 0xfff)
         dac = 0xfff;
+
     uint16_t word = ((uint16_t)(dac + 0.5)) & 0xfff;
+    auto bytesWritten = sendCmd(op, word);
 
-    int result = sendCmd(op, word);
     detectorTECSetpointHasBeenSet = true;
+    detectorTECSetointDegC = degC;
 
-    bool ok = isSuccess(op, result);
-    if (ok)
-        detectorTECSetointDegC = degC;
-    return ok;
+    return true;
 }
 
 //! @warning may need to send 8-byte buffer?
@@ -282,8 +286,15 @@ bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
     const uint8_t op = 0xeb;
     if (!isInGaAs())
         return false;
-    int result = sendCmd(op, flag ? 1 : 0);
-    return isSuccess(op, result);
+
+    // no idea why this is required, but ENLIGHTEN does it; presumably
+    // some code was copy-pasted in FW and it thinks it's dealing with
+    // a uint40 like used in laser modulation commands
+    vector<uint8_t> junk(8); 
+
+    auto bytesWritten = sendCmd(op, flag ? 1 : 0, 0, junk);
+
+    return true;
 }
 
 string WasatchVCPP::Spectrometer::getFirmwareVersion()
@@ -570,8 +581,9 @@ float WasatchVCPP::Spectrometer::deserializeGain(const vector<uint8_t>& data)
         return ErrorCodes::InvalidGain;
     }
 
-    const uint8_t& msb = data[0];
-    const uint8_t& lsb = data[1];
+    // note that we SEND gain big-endian, but we READ it little-endian :-(
+    const uint8_t& lsb = data[0];
+    const uint8_t& msb = data[1];
 
     return msb + (lsb / 256.f);
 }
@@ -623,18 +635,31 @@ bool WasatchVCPP::Spectrometer::getHighGainModeEnable()
 int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint8_t* data, int len)
 {
     // ARM firmware expects all commands to include at least 8 payload bytes
-    unsigned char buf[MIN_ARM_LEN] = { 0 };
+    uint8_t buf[MIN_ARM_LEN] = { 0 };
     if (data == nullptr && isARM())
     {
         data = buf;
         len = sizeof(buf);
     }
 
+    string dataStr;
+    if (len > 0)
+        dataStr = Util::sprintf(" (data: %s)", Util::toHex(data, len).c_str());
+
     mutComm.lock();
-    logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
-        bRequest, wValue, wIndex, len, maxTimeoutMS);
-    int bytesWritten = usb_control_msg(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, maxTimeoutMS);
+    int bytesWritten = usb_control_msg(
+        udev, 
+        HOST_TO_DEVICE, 
+        bRequest, 
+        wValue, 
+        wIndex, 
+        (char*)data, 
+        len, 
+        maxTimeoutMS);
     mutComm.unlock();
+
+    logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)%s (wrote %d bytes)", 
+        bRequest, wValue, wIndex, len, maxTimeoutMS, dataStr.c_str(), bytesWritten);
     return bytesWritten;
 }
 
@@ -699,10 +724,9 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t
     logger.debug("calling getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, bytesToRead, maxTimeoutMS);
     int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, (char*)&data[0], (int)data.size(), maxTimeoutMS);
-
-    string prefix = Util::sprintf("getCmdReal(0x%02x): read %d bytes", bRequest, bytesRead);
-    logger.hexdump(prefix, &data[0], bytesRead);
     mutComm.unlock();
+
+    logger.debug("getCmdReal(0x%02x): read %d bytes: %s", bRequest, bytesRead, Util::toHex(data).c_str());
 
     if (bytesRead < 0)
     {

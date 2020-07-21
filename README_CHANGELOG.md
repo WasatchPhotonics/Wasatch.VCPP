@@ -1,5 +1,15 @@
 # Changelog
 
+- 2020-07-21 0.0.11
+    - WasatchVCPPNet is now successfully testing almost all features
+    - added getMaxTimeoutMS
+    - implemented getEEPROMPage
+    - fixed getDetectorGain\*
+    - fixed isNan() check in ParseData::toFloat
+    - fixed setDetectorTECEnable
+    - null-terminated all exported C strings
+    - better debugs / return value around Spectrometer::sendCmd
+    - ISSUE: can't setHighGainMode on InGaAs
 - 2020-07-20 0.0.10
     - basic support for reentrant thread-safety
     - added libusb\_drivers to installers

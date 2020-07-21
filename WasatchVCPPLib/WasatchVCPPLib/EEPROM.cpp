@@ -209,7 +209,7 @@ void WasatchVCPP::EEPROM::stringifyAll()
     stringify("maxLaserPowerMW", Util::sprintf("%g", maxLaserPowerMW));
     stringify("minLaserPowerMW", Util::sprintf("%g", minLaserPowerMW));
 
-    stringify("userData", Util::toHex(userData));
+    stringify("userData", Util::toHex(userData)); // should be about 195 characters
     stringify("userText", userText);
 
     stringify("badPixels", Util::join(badPixels, "%d"));

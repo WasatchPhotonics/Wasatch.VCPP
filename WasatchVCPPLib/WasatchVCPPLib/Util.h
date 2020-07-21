@@ -21,6 +21,7 @@ namespace WasatchVCPP
         public:
             static std::string sprintf(const char* fmt, ...);
             static std::string toHex(const std::vector<uint8_t>& data);
+            static std::string toHex(const uint8_t* data, int len);
             static std::string toLower(const std::string& s);
             static std::string timestamp();
             static void sleepMS(int ms);

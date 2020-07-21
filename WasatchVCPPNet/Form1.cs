@@ -62,7 +62,10 @@ namespace WasatchVCPPNet
 
         private void checkBoxVerbose_CheckedChanged(object sender, EventArgs e)
         {
-            logger.level = checkBoxVerbose.Checked ? LogLevel.DEBUG : LogLevel.INFO;
+            var verbose = checkBoxVerbose.Checked;
+            logger.level = verbose ? LogLevel.DEBUG : LogLevel.INFO;
+            if (driver != null)
+                driver.logLevel = verbose ? 0 : 1;
         }
 
         private void buttonInit_Click(object sender, EventArgs e)
@@ -73,6 +76,8 @@ namespace WasatchVCPPNet
             chart1.Series.Clear();
 
             driver = new WasatchVCPP.Driver();
+
+            driver.logLevel = checkBoxVerbose.Checked ? 0 : 1;
             driver.logfilePath = "WasatchVCPPNet.log";
 
             logger.info("WasatchVCPP.Driver.libraryVersion = {0}", driver.libraryVersion);
@@ -82,8 +87,16 @@ namespace WasatchVCPPNet
             for (int i = 0; i < count; i++)
             {
                 var spec = driver.spectrometers[i];
-                logger.info("index {0} is {1} {2} with {3} pixels ({4:f2}, {5:f2}nm)",
-                    i, spec.model, spec.serialNumber, spec.pixels, spec.wavelengths[0], spec.wavelengths[spec.pixels - 1]);
+
+                string wavenumbers = "";
+                if (spec.wavenumbers != null)
+                    wavenumbers = string.Format(" ({0:f2}, {1:f2}cm⁻¹)", spec.wavenumbers[0], spec.wavenumbers[spec.pixels - 1]);
+
+                logger.info("index {0} is {1} {2} with {3} pixels ({4:f2}, {5:f2}nm){6} firmware {7} FPGA {8}",
+                    i, spec.model, spec.serialNumber, spec.pixels, 
+                    spec.wavelengths[0], spec.wavelengths[spec.pixels - 1],
+                    wavenumbers,
+                    spec.firmwareVersion, spec.fpgaVersion);
 
                 Series s = new Series(spec.serialNumber);
                 s.ChartType = SeriesChartType.Line;
@@ -94,32 +107,149 @@ namespace WasatchVCPPNet
                 worker.DoWork += Worker_DoWork;
                 worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
                 workers.Add(i, worker);
+            }
+        }
 
-                logger.debug("EEPROM:");
+        private void buttonMetadata_Click(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+            {
+                var spec = driver.spectrometers[i];
+
+                logger.info($"Metadata for {spec.serialNumber}");
+                logger.info($"  Integration Time:       {spec.integrationTimeMS} ms");
+                logger.info($"  Laser Enable:           {spec.laserEnable} ms");
+                logger.info($"  Temperature:            {spec.detectorTemperatureDegC:f2} °C");
+                logger.info($"  Detector TEC Enable:    {spec.detectorTECEnable}");
+                logger.info($"  Detector TEC Setpoint:  {spec.detectorTECSetpointDegC}");
+                logger.info($"  Detector Gain:          {spec.detectorGain:f2}");
+                logger.info($"  Detector Gain Odd:      {spec.detectorGainOdd:f2}");
+                logger.info($"  Detector Offset:        {spec.detectorOffset}");
+                logger.info($"  Detector Offset Odd:    {spec.detectorOffsetOdd}");
+                logger.info($"  High-Gain Mode Enable:  {spec.highGainModeEnable}");
+                logger.info($"  Max Timeout (ms):       {spec.maxTimeoutMS}");
+
+                logger.info("");
+                logger.info("  EEPROM:");
                 foreach (var pair in spec.eepromFields)
-                    logger.debug($"  {pair.Key} = {pair.Value}");
+                    logger.info($"    {pair.Key} = {pair.Value}");
+
+                logger.info("");
+                for (int page = 0; page < 8; page++)
+                    logger.hexdump(spec.getEEPROMPage(page),
+                                   string.Format("    buf[{0}]: ", page));
             }
         }
 
         private void buttonLaser_Click(object sender, EventArgs e)
         {
+            if (driver is null)
+                return;
+
             laserEnabled = !laserEnabled;
             for (int i = 0; i < driver.numberOfSpectrometers; i++)
                 driver.spectrometers[i].laserEnable = laserEnabled;
             buttonLaser.Text = laserEnabled ? "Laser Off" : "Laser On";
-            logger.debug($"laserEnable -> {laserEnabled}");
         }
 
         private void numericUpDownIntegrationTimeMS_ValueChanged(object sender, EventArgs e)
         {
+            if (driver is null)
+                return;
+
             var ms = (uint)numericUpDownIntegrationTimeMS.Value;
             for (int i = 0; i < driver.numberOfSpectrometers; i++)
                 driver.spectrometers[i].integrationTimeMS = ms;
-            logger.debug($"integrationTimeMS -> {ms}");
+        }
+
+        private void numericUpDownMaxTimeoutMS_ValueChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var ms = (int)numericUpDownMaxTimeoutMS.Value;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].maxTimeoutMS = ms;
+        }
+
+        private void numericUpDownTECSetpointDegC_ValueChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var degC = (int)numericUpDownTECSetpointDegC.Value;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].detectorTECSetpointDegC = degC;
+        }
+
+        private void checkBoxTECEnable_CheckedChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var enable = checkBoxTECEnable.Checked;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].detectorTECEnable = enable;
+        }
+
+        private void checkBoxHighGainModeEnable_CheckedChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var enable = checkBoxHighGainModeEnable.Checked;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].highGainModeEnable = enable;
+        }
+
+        private void numericUpDownDetectorGain_ValueChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var value = (float)(sender as NumericUpDown).Value;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].detectorGain = value;
+        }
+
+        private void numericUpDownDetectorGainOdd_ValueChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var value = (float)(sender as NumericUpDown).Value;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].detectorGainOdd = value;
+        }
+
+        private void numericUpDownDetectorOffset_ValueChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var value = (int)(sender as NumericUpDown).Value;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].detectorOffset = value;
+        }
+
+        private void numericUpDownDetectorOffsetOdd_ValueChanged(object sender, EventArgs e)
+        {
+            if (driver is null)
+                return;
+
+            var value = (int)(sender as NumericUpDown).Value;
+            for (int i = 0; i < driver.numberOfSpectrometers; i++)
+                driver.spectrometers[i].detectorOffsetOdd = value;
         }
 
         private void buttonStart_Click(object sender, EventArgs e)
         {
+            if (driver is null)
+                return;
+
             if (running)
                 stop();
             else
@@ -141,11 +271,17 @@ namespace WasatchVCPPNet
         void stop()
         {
             for (int i = 0; i < driver.numberOfSpectrometers; i++)
+            {
                 workers[i].CancelAsync();
+                driver.spectrometers[i].cancelOperation();
+            }
         }
 
         void processSpectrum(int index, double[] spectrum)
         {
+            if (driver is null)
+                return;
+
             var spec = driver.spectrometers[index];
             var series = serieses[index];
             if (spec is null || series is null)
@@ -157,6 +293,9 @@ namespace WasatchVCPPNet
                 return;
 
             series.Points.DataBindXY(x, y);
+
+            chart1.ChartAreas[0].AxisY.IsStartedFromZero = false;
+            chart1.ChartAreas[0].RecalculateAxesScale();
         }
 
         ////////////////////////////////////////////////////////////////////////
@@ -165,6 +304,9 @@ namespace WasatchVCPPNet
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
+            if (driver is null)
+                return;
+
             int index = (int)e.Argument;
             var spec = driver.spectrometers[index];
             var worker = workers[index];
@@ -189,10 +331,7 @@ namespace WasatchVCPPNet
             var allComplete = true;
             foreach (var pair in workers)
                 if (pair.Value.IsBusy)
-                {
                     allComplete = false;
-                    break;
-                }
 
             if (allComplete)
             {

@@ -322,6 +322,14 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_max_timeout_ms(int specIndex, int maxTimeoutMS);
 
+    //! Get the maximum internal timeout when waiting on blocking USB 
+    //! operations.
+    //!
+    //! @see wp_set_max_timeout_ms
+    //! @param specIndex (Input) which spectrometer
+    //! @returns configured maximum timeout (ms)
+    DLL_API int wp_get_max_timeout_ms(int specIndex);
+
     ////////////////////////////////////////////////////////////////////////////
     // Opcodes
     ////////////////////////////////////////////////////////////////////////////
@@ -787,9 +795,15 @@ namespace WasatchVCPP
                 int readControlMsg(uint8_t bRequest, uint16_t wIndex, uint8_t* data, int len)
                 { return wp_read_control_msg(specIndex, bRequest, wIndex, data, len); }
 
+                //! @see wp_set_max_timeout_ms
                 bool setMaxTimeoutMS(int maxTimeoutMS)
                 { return WP_SUCCESS == wp_set_max_timeout_ms(specIndex, maxTimeoutMS); }
 
+                //! @see wp_get_max_timeout_ms
+                int getMaxTimeoutMS()
+                { return wp_get_max_timeout_ms(specIndex); }
+
+                //! @see wp_cancel_operation
                 bool cancelOperation(bool blocking=false)
                 { return WP_SUCCESS == wp_cancel_operation(specIndex, blocking ? 1 : 0); }
 

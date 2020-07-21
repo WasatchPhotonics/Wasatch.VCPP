@@ -113,7 +113,10 @@ uint64_t WasatchVCPP::ParseData::toUInt40(const vector<uint8_t>& buf, int index,
 float WasatchVCPP::ParseData::toFloat (const vector<uint8_t>& buf, int index)
 {
     uint32_t raw = toUInt32(buf, index);
-    return *((float*)&raw);
+    float f = *((float*)&raw);
+    if (isnan(f))
+        f = 0;
+    return f;
 }
 
 string WasatchVCPP::ParseData::toString(const vector<uint8_t>& buf, int index, int len)
