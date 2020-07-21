@@ -145,8 +145,18 @@ extern "C"
     //! This is provided so the caller can correctly size the 'names' and 
     //! 'values' arrays for a call to wp_get_eeprom().
     //!
+    //! @param specIndex (Input) which spectrometer
     //! @returns how many EEPROM fields are available (negative on error)
     DLL_API int wp_get_eeprom_field_count(int specIndex);
+
+    //! Obtain the nth ordered EEPROM field name.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param index (Input) which field (1...wp_get_eeprom_field_count)
+    //! @param value (Output) allocated character buffer of 'len' bytes
+    //! @param len (Input) size of allocated value buffer
+    //! @returns WP_SUCCESS, WP_INSUFFICIENT_STORAGE or WP_ERROR if index > field count)
+    DLL_API int wp_get_eeprom_field_name(int specIndex, int index, char *value, int len);
 
     //! Read a table of all EEPROM fields, as strings.
     //!
@@ -830,6 +840,15 @@ namespace WasatchVCPP
                     for (int i = 0; i < len; i++)
                         result[i] = buf[i];
                     return result;
+                }
+
+                //! @see wp_get_eeprom_field_name
+                std::string getEEPROMFieldName(int index)
+                {
+                    char buf[64] = { 0 };
+                    if (WP_SUCCESS != wp_get_eeprom_field_name(specIndex, index, buf, sizeof(buf)))
+                        return std::string();
+                    return std::string(buf);
                 }
 
             private:

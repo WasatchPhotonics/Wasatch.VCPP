@@ -43,8 +43,8 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, int index
     driver = Driver::getInstance();
 
     // read firmware versions first (useful for debugging, validates FPGA comms)
-    firmwareVersion = getFirmwareVersion();
     fpgaVersion = getFPGAVersion();
+    firmwareVersion = getFirmwareVersion();
     logger.debug("firmware %s, FPGA %s", firmwareVersion.c_str(), fpgaVersion.c_str());
 
     ////////////////////////////////////////////////////////////////////////////
@@ -288,9 +288,8 @@ bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
 
 string WasatchVCPP::Spectrometer::getFirmwareVersion()
 {
-    string s;
-    const uint8_t op = 0xc0;
-    auto data = getCmd(op, 4);
+    string s = "ERROR";
+    auto data = getCmd(0xc0, 4);
     if (data.size() >= 4)
         s = Util::sprintf("%d.%d.%d.%d", data[3], data[2], data[1], data[0]);
     return s;
@@ -298,8 +297,7 @@ string WasatchVCPP::Spectrometer::getFirmwareVersion()
 
 string WasatchVCPP::Spectrometer::getFPGAVersion()
 {
-    const uint8_t op = 0xb4;
-    auto data = getCmd(op, 7);
+    auto data = getCmd(0xb4, 7);
     string s;
     for ( auto c : data )
         if (0x20 <= c && c <= 0x7f) // visible ASCII
@@ -700,24 +698,27 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t
     mutComm.lock();
     logger.debug("calling getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, bytesToRead, maxTimeoutMS);
-    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, (char*)&data[0], bytesToRead, maxTimeoutMS);
+    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, (char*)&data[0], (int)data.size(), maxTimeoutMS);
+
+    string prefix = Util::sprintf("getCmdReal(0x%02x): read %d bytes", bRequest, bytesRead);
+    logger.hexdump(prefix, &data[0], bytesRead);
     mutComm.unlock();
 
     if (bytesRead < 0)
     {
-        logger.error("getCmd2 read error (bRequest 0x%02x)", bRequest);
+        logger.error("getCmdReal(0x%02x): no data", bRequest);
         return retval;
     }
     else if (bytesRead < len) 
     {
-        logger.error("getCmd2 read incomplete response (%d bytes read, %d needed, %d expected)", 
+        logger.error("getCmdReal: incomplete response (%d bytes read, %d needed, %d expected)", 
             bytesRead, len, bytesToRead);
         return retval;
     }
 
     retval.resize(len);
     for (int i = 0; i < len; i++)
-        retval.push_back(data[i]);
+        retval[i] = data[i];
 
     return retval;
 }

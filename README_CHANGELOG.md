@@ -1,7 +1,14 @@
 # Changelog
 
-- 2020-07-?? 0.0.10
+- 2020-07-20 0.0.10
     - basic support for reentrant thread-safety
+    - added libusb\_drivers to installers
+    - added getEEPROMFieldName
+    - fixed firmwareVersion
+    - fleshed-out WasatchVCPPNet GUI
+        - EEPROM works
+        - acquisition works
+        - integration time works
 - 2020-07-15 0.0.9
     - build configurations for Debug/Release on x86/x64
     - added "make check\_headers"

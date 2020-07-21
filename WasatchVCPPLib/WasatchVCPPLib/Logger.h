@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include <string>
 #include <fstream>
+#include <string>
+#include <vector>
 
 namespace WasatchVCPP
 {
@@ -30,6 +31,9 @@ namespace WasatchVCPP
             void debug(const char* fmt, ...);
             void info(const char* fmt, ...);
             void error(const char* fmt, ...);
+
+            void hexdump(const std::string& prefix, const uint8_t* buf, int len);
+            void hexdump(const std::string& prefix, const std::vector<uint8_t>& data);
 
             bool setLogfile(const std::string& pathname);
 

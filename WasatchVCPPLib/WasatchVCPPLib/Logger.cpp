@@ -12,6 +12,7 @@
 #include "Util.h"
 
 using std::string;
+using std::vector;
 
 #define BUF_SIZE 256
 
@@ -74,3 +75,26 @@ void WasatchVCPP::Logger::output(const string& lvlName, const string& msg)
         logfile.flush();
     }
 }
+
+void WasatchVCPP::Logger::hexdump(const string& prefix, const vector<uint8_t>& data)
+{
+    if (level > LOG_LEVEL_DEBUG)
+        return;
+
+    string line = prefix + ": 0x";
+    for (int i = 0; i < data.size(); i++)
+        line += Util::sprintf("%02x ", data[i]);
+    debug("%s", line.c_str());
+}
+
+void WasatchVCPP::Logger::hexdump(const string& prefix, const uint8_t* buf, int len)
+{
+    if (level > LOG_LEVEL_DEBUG)
+        return;
+
+    string line = prefix + ": 0x";
+    for (int i = 0; i < len; i++)
+        line += Util::sprintf("%02x ", buf[i]);
+    debug("%s", line.c_str());
+}
+

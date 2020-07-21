@@ -21,7 +21,31 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_0D073F30D09942CBA1AC300B1FB0EE5F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_2459901FC1054521BAEE53445DF1559C"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_8ABE802C2A9C4A0EA6339B7AED05522A"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F89AFA320BC54AE2BE20B47EB87095DA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F8A86E7EB1C04A3C81C25CE0FE05B35D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -112,6 +136,86 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0D073F30D09942CBA1AC300B1FB0EE5F"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\amd64\\libusb0.sys"
+            "TargetName" = "8:libusb0.sys"
+            "Tag" = "8:"
+            "Folder" = "8:_7CA028A323264EAF97528D18021391D4"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8ABE802C2A9C4A0EA6339B7AED05522A"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\amd64\\libusb0.dll"
+            "TargetName" = "8:libusb0.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_7CA028A323264EAF97528D18021391D4"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F89AFA320BC54AE2BE20B47EB87095DA"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\license\\libusb0\\installer_license.txt"
+            "TargetName" = "8:installer_license.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_1683BAA4D63C45D5BCD3B9627600CEBD"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F8A86E7EB1C04A3C81C25CE0FE05B35D"
+            {
+            "SourcePath" = "8:..\\..\\include\\WasatchVCPP.h"
+            "TargetName" = "8:WasatchVCPP.h"
+            "Tag" = "8:"
+            "Folder" = "8:_63A7E9E85BAA4CF3867DF84D4EAFBE66"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
         }
         "FileType"
         {
@@ -150,6 +254,50 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_98D72FF70FE444B88E207192EB694677"
+                    {
+                    "Name" = "8:libusb_drivers"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_E9422A23621F4E7C83C928399513CDFF"
+                        "Folders"
+                        {
+                            "{9EF0B969-E518-4E46-987F-47570745A589}:_7CA028A323264EAF97528D18021391D4"
+                            {
+                            "Name" = "8:amd64"
+                            "AlwaysCreate" = "11:FALSE"
+                            "Condition" = "8:"
+                            "Transitive" = "11:FALSE"
+                            "Property" = "8:_4B4C040E55504A1C8F28E91E27F8A0D9"
+                                "Folders"
+                                {
+                                }
+                            }
+                            "{9EF0B969-E518-4E46-987F-47570745A589}:_D53C70F6EA2D4E558C6A556D22495EFF"
+                            {
+                            "Name" = "8:license"
+                            "AlwaysCreate" = "11:FALSE"
+                            "Condition" = "8:"
+                            "Transitive" = "11:FALSE"
+                            "Property" = "8:_7BFF15B797684FB4BC86BECE2066540A"
+                                "Folders"
+                                {
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_1683BAA4D63C45D5BCD3B9627600CEBD"
+                                    {
+                                    "Name" = "8:libusb0"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Condition" = "8:"
+                                    "Transitive" = "11:FALSE"
+                                    "Property" = "8:_723B13C8475A438ABB6E942865176F0B"
+                                        "Folders"
+                                        {
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -169,7 +317,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Wasatch.VCPP"
         "ProductCode" = "8:{672807D5-CF88-4CDE-B905-DBF3BE505AEC}"
-        "PackageCode" = "8:{77A7B3DD-01A7-45E2-8454-760143C1486D}"
+        "PackageCode" = "8:{1687CCF6-C0B1-4E1C-92A0-E9D31619F09A}"
         "UpgradeCode" = "8:{B3A4E2EB-5AAA-482A-91A1-1C958F74C45A}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"

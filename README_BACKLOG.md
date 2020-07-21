@@ -42,6 +42,7 @@ Per the "Design Remit" described in README.md:
     - reset FPGA
     - area scan
 - rare features
+    - multi-channel optimizations (e.g., wp\_send\_software\_trigger(specIndex) and wp\_get\_spectrum(..., send\_trigger=1)
     - actual frame count
     - threshold sensing
     - configurable throwaways

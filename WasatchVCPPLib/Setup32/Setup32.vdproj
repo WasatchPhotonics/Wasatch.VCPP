@@ -21,7 +21,43 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_8560EDFC2B71459AA7A63AE1C8DEFC71"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_95BBC0C38EF042A7A6A2B948C40A5712"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A14E7C49E9874BA3841C9E5FC2F08EA5"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_A5C5FD8A569544319755FCDDC9AE881B"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_C36902091C2A44F59C578A59A83841E6"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_D99A913B070246F188715AE99E5E1CAD"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_ECE936004470414383D753131DEAC195"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -50,6 +86,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
             }
         }
         "Release"
@@ -74,6 +118,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
             }
         }
     }
@@ -96,6 +148,126 @@
         }
         "File"
         {
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_8560EDFC2B71459AA7A63AE1C8DEFC71"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\WPLibUsb.inf"
+            "TargetName" = "8:WPLibUsb.inf"
+            "Tag" = "8:"
+            "Folder" = "8:_17E57AD9057F43E49F5D68E9AF805891"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_95BBC0C38EF042A7A6A2B948C40A5712"
+            {
+            "SourcePath" = "8:..\\..\\include\\WasatchVCPP.h"
+            "TargetName" = "8:WasatchVCPP.h"
+            "Tag" = "8:"
+            "Folder" = "8:_57408FD04A244FEAA517802490E9BE0C"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A14E7C49E9874BA3841C9E5FC2F08EA5"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\wplibusb.cat"
+            "TargetName" = "8:wplibusb.cat"
+            "Tag" = "8:"
+            "Folder" = "8:_17E57AD9057F43E49F5D68E9AF805891"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A5C5FD8A569544319755FCDDC9AE881B"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\license\\libusb0\\installer_license.txt"
+            "TargetName" = "8:installer_license.txt"
+            "Tag" = "8:"
+            "Folder" = "8:_B0B4C1BDD7F34338AE5CCCBCF6E25F98"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_D99A913B070246F188715AE99E5E1CAD"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\x86\\libusb0.sys"
+            "TargetName" = "8:libusb0.sys"
+            "Tag" = "8:"
+            "Folder" = "8:_F3F696A2132C41549AFC0FB94E2134CB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_ECE936004470414383D753131DEAC195"
+            {
+            "SourcePath" = "8:..\\..\\libusb_drivers\\x86\\libusb0_x86.dll"
+            "TargetName" = "8:libusb0_x86.dll"
+            "Tag" = "8:"
+            "Folder" = "8:_F3F696A2132C41549AFC0FB94E2134CB"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
         }
         "FileType"
         {
@@ -112,6 +284,50 @@
             "Property" = "8:TARGETDIR"
                 "Folders"
                 {
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_17E57AD9057F43E49F5D68E9AF805891"
+                    {
+                    "Name" = "8:libusb_drivers"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_598B015B9C3C4D9D8C2753F806875B11"
+                        "Folders"
+                        {
+                            "{9EF0B969-E518-4E46-987F-47570745A589}:_F3F696A2132C41549AFC0FB94E2134CB"
+                            {
+                            "Name" = "8:x86"
+                            "AlwaysCreate" = "11:FALSE"
+                            "Condition" = "8:"
+                            "Transitive" = "11:FALSE"
+                            "Property" = "8:_2DBFFD67B35742BF94A0B8C6E01BF866"
+                                "Folders"
+                                {
+                                }
+                            }
+                            "{9EF0B969-E518-4E46-987F-47570745A589}:_F585EAC43624480FBB0A23C58C66E967"
+                            {
+                            "Name" = "8:license"
+                            "AlwaysCreate" = "11:FALSE"
+                            "Condition" = "8:"
+                            "Transitive" = "11:FALSE"
+                            "Property" = "8:_634469CF86B04AAFB002F8C8BF4CB82C"
+                                "Folders"
+                                {
+                                    "{9EF0B969-E518-4E46-987F-47570745A589}:_B0B4C1BDD7F34338AE5CCCBCF6E25F98"
+                                    {
+                                    "Name" = "8:libusb0"
+                                    "AlwaysCreate" = "11:FALSE"
+                                    "Condition" = "8:"
+                                    "Transitive" = "11:FALSE"
+                                    "Property" = "8:_71F101B33B78449E9C86DECC91302DE6"
+                                        "Folders"
+                                        {
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             "{1525181F-901A-416C-8A58-119130FE478E}:_6B7F963625944F27B08B5A957DF6145A"
@@ -153,7 +369,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Wasatch.VCPP"
         "ProductCode" = "8:{BBF370E1-A250-49E2-98FC-AE7A6D7811FD}"
-        "PackageCode" = "8:{790DF61C-8B77-40A1-B51F-61C83C1BDABC}"
+        "PackageCode" = "8:{00D30B6F-0C70-4E24-9D3F-363179E5DCCE}"
         "UpgradeCode" = "8:{CAF4CECB-6F65-4C86-BFE3-EAEDE74BB566}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
@@ -674,7 +890,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_3BBE8E1EEC0D4A59A4EDFE445F1156F9"
             {
-            "SourcePath" = "8:..\\x64\\Debug\\WasatchVCPPDemo.exe"
+            "SourcePath" = "8:..\\Debug\\WasatchVCPPDemo.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_57408FD04A244FEAA517802490E9BE0C"
@@ -702,7 +918,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_C36902091C2A44F59C578A59A83841E6"
             {
-            "SourcePath" = "8:..\\x64\\Debug\\WasatchVCPP.dll"
+            "SourcePath" = "8:..\\Debug\\WasatchVCPP.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_57408FD04A244FEAA517802490E9BE0C"

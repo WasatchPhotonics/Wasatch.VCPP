@@ -185,6 +185,24 @@ int wp_get_eeprom_field_count(int specIndex)
     return (int)spec->eeprom.stringified.size();
 }
 
+int wp_get_eeprom_field_name(int specIndex, int index, char* value, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (index < 0 || index >= (int)spec->eeprom.stringified.size())
+        return WP_ERROR; // invalid index
+
+    int count = 0;
+    for (auto i = spec->eeprom.stringified.begin(); i != spec->eeprom.stringified.end(); i++, count++)
+        if (count == index)
+            return exportString(i->first, value, len);
+
+    driver->logger.error("wp_get_eeprom_field_name: impossible? (index = %d)", index);
+    return WP_ERROR;
+}
+
 int wp_get_eeprom(int specIndex, const char** names, const char** values, int len)
 {
     auto spec = driver->getSpectrometer(specIndex);
@@ -215,6 +233,14 @@ int wp_get_eeprom_field(int specIndex, const char* name, char* valueOut, int len
         return WP_ERROR_INVALID_SPECTROMETER;
 
     string lc = Util::toLower(name);
+
+    //! @todo think about this
+    if (lc == "userdata")
+    {
+        int size = min(len, 64);
+        memcpy(valueOut, &(spec->eeprom.userData[0]), size);
+        return WP_SUCCESS;
+    }
 
     const map<string, string>& entries = spec->eeprom.stringified;
     for (map<string, string>::const_iterator i = entries.begin(); i != entries.end(); i++)
