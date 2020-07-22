@@ -43,8 +43,14 @@ class WasatchVCPP
             set
             {
                 byte[] buf = Spectrometer.stringToBytes(value);  
-                wp_set_logfile_path(ref buf[0]);
+                wp_set_logfile_path(ref buf[0], buf.Length);
             }
+        }
+
+        public void logDebug(string msg)
+        {
+            byte[] buf = Spectrometer.stringToBytes(msg);  
+            wp_log_debug(ref buf[0], buf.Length);
         }
 
         public int openAllSpectrometers()
@@ -318,12 +324,12 @@ class WasatchVCPP
     const string DLL = "WasatchVCPP.dll";
     public const int WP_SUCCESS = 0;
 
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_all_spectrometers();
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_spectrometer(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_gain(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_gain_odd(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_tec_setpoint_deg_c(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_temperature_deg_c(int specIndex);
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_all_spectrometers();
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_spectrometer(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_offset(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_offset_odd(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_tec_enable(int specIndex);
@@ -346,6 +352,7 @@ class WasatchVCPP
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_spectrum(int specIndex, ref double spectrum, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_wavelengths(int specIndex, ref double wavelengths, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_wavenumbers(int specIndex, ref double wavenumbers, int len);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_log_debug(ref byte msg, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_open_all_spectrometers();
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int                wp_read_control_msg(byte bRequest, ushort wIndex, ref byte data, int len, int fullLen);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int                wp_send_control_msg(byte bRequest, ushort wValue, ushort wIndex, ref byte data, int len);
@@ -359,7 +366,7 @@ class WasatchVCPP
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_set_integration_time_ms(int specIndex, uint ms);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_set_laser_enable(int specIndex, int value); 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_set_log_level(int level);
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_set_logfile_path(ref byte pathname);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_set_logfile_path(ref byte pathname, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_cancel_operation(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_set_max_timeout_ms(int specIndex, int maxTimeoutMS);
 }

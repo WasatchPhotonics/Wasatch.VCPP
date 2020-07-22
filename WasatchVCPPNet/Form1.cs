@@ -143,6 +143,7 @@ namespace WasatchVCPPNet
                     logger.hexdump(spec.getEEPROMPage(page),
                                    string.Format("    buf[{0}]: ", page));
             }
+            driver.logDebug("sample injected log debug message");
         }
 
         private void checkBoxLaserEnable_CheckedChanged(object sender, EventArgs e)

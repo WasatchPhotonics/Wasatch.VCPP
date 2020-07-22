@@ -74,8 +74,9 @@ extern "C"
     //! Sets a pathname for WasatchVCPP to write a debug logfile.
     //!
     //! @param pathname (Input) a valid pathname (need not exist, will be overwritten if found)
+    //! @param len (Input) length of pathname
     //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_set_logfile_path(const char* pathname);
+    DLL_API int wp_set_logfile_path(const char* pathname, int len);
 
     //! Sets driver log level.
     //! 
@@ -86,8 +87,9 @@ extern "C"
     //! Allows calling code (and wrappers) to inject lines into the library's log.
     //!
     //! @param msg (Input) null-terminated C string
+    //! @param len (Input) length of string
     //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_log_debug(const char* msg);
+    DLL_API int wp_log_debug(const char* msg, int len);
 
     //! Obtains the version number of the WasatchVCPP library itself.
     //! @param value (Output) pre-allocated string to receive the value 
@@ -910,7 +912,7 @@ namespace WasatchVCPP
 
                 //! @see wp_set_logfile_path
                 bool setLogfile(const std::string& pathname)
-                { return WP_SUCCESS == wp_set_logfile_path(pathname.c_str()); }
+                { return WP_SUCCESS == wp_set_logfile_path(pathname.c_str(), (int)pathname.size()); }
 
                 //! @see wp_set_log_level
                 bool setLogLevel(int level)

@@ -3,6 +3,7 @@
 - 2020-07-22 1.0.0
     - added Logger.cs
     - added wp\_log\_debug
+    - added 'len' to wp\_set\_logfile\_path
     - changed Proxy::Spectrometer::spectrumBuf to std::vector
     - changed Proxy::Driver::spectrometers to std::map
     - resolved all known bugs

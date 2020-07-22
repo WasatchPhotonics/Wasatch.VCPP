@@ -296,9 +296,13 @@ int wp_get_eeprom_page(int specIndex, int page, uint8_t* buf, int len)
 // Settors
 ////////////////////////////////////////////////////////////////////////////////
 
-int wp_set_logfile_path(const char* pathname)
+int wp_set_logfile_path(const char* pathname, int len)
 {
-    if (!driver->logger.setLogfile(pathname))
+    string s;
+    for (int i = 0; i < len && pathname[i]; i++)
+        s += pathname[i];
+
+    if (!driver->logger.setLogfile(s))
         return WP_ERROR;
 
     return WP_SUCCESS;
@@ -314,12 +318,15 @@ int wp_set_log_level(int level)
     return WP_SUCCESS;
 }
 
-int wp_log_debug(const char* msg)
+int wp_log_debug(const char* msg, int len)
 { 
     if (driver->logger.level > Logger::Levels::LOG_LEVEL_DEBUG)
         return WP_ERROR;
 
-    driver->logger.debug("%s", msg); 
+    string s;
+    for (int i = 0; i < len && msg[i]; i++)
+        s += msg[i];
+    driver->logger.debug("%s", s.c_str()); 
     return WP_SUCCESS;
 }
 
