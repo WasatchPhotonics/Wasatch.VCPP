@@ -49,7 +49,7 @@ HWND hTextbox;
 string logBuffer;
 const int MAX_LOG_LEN = 16 * 1024; 
 
-WasatchVCPP::Proxy::Driver driver;  // example
+WasatchVCPP::Proxy::Driver driver; // example
 WasatchVCPP::Proxy::Spectrometer* spectrometer = nullptr; // example
 std::ofstream outfile;
 

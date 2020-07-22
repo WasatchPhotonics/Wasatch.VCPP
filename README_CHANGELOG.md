@@ -1,10 +1,13 @@
 # Changelog
 
 - 2020-07-22 1.0.0
+    - added Logger.cs
+    - added wp\_log\_debug
+    - changed Proxy::Spectrometer::spectrumBuf to std::vector
+    - changed Proxy::Driver::spectrometers to std::map
     - resolved all known bugs
     - tested WasatchVCPPNet with multiple spectrometers in parallel
     - all functions listed in WasatchVCPP.h believed working
-
 - 2020-07-21 0.0.11
     - WasatchVCPPNet is now successfully testing almost all features
     - added getMaxTimeoutMS

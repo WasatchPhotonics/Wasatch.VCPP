@@ -59,7 +59,6 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, int index
 
     pixels = eeprom.activePixelsHoriz;
 
-    logger.debug("Spectrometer::ctor: expanding wavecal");
     wavelengths.resize(pixels);
     for (int i = 0; i < pixels; i++)
         wavelengths[i] = eeprom.wavecalCoeffs[0] 
@@ -70,7 +69,6 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, int index
 
     if (eeprom.excitationNM > 0)
     {
-        logger.debug("Spectrometer::ctor: expanding wavenumbers");
         const double nmToCm = 1.0 / 1e7;
         const double laserCm = 1.0 / (eeprom.excitationNM * nmToCm);
 
@@ -122,17 +120,20 @@ WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, int index
 
 WasatchVCPP::Spectrometer::~Spectrometer()
 {
+    logger.info("WasatchVCPP::Spectrometer::dtor");
     close();
 }
 
 bool WasatchVCPP::Spectrometer::close()
 {
+    logger.info("Spectrometer::close");
     if (udev != nullptr)
     {
         usb_release_interface(udev, 0);
         usb_close(udev);
         udev = nullptr;
     }
+    logger.info("Spectrometer::close: end");
     return true;
 }
 
@@ -148,11 +149,9 @@ bool WasatchVCPP::Spectrometer::readEEPROM()
 
     if (!eeprom.parse(pages))
     {
-        logger.error("unable to parse EEPROM");
+        logger.error("Spectrometer::readEEPROM: unable to parse EEPROM");
         return false;
     }
-
-    logger.debug("Spectrometer::readEEPROM done");
     return true;
 }
 
@@ -274,6 +273,8 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
     uint16_t word = ((uint16_t)(dac + 0.5)) & 0xfff;
     auto bytesWritten = sendCmd(op, word);
 
+    logger.debug("detectorTECSetpointDegC -> 0x%04x (%.2f)", word, degC);
+
     detectorTECSetpointHasBeenSet = true;
     detectorTECSetointDegC = degC;
 
@@ -293,8 +294,7 @@ bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
 
     auto bytesWritten = sendCmd(op, flag ? 1 : 0, 0, junk);
 
-    // auto check = ParseData::toBool(getCmd(0xec, 1));
-    // logger.debug("setHighGainModeEnable: wrote %d, read %d", flag ? 1 : 0, check ? 1 : 0);
+    logger.debug("highGainModeEnable -> %s", flag ? "on" : "off");
 
     return true;
 }
@@ -305,6 +305,8 @@ string WasatchVCPP::Spectrometer::getFirmwareVersion()
     auto data = getCmd(0xc0, 4);
     if (data.size() >= 4)
         s = Util::sprintf("%d.%d.%d.%d", data[3], data[2], data[1], data[0]);
+
+    logger.debug("firmwareVersion <- %s", s.c_str());
     return s;
 }
 
@@ -315,6 +317,9 @@ string WasatchVCPP::Spectrometer::getFPGAVersion()
     for ( auto c : data )
         if (0x20 <= c && c <= 0x7f) // visible ASCII
             s += (char)c;
+
+    logger.debug("fpgaVersion <- %s", s.c_str());
+
     return s;
 }
 
@@ -325,11 +330,14 @@ int32_t WasatchVCPP::Spectrometer::getDetectorTemperatureRaw()
     auto data = getCmd(op, 2);
     if (data.size() < 2)
     {
-        logger.error("getDetectorTemperatureRaw: data = %s", Util::toHex(data));
+        logger.error("getDetectorTemperatureRaw: data = %s", Util::toHex(data).c_str());
         return -1;
     }
         
     uint16_t raw = (data[0] << 8) | data[1]; // MSB-LSB
+
+    logger.error("getDetectorTemperatureRaw <- 0x%04x", raw);
+
     return raw;
 }
 
@@ -344,7 +352,7 @@ float WasatchVCPP::Spectrometer::getDetectorTemperatureDegC()
                + eeprom.adcToDegCCoeffs[1] * raw
                + eeprom.adcToDegCCoeffs[2] * raw * raw;
 
-    logger.debug("detectorTemperatureDegC = %.2f (0x%04x raw)", degC, raw);
+    logger.debug("detectorTemperatureDegC <- %.2f (0x%04x raw)", degC, raw);
     return degC;
 }
 
@@ -352,6 +360,9 @@ float WasatchVCPP::Spectrometer::getDetectorTemperatureDegC()
 // Acquisition
 ////////////////////////////////////////////////////////////////////////////////
 
+//! Attempt to cancel an ongoing integration.
+//! 
+//! @warning this function will not work correctly without custom firmware
 bool WasatchVCPP::Spectrometer::cancelOperation(bool blocking)
 {
     if (!acquiring)
@@ -723,7 +734,7 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t
     vector<uint8_t> data(bytesToRead); 
 
     mutComm.lock();
-    logger.debug("calling getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
+    logger.debug("getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, bytesToRead, maxTimeoutMS);
     int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, (char*)&data[0], (int)data.size(), maxTimeoutMS);
     mutComm.unlock();

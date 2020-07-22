@@ -161,17 +161,26 @@ int wp_get_spectrum(int specIndex, double* spectrum, int len)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
+    {
+        driver->logger.error("wp_get_spectrum: invalid specIndex %d", specIndex);
         return WP_ERROR_INVALID_SPECTROMETER;
+    }
 
     auto intensities = spec->getSpectrum();
     if (intensities.empty())
+    {
+        driver->logger.error("wp_get_spectrum: error generating spectrum");
         return WP_ERROR;
+    }
+
+    if (len < (int)intensities.size())
+    {
+        driver->logger.error("wp_get_spectrum: insufficient storage");
+        return WP_ERROR_INSUFFICIENT_STORAGE;
+    }
 
     for (int i = 0; i < (int)intensities.size(); i++)
-        if (i < len)
-            spectrum[i] = intensities[i];
-        else
-            return WP_ERROR_INSUFFICIENT_STORAGE;
+        spectrum[i] = intensities[i];
 
     return WP_SUCCESS;
 }
@@ -302,6 +311,15 @@ int wp_set_log_level(int level)
         return WP_ERROR;
 
     driver->logger.level = (Logger::Levels) level;
+    return WP_SUCCESS;
+}
+
+int wp_log_debug(const char* msg)
+{ 
+    if (driver->logger.level > Logger::Levels::LOG_LEVEL_DEBUG)
+        return WP_ERROR;
+
+    driver->logger.debug("%s", msg); 
     return WP_SUCCESS;
 }
 

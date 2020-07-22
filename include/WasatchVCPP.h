@@ -83,6 +83,12 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_log_level(int level);
 
+    //! Allows calling code (and wrappers) to inject lines into the library's log.
+    //!
+    //! @param msg (Input) null-terminated C string
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_log_debug(const char* msg);
+
     //! Obtains the version number of the WasatchVCPP library itself.
     //! @param value (Output) pre-allocated string to receive the value 
     //! @param len (Input) length of allocated buffer (16 recommended)
@@ -654,7 +660,7 @@ namespace WasatchVCPP
                         return;
 
                     // pre-allocate a buffer for reading spectra
-                    spectrumBuf = new double[pixels];
+                    spectrumBuf.resize(pixels);
 
                     model = eepromFields["model"];
                     serialNumber = eepromFields["serialNumber"];
@@ -683,12 +689,6 @@ namespace WasatchVCPP
                     {
                         wp_close_spectrometer(specIndex);
                         specIndex = -1;
-                    }
-
-                    if (spectrumBuf != nullptr)
-                    {
-                        delete[] spectrumBuf;
-                        spectrumBuf = nullptr;
                     }
 
                     return true;
@@ -833,10 +833,9 @@ namespace WasatchVCPP
                 std::vector<double> getSpectrum()
                 {
                     std::vector<double> result;
-                    if (spectrumBuf != nullptr)
-                        if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrumBuf, pixels))
-                            for (int i = 0; i < pixels; i++)
-                                result.push_back(spectrumBuf[i]);
+                    if (pixels > 0)
+                        if (WP_SUCCESS == wp_get_spectrum(specIndex, &(spectrumBuf[0]), pixels))
+                            result = spectrumBuf;
                     return result;
                 }
 
@@ -889,7 +888,7 @@ namespace WasatchVCPP
                     free(values);
                     return true;
                 }
-                double* spectrumBuf;
+                std::vector<double> spectrumBuf;
         };
 
         ////////////////////////////////////////////////////////////////////////
@@ -911,15 +910,11 @@ namespace WasatchVCPP
 
                 //! @see wp_set_logfile_path
                 bool setLogfile(const std::string& pathname)
-                { 
-                    return WP_SUCCESS == wp_set_logfile_path(pathname.c_str()); 
-                }
+                { return WP_SUCCESS == wp_set_logfile_path(pathname.c_str()); }
 
                 //! @see wp_set_log_level
                 bool setLogLevel(int level)
-                {
-                    return WP_SUCCESS == wp_set_log_level(level);
-                }
+                { return WP_SUCCESS == wp_set_log_level(level); }
 
                 //! @see wp_get_library_version
                 std::string getLibraryVersion()
@@ -934,14 +929,23 @@ namespace WasatchVCPP
                 {
                     spectrometers.clear();
 
-                    numberOfSpectrometers = wp_open_all_spectrometers();
-                    if (numberOfSpectrometers <= 0)
+                    auto enumeratedCount = wp_open_all_spectrometers();
+                    if (enumeratedCount <= 0)
                         return 0;
 
-                    for (int i = 0; i < numberOfSpectrometers; i++)
-                        spectrometers.push_back(Spectrometer(i));
+                    int validCount = 0;
+                    for (int index = 0; index < enumeratedCount; index++)
+                    {
+                        auto pixels = wp_get_pixels(index);
+                        if (pixels > 0)
+                        {
+                            auto spec = new Proxy::Spectrometer(index);
+                            spectrometers.insert(std::make_pair(validCount, spec));
+                            validCount++;
+                        }
+                    }
 
-                    return numberOfSpectrometers;
+                    return validCount;
                 }
 
                 //! Retrieve a handle to one Spectrometer.
@@ -952,10 +956,11 @@ namespace WasatchVCPP
                 //! @returns handle to Proxy::Spectrometer
                 Spectrometer* getSpectrometer(int index)
                 {
-                    if (index >= (int)spectrometers.size())
+                    auto iter = spectrometers.find(index);
+                    if (iter == spectrometers.end())
                         return nullptr;
 
-                    return &spectrometers[index];
+                    return iter->second;
                 }
 
                 //! @see wp_close_all_spectrometers()
@@ -964,8 +969,11 @@ namespace WasatchVCPP
                 //!       resources won't be released
                 bool closeAllSpectrometers()
                 {
-                    for (int i = 0; i < numberOfSpectrometers; i++)
-                        spectrometers[i].close();
+                    for (auto iter = spectrometers.begin(); iter != spectrometers.end(); iter++)
+                    {
+                        delete iter->second;
+                        iter->second = nullptr;
+                    }
                     spectrometers.clear();
 
                     return WP_SUCCESS == wp_close_all_spectrometers();
@@ -984,8 +992,7 @@ namespace WasatchVCPP
             ////////////////////////////////////////////////////////////////////
 
             private:
-                //! make this a map, like WasatchVCPP::Driver::spectrometers?
-                std::vector<Spectrometer> spectrometers;
+                std::map<int, Spectrometer*> spectrometers;
         };
     }
 }
