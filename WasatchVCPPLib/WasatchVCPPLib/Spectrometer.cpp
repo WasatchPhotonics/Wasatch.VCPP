@@ -280,7 +280,6 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
     return true;
 }
 
-//! @warning may need to send 8-byte buffer?
 bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
 {
     const uint8_t op = 0xeb;
@@ -293,6 +292,9 @@ bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
     vector<uint8_t> junk(8); 
 
     auto bytesWritten = sendCmd(op, flag ? 1 : 0, 0, junk);
+
+    // auto check = ParseData::toBool(getCmd(0xec, 1));
+    // logger.debug("setHighGainModeEnable: wrote %d, read %d", flag ? 1 : 0, check ? 1 : 0);
 
     return true;
 }

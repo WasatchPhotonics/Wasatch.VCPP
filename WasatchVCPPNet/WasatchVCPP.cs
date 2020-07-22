@@ -49,14 +49,30 @@ class WasatchVCPP
 
         public int openAllSpectrometers()
         {
-            var count = wp_open_all_spectrometers();
-            for (int i = 0; i < count; i++)
-                spectrometers.Add(i, new Spectrometer(i));
-            return count;
+            wp_open_all_spectrometers();
+            var countEnumerated = wp_get_number_of_spectrometers();
+
+            // in the unusual event that a spectrometer "enumerates" and 
+            // "opens" but has invalid / unreadable EEPROM, just reject it
+            int countValid = 0;
+            for (int index = 0; index < countEnumerated; index++)
+            {
+                var spec = new Spectrometer(index);
+                if (spec.pixels > 0)
+                {
+                    spectrometers.Add(countValid, spec);
+                    countValid++;
+                }
+                else
+                {
+                    spec.close();
+                }
+            }
+            return countValid;
         }
 
         public void closeAllSpectrometers() => wp_close_all_spectrometers();
-        public int numberOfSpectrometers => wp_get_number_of_spectrometers();
+        public int numberOfSpectrometers => spectrometers.Count;
     };
 
     public class Spectrometer
@@ -83,6 +99,8 @@ class WasatchVCPP
             readEEPROM();
         }
 
+        public void close() => wp_close_spectrometer(specIndex);
+
         ////////////////////////////////////////////////////////////////////////
         // private accessors
         ////////////////////////////////////////////////////////////////////////
@@ -105,6 +123,8 @@ class WasatchVCPP
 
         double[] getWavelengths()
         {
+            if (pixels < 1)
+                return null;
             double[] result = new double[pixels];
             if (WP_SUCCESS != wp_get_wavelengths(specIndex, ref result[0], pixels))
                 return null;
@@ -113,6 +133,8 @@ class WasatchVCPP
 
         double[] getWavenumbers()
         {
+            if (pixels < 1)
+                return null;
             double[] result = new double[pixels];
             if (WP_SUCCESS != wp_get_wavenumbers(specIndex, ref result[0], pixels))
                 return null;
@@ -301,7 +323,7 @@ class WasatchVCPP
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_tec_setpoint_deg_c(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_temperature_deg_c(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_all_spectrometers();
-    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int                wp_close_spectrometer(int specIndex);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_spectrometer(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_offset(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_offset_odd(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_tec_enable(int specIndex);

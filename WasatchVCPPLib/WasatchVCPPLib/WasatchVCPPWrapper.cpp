@@ -252,7 +252,7 @@ int wp_get_eeprom_field(int specIndex, const char* name, char* valueOut, int len
         if (lc == Util::toLower(name))
         {
             // if the full string (plus null) doesn't fit, just say so
-            if (len < value.size() + 1)
+            if (len < (int)value.size() + 1)
                 return WP_ERROR_INSUFFICIENT_STORAGE;
 
             strncpy_s(valueOut, len, value.c_str(), value.size());
@@ -275,7 +275,7 @@ int wp_get_eeprom_page(int specIndex, int page, uint8_t* buf, int len)
         return WP_ERROR;
 
     const vector<uint8_t>& data = spec->eeprom.pages[page];
-    if (len < data.size())
+    if (len < (int)data.size())
         return WP_ERROR_INSUFFICIENT_STORAGE;
 
     memcpy_s(buf, len, &(data[0]), data.size());

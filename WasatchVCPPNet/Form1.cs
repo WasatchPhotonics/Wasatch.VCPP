@@ -13,7 +13,6 @@ namespace WasatchVCPPNet
         WasatchVCPP.Driver driver;
         Dictionary<int, BackgroundWorker> workers = new Dictionary<int, BackgroundWorker>();
         Dictionary<int, Series> serieses = new Dictionary<int, Series>();
-        bool laserEnabled;
         bool running;
         bool shutdownPending;
 
@@ -26,11 +25,8 @@ namespace WasatchVCPPNet
         public Form1()
         {
             InitializeComponent();
-
             logger.setTextBox(textBoxEventLog);
-
             Text = string.Format("WasatchVCPPNet {0}", Assembly.GetExecutingAssembly().GetName().Version.ToString());
-
         }
         
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -51,7 +47,10 @@ namespace WasatchVCPPNet
             }
 
             if (allComplete)
-                driver.closeAllSpectrometers();
+            {
+                if (driver != null)
+                    driver.closeAllSpectrometers();
+            }
             else
                 e.Cancel = true;
         }  
@@ -108,6 +107,8 @@ namespace WasatchVCPPNet
                 worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
                 workers.Add(i, worker);
             }
+
+            initGUIFromFirstSpectrometer();
         }
 
         private void buttonMetadata_Click(object sender, EventArgs e)
@@ -144,15 +145,14 @@ namespace WasatchVCPPNet
             }
         }
 
-        private void buttonLaser_Click(object sender, EventArgs e)
+        private void checkBoxLaserEnable_CheckedChanged(object sender, EventArgs e)
         {
             if (driver is null)
                 return;
 
-            laserEnabled = !laserEnabled;
+            var enabled = (sender as CheckBox).Checked;
             for (int i = 0; i < driver.numberOfSpectrometers; i++)
-                driver.spectrometers[i].laserEnable = laserEnabled;
-            buttonLaser.Text = laserEnabled ? "Laser Off" : "Laser On";
+                driver.spectrometers[i].laserEnable = enabled;
         }
 
         private void numericUpDownIntegrationTimeMS_ValueChanged(object sender, EventArgs e)
@@ -296,6 +296,44 @@ namespace WasatchVCPPNet
 
             chart1.ChartAreas[0].AxisY.IsStartedFromZero = false;
             chart1.ChartAreas[0].RecalculateAxesScale();
+        }
+
+        void initGUIFromFirstSpectrometer()
+        {
+            if (driver is null)
+                return;
+            var spec = driver.spectrometers[0];
+
+            // these will trigger a series of callbacks, which will have
+            // the effect of setting all connected spectrometers to the same
+            // settings as the first one (skipping TEC setpoint, as that
+            // would rarely be optimal for heterogenous testbeds)
+
+            checkBoxLaserEnable.Checked = spec.laserEnable;
+            numericUpDownIntegrationTimeMS.Value = spec.integrationTimeMS;
+            numericUpDownMaxTimeoutMS.Value = spec.maxTimeoutMS;
+            checkBoxTECEnable.Checked = spec.detectorTECEnable;
+            checkBoxHighGainModeEnable.Checked = spec.highGainModeEnable;
+
+            // only update these to the GUI if there's only one connected spectrometer
+            if (driver.numberOfSpectrometers == 1)
+            {
+                numericUpDownTECSetpointDegC.Value = spec.detectorTECSetpointDegC;
+                numericUpDownDetectorGain.Value = (decimal)spec.detectorGain;
+                numericUpDownDetectorGainOdd.Value = (decimal)spec.detectorGainOdd;
+                numericUpDownDetectorOffset.Value = spec.detectorOffset;
+                numericUpDownDetectorOffsetOdd.Value = spec.detectorOffsetOdd;
+            }
+            else
+            {
+                // just disable these widgets when connected to multiple spectrometers,
+                // until we provide a drop-down menu allowing selection of one spectrometer
+                numericUpDownTECSetpointDegC.Enabled = false;
+                numericUpDownDetectorGain.Enabled = false;
+                numericUpDownDetectorGainOdd.Enabled = false;
+                numericUpDownDetectorOffset.Enabled = false;
+                numericUpDownDetectorOffsetOdd.Enabled = false;
+            }
         }
 
         ////////////////////////////////////////////////////////////////////////

@@ -118,6 +118,15 @@ are populated at build.)
     - x86/
     - x64/
 
+- libusb\_drivers/
+    - The .inf and .cat files used to associate Wasatch Photonics USB 
+      spectrometers with the libusb-win32 low-level driver.  This folder
+      is an exact copy of that provided through Wasatch.NET:
+    - https://github.com/WasatchPhotonics/Wasatch.NET/tree/master/libusb_drivers
+    - To "install" these drivers with your spectrometer, follow the same
+      procedure defined for Wasatch.NET:
+    - https://github.com/WasatchPhotonics/Wasatch.NET#post-install-step-1-libusb-drivers
+
 - WasatchVCPPLib/
     - WasatchVCPPLib/ 
         - sources to build WasatchVCPP.dll from Visual Studio
@@ -135,13 +144,14 @@ are populated at build.)
 
 # Usage
 
-There are basically four ways you can use WasatchVCPP:
+There are basically five ways you can use WasatchVCPP:
 
 1. use the raw C functions (C API) to call precompiled WasatchVCPP.dll via C or C++
 2. use WasatchVCPP::Proxy (C++ API) to call precompiled WasatchVCPP.dll via C++
 3. compile WasatchVCPP.dll yourself, then call WasatchVCPP::Driver and
    WasatchVCPP::Spectrometer directly (having ensured perfect ABI alignment)
 4. import WasatchVCPP files into your own project, then call them directly
+5. make a copy of WasatchVCPPNet/WasatchVCPP.cs and call it from your C# program
 
 ## Discussion
 
@@ -173,7 +183,9 @@ WasatchVCPP.
 
 # Examples
 
-A simple Visual C++ GUI project, "WastchVCPPDemo" is included in the solution
+## WasatchVCPPDemo
+
+A simple Visual C++ GUI project, "WasatchVCPPDemo" is included in the solution
 so you can see how these functions can be called through the WasatchVCPP::Proxy
 C++ interface (whose source code itself provides an example to using the
 underlying C interface).
@@ -212,6 +224,17 @@ In short, this is a typical calling sequence:
 You can see the above lines "in situ" when you grep the demo for "example":
 
     $ grep "example" WasatchVCPPLib/WasatchVCPPDemo/WasatchVCPPDemo.cpp
+
+## WasatchVCPPNet
+
+A second GUI demo is provided in the WasatchVCPPNet solution.  This is packaged
+as a separate solution (as opposed to merely a project in the WasatchVCPPLib 
+solution) to clearly demonstrate that only the WasatchVCPP.dll is being called,
+and there are no "intra-package" linkage references or other shortcuts.
+
+This GUI was written in C# for the simple reason that spectral graphing is 
+trivial in .NET, and it was easier to call the WasatchVCPP C API from C# than to
+import a graphing framework into Visual C++ :-(
 
 # References
 

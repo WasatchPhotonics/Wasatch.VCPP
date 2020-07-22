@@ -12,10 +12,6 @@ Per the "Design Remit" described in README.md:
 (done)
 - see WasatchVCPP.h and README_CHANGELOG.md
 
-(not done)
-- WasatchVCPPNet demo (started)
-- added .inf files to installer
-
 ## Not supported (pending customer use-case)
 
 - ARM features
