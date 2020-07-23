@@ -11,6 +11,7 @@ namespace WasatchVCPPNet
     public partial class Form1 : Form
     {
         WasatchVCPP.Driver driver;
+        BackgroundWorker workerTemperature;
         Dictionary<int, BackgroundWorker> workers = new Dictionary<int, BackgroundWorker>();
         Dictionary<int, Series> serieses = new Dictionary<int, Series>();
         bool running;
@@ -33,6 +34,7 @@ namespace WasatchVCPPNet
         {
             shutdownPending = true;
 
+            checkBoxMonitorTemperature.Checked = false;
             if (running)
                 stop();
 
@@ -59,7 +61,7 @@ namespace WasatchVCPPNet
         // Callbacks
         ////////////////////////////////////////////////////////////////////////
 
-        private void checkBoxVerbose_CheckedChanged(object sender, EventArgs e)
+        void checkBoxVerbose_CheckedChanged(object sender, EventArgs e)
         {
             var verbose = checkBoxVerbose.Checked;
             logger.level = verbose ? LogLevel.DEBUG : LogLevel.INFO;
@@ -67,7 +69,7 @@ namespace WasatchVCPPNet
                 driver.logLevel = verbose ? 0 : 1;
         }
 
-        private void buttonInit_Click(object sender, EventArgs e)
+        void buttonInit_Click(object sender, EventArgs e)
         {
             if (driver != null)
                 return;
@@ -109,11 +111,17 @@ namespace WasatchVCPPNet
             }
 
             initGUIFromFirstSpectrometer();
+
+            workerTemperature = new BackgroundWorker { WorkerSupportsCancellation = true };
+            workerTemperature.DoWork += WorkerTemperature_DoWork;
+            workerTemperature.RunWorkerCompleted += WorkerTemperature_RunWorkerCompleted;
+
+            buttonStart.Enabled = buttonMetadata.Enabled = true;
         }
 
-        private void buttonMetadata_Click(object sender, EventArgs e)
+        void buttonMetadata_Click(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             for (int i = 0; i < driver.numberOfSpectrometers; i++)
@@ -146,9 +154,9 @@ namespace WasatchVCPPNet
             driver.logDebug("sample injected log debug message");
         }
 
-        private void checkBoxLaserEnable_CheckedChanged(object sender, EventArgs e)
+        void checkBoxLaserEnable_CheckedChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var enabled = (sender as CheckBox).Checked;
@@ -156,9 +164,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].laserEnable = enabled;
         }
 
-        private void numericUpDownIntegrationTimeMS_ValueChanged(object sender, EventArgs e)
+        void numericUpDownIntegrationTimeMS_ValueChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var ms = (uint)numericUpDownIntegrationTimeMS.Value;
@@ -166,9 +174,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].integrationTimeMS = ms;
         }
 
-        private void numericUpDownMaxTimeoutMS_ValueChanged(object sender, EventArgs e)
+        void numericUpDownMaxTimeoutMS_ValueChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var ms = (int)numericUpDownMaxTimeoutMS.Value;
@@ -176,9 +184,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].maxTimeoutMS = ms;
         }
 
-        private void numericUpDownTECSetpointDegC_ValueChanged(object sender, EventArgs e)
+        void numericUpDownTECSetpointDegC_ValueChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var degC = (int)numericUpDownTECSetpointDegC.Value;
@@ -186,9 +194,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].detectorTECSetpointDegC = degC;
         }
 
-        private void checkBoxTECEnable_CheckedChanged(object sender, EventArgs e)
+        void checkBoxTECEnable_CheckedChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var enable = checkBoxTECEnable.Checked;
@@ -196,9 +204,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].detectorTECEnable = enable;
         }
 
-        private void checkBoxHighGainModeEnable_CheckedChanged(object sender, EventArgs e)
+        void checkBoxHighGainModeEnable_CheckedChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var enable = checkBoxHighGainModeEnable.Checked;
@@ -206,9 +214,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].highGainModeEnable = enable;
         }
 
-        private void numericUpDownDetectorGain_ValueChanged(object sender, EventArgs e)
+        void numericUpDownDetectorGain_ValueChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var value = (float)(sender as NumericUpDown).Value;
@@ -216,9 +224,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].detectorGain = value;
         }
 
-        private void numericUpDownDetectorGainOdd_ValueChanged(object sender, EventArgs e)
+        void numericUpDownDetectorGainOdd_ValueChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var value = (float)(sender as NumericUpDown).Value;
@@ -226,9 +234,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].detectorGainOdd = value;
         }
 
-        private void numericUpDownDetectorOffset_ValueChanged(object sender, EventArgs e)
+        void numericUpDownDetectorOffset_ValueChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var value = (int)(sender as NumericUpDown).Value;
@@ -236,9 +244,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].detectorOffset = value;
         }
 
-        private void numericUpDownDetectorOffsetOdd_ValueChanged(object sender, EventArgs e)
+        void numericUpDownDetectorOffsetOdd_ValueChanged(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var value = (int)(sender as NumericUpDown).Value;
@@ -246,9 +254,9 @@ namespace WasatchVCPPNet
                 driver.spectrometers[i].detectorOffsetOdd = value;
         }
 
-        private void buttonStart_Click(object sender, EventArgs e)
+        void buttonStart_Click(object sender, EventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             if (running)
@@ -257,9 +265,20 @@ namespace WasatchVCPPNet
                 start();
         }
 
+        void checkBoxMonitorTemperature_CheckedChanged(object sender, EventArgs e)
+        {
+            var enabled = (sender as CheckBox).Checked;
+            if (enabled)
+                workerTemperature.RunWorkerAsync();
+            else
+                workerTemperature.CancelAsync();
+        }
+
         ////////////////////////////////////////////////////////////////////////
         // Methods
         ////////////////////////////////////////////////////////////////////////
+
+        bool initialized => driver != null && driver.numberOfSpectrometers > 0;
 
         void start()
         {
@@ -280,7 +299,7 @@ namespace WasatchVCPPNet
 
         void processSpectrum(int index, double[] spectrum)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             var spec = driver.spectrometers[index];
@@ -301,7 +320,7 @@ namespace WasatchVCPPNet
 
         void initGUIFromFirstSpectrometer()
         {
-            if (driver is null)
+            if (!initialized)
                 return;
             var spec = driver.spectrometers[0];
 
@@ -338,12 +357,12 @@ namespace WasatchVCPPNet
         }
 
         ////////////////////////////////////////////////////////////////////////
-        // Background Workers
+        // Acquisition Worker
         ////////////////////////////////////////////////////////////////////////
 
-        private void Worker_DoWork(object sender, DoWorkEventArgs e)
+        void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
-            if (driver is null)
+            if (!initialized)
                 return;
 
             int index = (int)e.Argument;
@@ -365,7 +384,7 @@ namespace WasatchVCPPNet
             }
         }
 
-        private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             var allComplete = true;
             foreach (var pair in workers)
@@ -380,6 +399,34 @@ namespace WasatchVCPPNet
                 if (shutdownPending)
                     Close();
             }
+        }
+
+        ////////////////////////////////////////////////////////////////////////
+        // Temperature Worker
+        ////////////////////////////////////////////////////////////////////////
+
+        void WorkerTemperature_DoWork(object sender, DoWorkEventArgs e)
+        {
+            if (!initialized)
+                return;
+            var spec = driver.spectrometers[0];
+
+            while (true)
+            {
+                if (workerTemperature.CancellationPending || shutdownPending)
+                    break;
+
+                var degC = spec.detectorTemperatureDegC;
+                chart1.BeginInvoke(new MethodInvoker(delegate { labelDetectorTemperatureDegC.Text = string.Format("{0:f2}", degC); }));
+
+                Thread.Sleep(1000);
+            }
+        }
+
+        void WorkerTemperature_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (!shutdownPending)
+                labelDetectorTemperatureDegC.Text = "disabled";
         }
     }
 }

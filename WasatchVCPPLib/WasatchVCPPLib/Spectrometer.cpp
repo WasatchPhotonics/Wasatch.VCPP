@@ -326,6 +326,9 @@ string WasatchVCPP::Spectrometer::getFPGAVersion()
 //! @returns negative on error, else valid uint16_t
 int32_t WasatchVCPP::Spectrometer::getDetectorTemperatureRaw()
 {
+    if (eeprom.hasCooling)
+        return -1;
+
     const uint8_t op = 0xd7;
     auto data = getCmd(op, 2);
     if (data.size() < 2)
@@ -368,11 +371,30 @@ bool WasatchVCPP::Spectrometer::cancelOperation(bool blocking)
     if (!acquiring)
         return false;
 
+    // This will cause this class's bulk endpoint read "retry loop" to stop 
+    // cycling, at least within maxTimeoutMS.  However, this doesn't actually 
+    // change anything inside the hardware spectrometer.
     operationCancelled = true;
 
+    // To actually cause the spectrometer to abruptly end the current acquisition
+    // before the original scheduled "end-of-integration time," we need to reduce
+    // the current integration time.  With appropriate FPGA FW, this will cause
+    // the current acquisition to "end immediately" (read-out the sensor and push
+    // the abbreviated intensities to the bulk endpoint, where we may or may not
+    // bother to actually read them).
+    cancelledIntegrationTimeMS = integrationTimeMS;
+    setIntegrationTimeMS(eeprom.minIntegrationTimeMS);
+
+    // The question now is when to restore the original integration time.  My 
+    // current approach is to set a new flag, lastAcquisitionWasCancelled, which
+    // will cause the NEXT acquisition to start by re-setting the originally-
+    // configured integration time.
+    lastAcquisitionWasCancelled = true;
+
+    // if requested, block until current bulk read times-out
     if (blocking)
     {
-        // check at least 1Hz
+        // check at least 1Hz 
         int sleepMS = min(maxTimeoutMS, 1000); 
         while (acquiring)
         {
@@ -400,6 +422,14 @@ long WasatchVCPP::Spectrometer::generateTotalWaitMS()
 std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     mutAcquisition.lock();
+
+    // perform clean-up from cancelled operation, if any
+    if (lastAcquisitionWasCancelled)
+    {
+        setIntegrationTimeMS(cancelledIntegrationTimeMS);
+        lastAcquisitionWasCancelled = false;
+    }
+
     vector<double> spectrum;
     if (acquiring)
     {

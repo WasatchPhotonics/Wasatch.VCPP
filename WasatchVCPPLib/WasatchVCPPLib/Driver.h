@@ -47,7 +47,7 @@ namespace WasatchVCPP
     class Driver
     {
         public:
-            const std::string libraryVersion = "1.0.0";
+            const std::string libraryVersion = "1.0.1";
 
             static Driver* getInstance();
 

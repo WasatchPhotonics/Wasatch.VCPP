@@ -1,5 +1,12 @@
 # Changelog
 
+- 2020-07-23 1.0.1
+    - WasatchVCPPLib
+        - preliminary SW support for FPGA cancelOperation 
+        - disallow reading temperature unless cooling configured
+    - WasatchVCPPNet
+        - added temperature monitoring
+        - fixed GUI display for temperature, offset error values
 - 2020-07-22 1.0.0
     - added Logger.cs
     - added wp\_log\_debug

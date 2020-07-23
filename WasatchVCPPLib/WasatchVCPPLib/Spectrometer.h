@@ -111,6 +111,9 @@ namespace WasatchVCPP
             bool detectorTECSetpointHasBeenSet;
             bool acquiring;
             bool operationCancelled;
+            int cancelledIntegrationTimeMS;
+            bool lastAcquisitionWasCancelled;
+
             std::mutex mutAcquisition;
             std::mutex mutComm;
 
