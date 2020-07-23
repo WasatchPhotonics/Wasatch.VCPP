@@ -236,6 +236,10 @@ This GUI was written in C# for the simple reason that spectral graphing is
 trivial in .NET, and it was easier to call the WasatchVCPP C API from C# than to
 import a graphing framework into Visual C++ :-(
 
+# Changelog
+
+- see [Changelog](README_CHANGELOG.md)
+
 # References
 
 libusb-win32
