@@ -181,8 +181,7 @@ bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
     return true;
 }
 
-// not declared in class because doesn't use logger
-uint16_t serializeGain(float value)
+uint16_t WasatchVCPP::Spectrometer::serializeGain(float value)
 {
     uint8_t msb = (int)value & 0xff;
     uint8_t lsb = ((uint16_t)((value - msb) * 256.0 + 0.5)) & 0xff;
@@ -745,12 +744,29 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmd2(uint16_t wValue, int len, uin
 //! getCmd2 facades.
 //!
 //! All "Hungarian notation" parameter names (bRequest, wValue etc) are taken from
-//! public USB specifications to avoid confusion.
+//! public USB specifications to reduce confusion.  (It is worth remembering that
+//! bRequest is a byte, wValue and wIndex are 16-bit words, etc.)
 //! 
 //! @see getCmd
 //! @see getCmd2
 //! @see https://www.beyondlogic.org/usbnutshell/usb6.shtml
-vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, int len, int fullLen)
+//!
+//! @param bRequest (Input) the accessor opcode to read
+//! @param wValue   (Input) the primary argument to the opcode (or "specific opcode"
+//!                         if bRequest is 0xff to indicate a "second-tier" opcode)
+//! @param wIndex   (Input) the secondary argument to the opcode; or additional bytes
+//!                         of precision for long arguments; or the primary argument
+//!                         to second-tier opcodes.
+//! @param len      (Input) how many bytes we NEED BACK in the response from this 
+//!                         function
+//! @param fullLen  (Input) how many bytes we ACTUALLY EXPECT BACK over USB
+//! @returns the 'len' requested bytes from the USB response (empty on error)
+vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(
+        uint8_t bRequest, 
+        uint16_t wValue, 
+        uint16_t wIndex, 
+        int len, 
+        int fullLen)
 {
     // this is what we'll return
     vector<uint8_t> retval;
@@ -799,15 +815,17 @@ bool WasatchVCPP::Spectrometer::isARM() { return pid == 0x4000; }
 bool WasatchVCPP::Spectrometer::isInGaAs() { return pid == 0x2000; }
 
 bool WasatchVCPP::Spectrometer::isMicro()
-{
-    return isARM() && Util::toLower(eeprom.detectorName).find("IMX") != string::npos;
-}
+{ return isARM() && Util::toLower(eeprom.detectorName).find("imx") != string::npos; }
 
 //! @todo use PID to determine appropriate result code by platform
+//! @warning Right now, we literally aren't reading the single-byte result code
+//!          returned to the control endpoint following a sendCmd, so I don't
+//!          even know where that status code is going.  I ASSUME that it simply
+//!          gets "overwritten" by the next call to getCmdReal?
 bool WasatchVCPP::Spectrometer::isSuccess(unsigned char opcode, int result)
 { return true; }
 
-//! @todo move to Util?
+//! @todo move to Util
 unsigned long WasatchVCPP::Spectrometer::clamp(unsigned long value, unsigned long min, unsigned long max)
 {
     if (value < min)

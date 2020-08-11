@@ -14,6 +14,7 @@
 #include <string>
 #include <iostream>
 
+using std::mutex;
 using std::vector;
 using std::string;
 using std::make_pair;
@@ -24,10 +25,14 @@ using std::make_pair;
 
 WasatchVCPP::Driver* WasatchVCPP::Driver::instance = nullptr;
 
+mutex WasatchVCPP::Driver::mut;
+
 WasatchVCPP::Driver* WasatchVCPP::Driver::getInstance()
 {
+    mut.lock();
     if (instance == nullptr)
         instance = new WasatchVCPP::Driver();
+    mut.unlock();
     return instance;
 }
 
@@ -45,11 +50,11 @@ int WasatchVCPP::Driver::openAllSpectrometers()
 {
     logger.info("Driver::openAllSpectrometers");
 
-    mutLifecycle.lock();
+    mut.lock();
     if (!spectrometers.empty())
     {
         logger.error("Driver::openAllSpectrometers: please call closeAllSpectrometers before re-calling");
-        mutLifecycle.unlock();
+        mut.unlock();
         return -1;
     }
 
@@ -114,7 +119,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
         }
     }
 
-    mutLifecycle.unlock();
+    mut.unlock();
 
     logger.info("Driver::openAllSpectrometers: done");
     return (int)spectrometers.size();
@@ -122,24 +127,28 @@ int WasatchVCPP::Driver::openAllSpectrometers()
 
 WasatchVCPP::Spectrometer* WasatchVCPP::Driver::getSpectrometer(int index)
 {
+    Spectrometer* retval = nullptr;
+
+    mut.lock();
     auto iter = spectrometers.find(index);
-    if (iter == spectrometers.end())
-    {
+    if (iter != spectrometers.end())
+        retval = iter->second;
+    else
         logger.error("Driver::getSpectrometer(%d) not found", index);
-        return nullptr;
-    }
-    return iter->second;
+    mut.unlock();
+
+    return retval;
 }
 
 bool WasatchVCPP::Driver::removeSpectrometer(int index)
 {
     logger.info("Driver::removeSpectrometer(%d)", index);
 
-    mutLifecycle.lock();
+    mut.lock();
     auto spec = getSpectrometer(index);
     if (spec == nullptr)
     {
-        mutLifecycle.unlock();
+        mut.unlock();
         return false;
     }
     
@@ -149,7 +158,7 @@ bool WasatchVCPP::Driver::removeSpectrometer(int index)
     spec = nullptr;
 
     spectrometers.erase(index);
-    mutLifecycle.unlock();
+    mut.unlock();
     return ok;
 }
 
@@ -157,11 +166,11 @@ bool WasatchVCPP::Driver::closeAllSpectrometers()
 {
     logger.info("Driver::closeAllSpectrometers");
 
-    mutLifecycle.lock();
+    mut.lock();
     vector<int> indices;
     for (auto i = spectrometers.begin(); i != spectrometers.end(); i++)
         indices.push_back(i->first);
-    mutLifecycle.unlock();
+    mut.unlock();
 
     for (auto index : indices)
         removeSpectrometer(index);

@@ -1,5 +1,7 @@
 # Changelog
 
+- 2020-08-11 1.0.2
+    - cleanup, docs, improved mutex synchronization
 - 2020-07-23 1.0.1
     - WasatchVCPPLib
         - preliminary SW support for FPGA cancelOperation 

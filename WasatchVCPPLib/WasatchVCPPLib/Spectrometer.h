@@ -28,6 +28,7 @@ namespace WasatchVCPP
     {
         public:
             //! keep synchronized with WasatchVCPP.h WP_ERROR_*
+            //! @todo move to ErrorCodes.h so Driver.cpp can use
             enum ErrorCodes 
             {
                 Success             =  0,
@@ -43,10 +44,11 @@ namespace WasatchVCPP
 
             Spectrometer(usb_dev_handle* udev, int pid, int index, Logger& logger);
             ~Spectrometer();
+
             bool close();
 
             EEPROM eeprom;
-            Driver* driver;
+            Driver* driver;     // still needed?
 
             // public metadata
             int pid;
@@ -56,10 +58,18 @@ namespace WasatchVCPP
             bool isARM();
             bool isInGaAs();
             bool isMicro();
+
+            //! Other Wasatch drivers don't really have this concept...basically,
+            //! all blocking reads to bulk endpoints (spectral reads) wait no
+            //! longer than this, and loop over multiple reads if necessary, to
+            //! fulfill the given integration time (plus unknown trigger wait).
+            //! Keeping this value small and controllable is key to being able to
+            //! interrupt and cancel long integrations (5-10min) within a 
+            //! reasonable response time.
             int maxTimeoutMS = 1000;
 
             // cached properties
-            int pixels = 1024;
+            int pixels;
             std::string firmwareVersion;
             std::string fpgaVersion;
             int integrationTimeMS;
@@ -137,9 +147,8 @@ namespace WasatchVCPP
 
             // utility
             bool isSuccess(unsigned char opcode, int result);
-            unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
+            uint16_t serializeGain(float value);
             float deserializeGain(const std::vector<uint8_t>& data);
-
+            unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
     };
 }
-

@@ -41,13 +41,23 @@ namespace WasatchVCPP
 
         There are no specific locks in place, presently, to preclude things like:
 
-        - changing integration time during acquisition
+        - changing integration time during acquisition (in fact, cancelOperation
+          will do precisely this)
         - changing laser state during acquisition
     */
     class Driver
     {
         public:
-            const std::string libraryVersion = "1.0.1";
+
+            //! This is where the "master version number" is stored for the
+            //! library.  It's not in WasatchVCPP.h because that file will
+            //! often be customer-writeable...what we really want to know is
+            //! what version of the LIBRARY was compiled into the DLL, not
+            //! what the "current" customer API is.
+            //!
+            //! @note this value is checked by scripts/deploy against the given 
+            //!       release tag
+            const std::string libraryVersion = "1.0.2";
 
             static Driver* getInstance();
 
@@ -63,11 +73,12 @@ namespace WasatchVCPP
             Logger logger;
 
         private:
+            //! synchronizes access to instance and spectrometer map
+            static std::mutex mut;      
             static Driver* instance;
+
             Driver(); 
 
             std::map<int, Spectrometer*> spectrometers;
-
-            std::mutex mutLifecycle;
     };
 }
