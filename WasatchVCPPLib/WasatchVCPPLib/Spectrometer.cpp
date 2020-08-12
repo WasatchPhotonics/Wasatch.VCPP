@@ -12,12 +12,16 @@
 #include "ParseData.h"
 #include "Util.h"
 
+#include <math.h>
+#include <stdio.h>
+
 #include <algorithm>
 #include <chrono>
 
 using std::string;
 using std::vector;
 using std::max;
+using std::min;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
@@ -34,7 +38,7 @@ unsigned long MAX_UINT24 = 16777216;
 // Lifecycle
 ////////////////////////////////////////////////////////////////////////////////
 
-WasatchVCPP::Spectrometer::Spectrometer(usb_dev_handle* udev, int pid, int index, Logger& logger)
+WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int index, Logger& logger)
     : udev(udev), pid(pid), index(index), logger(logger), eeprom(logger)
 {
 
@@ -129,8 +133,13 @@ bool WasatchVCPP::Spectrometer::close()
     logger.info("Spectrometer::close");
     if (udev != nullptr)
     {
+#if USE_LIBUSB_WIN32
         usb_release_interface(udev, 0);
         usb_close(udev);
+#else
+        libusb_release_interface(udev, 0);
+        libusb_close(udev);
+#endif
         udev = nullptr;
     }
     logger.info("Spectrometer::close: end");
@@ -504,6 +513,7 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
     //! @see https://sourceforge.net/p/libusb-win32/code/HEAD/tree/trunk/libusb/src/windows.c#l493
     //! @see https://sourceforge.net/p/libusb-win32/code/HEAD/tree/trunk/libusb/src/error.h#l41
     const int LIBUSB_WIN32_ERROR_TIMEOUT = -116;
+    const int LIBUSB_ERROR_TIMEOUT = -7;
 
     vector<uint16_t> subspectrum;
 
@@ -519,7 +529,7 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
 
     // what is the size of the individual reads we're going to perform (allowing
     // interruptions between, but not during each)?
-    long periodMS = min(allocatedMS, maxTimeoutMS);
+    long periodMS = min(allocatedMS, (long)maxTimeoutMS);
 
     // what is the WALLCLOCK elapsed time we've spent so far on this venture?
     long elapsedMS = 0;
@@ -533,8 +543,16 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
 
         logger.debug("attempting to read %d bytes from endpoint 0x%02x with timeout %dms", 
             bytesLeftToRead, ep, timeoutMS);
+
+#if USE_LIBUSB_WIN32
+        int result = 0;
         int bytesRead = usb_bulk_read(udev, ep, (char*)&bufSubspectrum[0], bytesLeftToRead, timeoutMS);
-        logger.debug("read %d bytes from endpoint 0x%02x", bytesRead, ep);
+#else
+        int bytesRead = 0;
+        int result = libusb_bulk_transfer(udev, ep, (unsigned char*)&bufSubspectrum[0], bytesLeftToRead, &bytesRead, timeoutMS);
+#endif
+
+        logger.debug("read %d bytes from endpoint 0x%02x (result %d)", bytesRead, ep, result);
 
         // update timing
         auto timeReadEnd = std::chrono::high_resolution_clock::now();
@@ -554,7 +572,7 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
         if (bytesRead <= 0)
         {
             // was it a timeout?
-            if (bytesRead == LIBUSB_WIN32_ERROR_TIMEOUT)
+            if (bytesRead == LIBUSB_WIN32_ERROR_TIMEOUT || result == LIBUSB_ERROR_TIMEOUT)
             {
                 // do we still have time to spend on this?
                 if (remainingMS > 0)
@@ -567,7 +585,13 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
 
             // either it wasn't a timeout, or we're out of time
             logger.error("getSubspectrum: bytesRead negative or zero, giving up (allocated %ldms, period %dms, elapsed %ldms, remaining %ldms (%s)", 
-                allocatedMS, periodMS, elapsedMS, remainingMS, usb_strerror());
+                allocatedMS, periodMS, elapsedMS, remainingMS, 
+#if USE_LIBUSB_WIN32
+                usb_strerror()
+#else
+                libusb_strerror(libusb_error(result))
+#endif
+            );
             return vector<uint16_t>();
         }
 
@@ -689,15 +713,13 @@ int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16
         dataStr = Util::sprintf(" (data: %s)", Util::toHex(data, len).c_str());
 
     mutComm.lock();
-    int bytesWritten = usb_control_msg(
-        udev, 
-        HOST_TO_DEVICE, 
-        bRequest, 
-        wValue, 
-        wIndex, 
-        (char*)data, 
-        len, 
-        maxTimeoutMS);
+
+#if USE_LIBUSB_WIN32
+    int bytesWritten = usb_control_msg        (udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, maxTimeoutMS);
+#else
+    int bytesWritten = libusb_control_transfer(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex,        data, len, maxTimeoutMS);
+#endif
+
     mutComm.unlock();
 
     logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)%s (wrote %d bytes)", 
@@ -782,7 +804,13 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(
     mutComm.lock();
     logger.debug("getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, bytesToRead, maxTimeoutMS);
-    int bytesRead = usb_control_msg(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, (char*)&data[0], (int)data.size(), maxTimeoutMS);
+
+#if USE_LIBUSB_WIN32
+    int bytesRead = usb_control_msg        (udev, DEVICE_TO_HOST, bRequest, wValue, wIndex, (char*)&data[0], (int)data.size(), maxTimeoutMS);
+#else
+    int bytesRead = libusb_control_transfer(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex,        &data[0], (int)data.size(), maxTimeoutMS);
+#endif
+
     mutComm.unlock();
 
     logger.debug("getCmdReal(0x%02x): read %d bytes: %s", bRequest, bytesRead, Util::toHex(data).c_str());

@@ -58,11 +58,13 @@ int WasatchVCPP::Driver::openAllSpectrometers()
         return -1;
     }
 
+    spectrometers.clear();
+
+#ifdef USE_LIBUSB_WIN32
     usb_init();
     usb_find_busses();
     usb_find_devices();
 
-    spectrometers.clear();
     for (struct usb_bus* bus = usb_get_busses(); bus; bus = bus->next)
     {
         logger.debug("traversing bus %lu (%s)", bus->location, bus->dirname);
@@ -118,6 +120,87 @@ int WasatchVCPP::Driver::openAllSpectrometers()
             }
         }
     }
+#else
+    libusb_device **devs;
+    int r = libusb_init(nullptr);
+
+    if (r < 0) 
+    {
+        logger.error("Failed to init USB");
+        return -1;
+    }
+
+    ssize_t cnt = libusb_get_device_list(nullptr, &devs);
+
+    if (cnt < 0){
+        logger.debug("Failed to get USB device list");
+        libusb_exit(nullptr);
+        return int(cnt);
+    }
+
+    libusb_device *dev;
+    int i = 0;
+
+    while ((dev = devs[i++]) != nullptr)
+    {
+        struct libusb_device_descriptor desc;
+        int r = libusb_get_device_descriptor(dev, &desc);
+        if (r < 0) {
+            logger.debug("Failed to get device descriptor");
+            return -1;
+        }
+
+        logger.debug("discovered 0x%04x:0x%04x", desc.idVendor, desc.idProduct);
+
+        if(desc.idVendor == 0x24aa)
+        {
+            unsigned pid = desc.idProduct;
+            if (pid == 0x1000 || pid == 0x2000 || pid == 0x4000)
+            {
+                logger.debug("opening device");
+
+                libusb_device_handle *udev;
+                int openResult = libusb_open(dev, &udev);
+
+                if(udev != nullptr)
+                {
+                    if (desc.bNumConfigurations)
+                    {
+                        int configResult = libusb_set_configuration(udev, 1);
+                        if (configResult != 0)
+                        {
+                            logger.debug("USB config error: %d", configResult);
+                            libusb_close(udev);
+                            continue;
+                        }
+
+                        int claimResult = libusb_claim_interface(udev, 0);
+                        if (claimResult != 0)
+                        {
+                            logger.debug("USB claim error: %d", claimResult);
+                            libusb_close(udev);
+                            continue;
+                        }
+
+                        int index = (int)spectrometers.size();
+                        auto spec = new Spectrometer(udev, pid, index, logger);
+                        logger.debug("adding Spectrometer as index %d", index);
+
+                        spectrometers.insert(make_pair(index, spec));
+                    }
+                    else
+                    {
+                        libusb_close(udev);
+                    }
+                }
+                else
+                {
+                    logger.error("open failed");
+                }
+            }
+        }
+    }
+#endif
 
     mut.unlock();
 
