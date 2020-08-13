@@ -47,9 +47,7 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
     driver = Driver::getInstance();
 
     // read firmware versions first (useful for debugging, validates FPGA comms)
-    logger.debug("Spectrometer::ctor: apple");
     fpgaVersion = getFPGAVersion();
-    logger.debug("Spectrometer::ctor: banana");
     firmwareVersion = getFirmwareVersion();
     logger.debug("firmware %s, FPGA %s", firmwareVersion.c_str(), fpgaVersion.c_str());
 
@@ -57,7 +55,6 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
     // EEPROM
     ////////////////////////////////////////////////////////////////////////////
 
-    logger.debug("Spectrometer::ctor: cherry");
     readEEPROM();
 
     ////////////////////////////////////////////////////////////////////////////
