@@ -3,7 +3,7 @@ TOP = ../..
 INC_DIR = $(TOP)/include
 LIB_DIR = $(TOP)/lib
 
-LIB = $(LIB_DIR)/libwasatchcpp.a
+LIB = $(LIB_DIR)/libwasatchvcpp.a
 
 SRCS = $(wildcard *.cpp)
 OBJS = $(SRCS:.cpp=.o)
