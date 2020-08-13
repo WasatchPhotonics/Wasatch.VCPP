@@ -351,4 +351,6 @@ MigrationBackup/
 
 # added by MZ
 doxygen/
-
+*.o
+*.a
+*.so
