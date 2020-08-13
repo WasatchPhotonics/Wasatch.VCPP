@@ -11,7 +11,8 @@
 #include "libusb.h"
 #define WPVCPP_UDEV_TYPE usb_dev_handle
 #else
-#include <libusb-1_0.h>
+//#include <libusb-1_0.h>
+#include <libusb.h>
 #define WPVCPP_UDEV_TYPE libusb_device_handle
 #endif
 

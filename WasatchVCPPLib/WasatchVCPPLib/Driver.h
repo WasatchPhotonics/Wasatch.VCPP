@@ -10,7 +10,8 @@
 #ifdef USE_LIBUSB_WIN32
 #include "libusb.h"
 #else
-#include <libusb-1_0.h>
+//#include <libusb-1_0.h>
+#include <libusb.h>
 #endif
 
 #include "Logger.h"

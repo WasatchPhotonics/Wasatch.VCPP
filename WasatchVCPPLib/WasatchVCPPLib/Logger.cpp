@@ -13,10 +13,6 @@
 
 #include <stdarg.h> 
 
-#ifndef USE_LIBUSB_WIN32
-#include <QDebug>
-#endif
-
 using std::string;
 using std::vector;
 
@@ -74,10 +70,8 @@ void WasatchVCPP::Logger::output(const string& lvlName, const string& msg)
 {
     string line = Util::sprintf("%s [%s] %s\r\n", Util::timestamp().c_str(), lvlName.c_str(), msg.c_str());
 
-#ifdef USE_LIBUSB_WIN32
+#if _WINDOWS
     OutputDebugStringA(line.c_str());
-#else
-    qDebug() << (line.c_str());
 #endif
 
     if (logfile.is_open())

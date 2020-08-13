@@ -1,6 +1,12 @@
 .PHONY: doc docs
 
+all: 
+	@cd WasatchVCPPLib && $(MAKE) $@
+
+new: clean all
+
 clean: 
+	@cd WasatchVCPPLib && $(MAKE) $@
 	@rm -rf doxygen*                                            \
             WasatchVCPPLib/.vs                                  \
             WasatchVCPPLib/packages                             \
@@ -12,13 +18,14 @@ clean:
             WasatchVCPPLib/WasatchVCPPDemo/{x64,Win32}          \
             WasatchVCPPLib/WasatchVCPPDemo/{Debug,Release}      \
             WasatchVCPPNet/{obj,bin}                            \
+            bin/*.{exe,dll}                                     \
             lib/{x86,x64}/*.{lib,dll}                           \
-            bin/*.{exe,dll}
+            lib/*.{a,so}
 
 doc docs:
 	@(cat Doxyfile ; echo "PROJECT_NUMBER = $$VERSION") | doxygen - 1>doxygen.out 2>doxygen.err
 
-# diff wp_foo() declarations in C vs C# APIs
+# called by scripts/deploy to compare wp_foo() declarations in C vs C# APIs
 check_headers:
 	@TMPFILE="make-check-headers" ; \
     egrep -o 'wp_[a-z0-9_]+' include/WasatchVCPP.h | sort -u > $$TMPFILE.h ; \

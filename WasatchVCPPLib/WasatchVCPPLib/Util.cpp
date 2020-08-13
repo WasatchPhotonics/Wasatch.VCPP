@@ -56,7 +56,7 @@ string WasatchVCPP::Util::timestamp()
 #else
     time_t now = time(NULL);
     tm tm;
-    localtime_s(&tm, &now); // localtime_r(&now, &tm)?
+    localtime_r(&now, &tm); 
     char buffer[32];
     strftime(buffer, 32, "%Y-%m-%d %H:%M:%S", &tm);
     return string(buffer);

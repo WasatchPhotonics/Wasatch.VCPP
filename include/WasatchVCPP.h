@@ -35,10 +35,14 @@
 // DLL symbols, and when the library is being USED (this header is being 
 // included into a customer application which is being compiled), the DLL
 // symbols will be IMPORTED.
-#ifdef WASATCHVCPPLIB_EXPORTS
-#define DLL_API __declspec(dllexport)
+#if _WINDOWS
+    #ifdef WASATCHVCPPLIB_EXPORTS
+        #define DLL_API __declspec(dllexport)
+    #else
+        #define DLL_API __declspec(dllimport)
+    #endif
 #else
-#define DLL_API __declspec(dllimport)
+    #define DLL_API
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
