@@ -1,3 +1,5 @@
+![Visual Studio](https://github.com/WasatchPhotonics/Wasatch.VCPP/raw/master/screenshots/VisualStudio.png)
+
 # Overview
 
 Unmanaged Visual C++ driver for Wasatch Photonics spectrometers which does not
@@ -252,3 +254,5 @@ libusb-win32
 - https://sourceforge.net/p/libusb-win32/wiki/Home/
 - https://sourceforge.net/p/libusb-win32/wiki/Examples/
 - https://sourceforge.net/p/libusb-win32/wiki/Documentation/
+
+![Ubuntu](https://github.com/WasatchPhotonics/Wasatch.VCPP/raw/master/screenshots/ubuntu.png)

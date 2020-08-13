@@ -354,3 +354,4 @@ doxygen/
 *.o
 *.a
 *.so
+demo-linux/demo

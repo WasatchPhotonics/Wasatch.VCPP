@@ -48,15 +48,14 @@ Per the "Design Remit" described in README.md:
     - rigorous thread safety
     - internal threading / callbacks / inversion of control
 
-# Architectural Backlog
+# Platforms
 
-- add "Release" target
-- add WasatchCPP (no "V") Makefile tree for POSIX / GCC / CLANG targets
+- build and test on Raspberry Pi (Linux/ARM)
 
 ## libusb-win32 deprecation
 
 At some point we may need to move from the legacy libusb-win32 to the newer
-libusbk backend.  That should be achievable without too much heartache, but
-at the moment libusb-win32 is what our standard .inf files (and ENLIGHTEN)
+libusbk backend on Windows.  That should be achievable without too much heartache,
+but at the moment libusb-win32 is what our standard .inf files (and ENLIGHTEN)
 use, and it still seems to work for all our use-cases, so this has not been
 prioritized.
