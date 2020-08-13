@@ -15,7 +15,9 @@ CXXFLAGS += --std=c++11     \
 all: $(LIB)
 
 clean:
-	rm *.o $(LIB)
+	rm -f *.o $(LIB)
+
+new: clean all
 
 $(LIB): $(OBJS)
 	mkdir -p $(TOP)/lib

@@ -79,8 +79,8 @@ namespace WasatchVCPP
             Logger logger;
 
         private:
-            //! synchronizes access to instance and spectrometer map
-            static std::mutex mut;      
+            static std::mutex mutDriver;        //!< synchronize singleton 
+            static std::mutex mutSpectrometers; //!< synchronize spectrometers map
             static Driver* instance;
 
             Driver(); 

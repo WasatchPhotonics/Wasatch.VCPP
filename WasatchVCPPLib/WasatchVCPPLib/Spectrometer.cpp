@@ -47,7 +47,9 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
     driver = Driver::getInstance();
 
     // read firmware versions first (useful for debugging, validates FPGA comms)
+    logger.debug("Spectrometer::ctor: apple");
     fpgaVersion = getFPGAVersion();
+    logger.debug("Spectrometer::ctor: banana");
     firmwareVersion = getFirmwareVersion();
     logger.debug("firmware %s, FPGA %s", firmwareVersion.c_str(), fpgaVersion.c_str());
 
@@ -55,6 +57,7 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
     // EEPROM
     ////////////////////////////////////////////////////////////////////////////
 
+    logger.debug("Spectrometer::ctor: cherry");
     readEEPROM();
 
     ////////////////////////////////////////////////////////////////////////////
@@ -712,7 +715,8 @@ int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16
     if (len > 0)
         dataStr = Util::sprintf(" (data: %s)", Util::toHex(data, len).c_str());
 
-    mutComm.lock();
+    if (!lockComm())
+        return -1;
 
 #if USE_LIBUSB_WIN32
     int bytesWritten = usb_control_msg        (udev, HOST_TO_DEVICE, bRequest, wValue, wIndex, (char*)data, len, maxTimeoutMS);
@@ -720,7 +724,7 @@ int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16
     int bytesWritten = libusb_control_transfer(udev, HOST_TO_DEVICE, bRequest, wValue, wIndex,        data, len, maxTimeoutMS);
 #endif
 
-    mutComm.unlock();
+    unlockComm();
 
     logger.debug("sendCmd(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)%s (wrote %d bytes)", 
         bRequest, wValue, wIndex, len, maxTimeoutMS, dataStr.c_str(), bytesWritten);
@@ -745,6 +749,8 @@ int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16
 vector<uint8_t> WasatchVCPP::Spectrometer::getCmd(uint8_t bRequest, int len, uint16_t wIndex, int fullLen)
 {
     const uint16_t wValue = 0;
+    logger.debug("relaying getCmd(bRequest 0x%02x, len %d, wIndex 0x%04x, fullLen %d)",
+        bRequest, len, wIndex, fullLen);
     return getCmdReal(bRequest, wValue, wIndex, len, fullLen);
 }
 
@@ -759,6 +765,8 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmd(uint8_t bRequest, int len, uin
 vector<uint8_t> WasatchVCPP::Spectrometer::getCmd2(uint16_t wValue, int len, uint16_t wIndex, int fullLen)
 {
     const uint8_t bRequest = 0xff;
+    logger.debug("relaying getCmd2(wValue 0x%04x, len %d, wIndex 0x%04x, fullLen %d)",
+        wValue, len, wIndex, fullLen);
     return getCmdReal(bRequest, wValue, wIndex, len, fullLen);
 }
 
@@ -801,7 +809,9 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(
     // this is our temporary (often somewhat larger) buffer
     vector<uint8_t> data(bytesToRead); 
 
-    mutComm.lock();
+    if (!lockComm())
+        return retval;
+
     logger.debug("getCmdReal(bRequest 0x%02x, wValue 0x%04x, wIndex 0x%04x, len %d, timeout %dms)", 
         bRequest, wValue, wIndex, bytesToRead, maxTimeoutMS);
 
@@ -811,7 +821,7 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(
     int bytesRead = libusb_control_transfer(udev, DEVICE_TO_HOST, bRequest, wValue, wIndex,        &data[0], (int)data.size(), maxTimeoutMS);
 #endif
 
-    mutComm.unlock();
+    unlockComm();
 
     logger.debug("getCmdReal(0x%02x): read %d bytes: %s", bRequest, bytesRead, Util::toHex(data).c_str());
 
@@ -863,3 +873,13 @@ unsigned long WasatchVCPP::Spectrometer::clamp(unsigned long value, unsigned lon
     return value;
 }
 
+bool WasatchVCPP::Spectrometer::lockComm()
+{
+    mutComm.lock();
+    return true;
+}
+
+void WasatchVCPP::Spectrometer::unlockComm()
+{
+    mutComm.unlock();
+}

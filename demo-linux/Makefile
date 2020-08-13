@@ -6,8 +6,10 @@ LDFLAGS  += -L../lib        \
         
 all: demo
 
+new: clean all
+
 clean:
-	@rm -f *.o demo
+	@rm -f *.o *.log demo
 
 demo: demo.o
 	g++ $(LDFLAGS) -o $@ $^ $(LDFLAGS)

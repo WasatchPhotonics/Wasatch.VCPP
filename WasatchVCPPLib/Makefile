@@ -3,3 +3,5 @@ all:
 
 clean:
 	@cd WasatchVCPPLib && $(MAKE) $@
+
+new: clean all
