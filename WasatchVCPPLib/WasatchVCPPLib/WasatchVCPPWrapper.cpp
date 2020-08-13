@@ -21,6 +21,8 @@
 #include <string>
 #include <map>
 
+#include <string.h> // Linux memset
+
 #include "Util.h"
 #include "Logger.h"
 #include "Driver.h"
@@ -34,6 +36,7 @@ using WasatchVCPP::Logger;
 using std::string;
 using std::vector;
 using std::map;
+using std::min;
 
 ////////////////////////////////////////////////////////////////////////////////
 // globals
@@ -264,7 +267,12 @@ int wp_get_eeprom_field(int specIndex, const char* name, char* valueOut, int len
             if (len < (int)value.size() + 1)
                 return WP_ERROR_INSUFFICIENT_STORAGE;
 
+#if _WINDOWS
             strncpy_s(valueOut, len, value.c_str(), value.size());
+#else
+            strncpy(valueOut, value.c_str(), min(len, (int)value.size()));
+#endif
+
             valueOut[len - 1] = 0; // no matter what, null-terminate the output string
             return WP_SUCCESS;
         }
@@ -287,7 +295,11 @@ int wp_get_eeprom_page(int specIndex, int page, uint8_t* buf, int len)
     if (len < (int)data.size())
         return WP_ERROR_INSUFFICIENT_STORAGE;
 
+#if _WINDOWS
     memcpy_s(buf, len, &(data[0]), data.size());
+#else
+    memcpy(buf, &(data[0]), min(len, (int)data.size()));
+#endif
 
     return WP_SUCCESS;
 }

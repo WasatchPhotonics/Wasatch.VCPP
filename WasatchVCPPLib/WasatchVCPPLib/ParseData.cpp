@@ -8,6 +8,8 @@
 #include "pch.h"
 #include "ParseData.h"
 
+#include <math.h>
+ 
 using std::string;
 using std::vector;
 

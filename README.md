@@ -1,3 +1,5 @@
+![Visual Studio](https://github.com/WasatchPhotonics/Wasatch.VCPP/raw/master/screenshots/VisualStudio.png)
+
 # Overview
 
 Unmanaged Visual C++ driver for Wasatch Photonics spectrometers which does not
@@ -33,6 +35,8 @@ and undecided for inclusion.
 
 # Dependencies
 
+## Windows
+
 - Visual Studio (tested with 2019 Community Edition)
 
 This library is built atop the same libusb-win32 back-end used by ENLIGHTEN,
@@ -40,6 +44,10 @@ Wasatch.NET etc.  Therefore, if you have one of those installed, it should "just
 work".  Until an installer is added to this project, it is recommended that users
 install ENLIGHTEN first as the quickest way to install and configure the .inf
 files to associate our USB VID and PID with the libusb-win32 low-level driver.
+
+## Linux / POSIX
+
+- see [Linux](README_LINUX.md)
 
 # API
 
@@ -246,3 +254,5 @@ libusb-win32
 - https://sourceforge.net/p/libusb-win32/wiki/Home/
 - https://sourceforge.net/p/libusb-win32/wiki/Examples/
 - https://sourceforge.net/p/libusb-win32/wiki/Documentation/
+
+![Ubuntu](https://github.com/WasatchPhotonics/Wasatch.VCPP/raw/master/screenshots/ubuntu.png)

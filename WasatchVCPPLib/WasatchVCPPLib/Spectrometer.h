@@ -7,7 +7,15 @@
 
 #pragma once
 
+#ifdef USE_LIBUSB_WIN32
 #include "libusb.h"
+#define WPVCPP_UDEV_TYPE usb_dev_handle
+#else
+//#include <libusb-1_0.h>
+#include <libusb.h>
+#define WPVCPP_UDEV_TYPE libusb_device_handle
+#endif
+
 #include "EEPROM.h"
 #include "Logger.h"
 
@@ -42,7 +50,7 @@ namespace WasatchVCPP
                 InvalidOffset       = -32768 
             };
 
-            Spectrometer(usb_dev_handle* udev, int pid, int index, Logger& logger);
+            Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int index, Logger& logger);
             ~Spectrometer();
 
             bool close();
@@ -112,7 +120,7 @@ namespace WasatchVCPP
         // Private attributes
         ////////////////////////////////////////////////////////////////////////
         private:
-            usb_dev_handle* udev;
+            WPVCPP_UDEV_TYPE* udev;
 
             std::vector<uint8_t> endpoints;
             std::vector<uint8_t> bufSubspectrum; 
@@ -150,5 +158,7 @@ namespace WasatchVCPP
             uint16_t serializeGain(float value);
             float deserializeGain(const std::vector<uint8_t>& data);
             unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
+            bool lockComm();
+            void unlockComm();
     };
 }

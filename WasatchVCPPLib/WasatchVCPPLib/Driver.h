@@ -7,7 +7,13 @@
 
 #pragma once
 
+#ifdef USE_LIBUSB_WIN32
 #include "libusb.h"
+#else
+//#include <libusb-1_0.h>
+#include <libusb.h>
+#endif
+
 #include "Logger.h"
 
 #include <string>
@@ -57,7 +63,7 @@ namespace WasatchVCPP
             //!
             //! @note this value is checked by scripts/deploy against the given 
             //!       release tag
-            const std::string libraryVersion = "1.0.2";
+            const std::string libraryVersion = "1.0.3";
 
             static Driver* getInstance();
 
@@ -73,8 +79,8 @@ namespace WasatchVCPP
             Logger logger;
 
         private:
-            //! synchronizes access to instance and spectrometer map
-            static std::mutex mut;      
+            static std::mutex mutDriver;        //!< synchronize singleton 
+            static std::mutex mutSpectrometers; //!< synchronize spectrometers map
             static Driver* instance;
 
             Driver(); 
