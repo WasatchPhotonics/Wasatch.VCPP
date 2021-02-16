@@ -56,11 +56,11 @@ namespace WasatchVCPP
             bool close();
 
             EEPROM eeprom;
-            Driver* driver;     // still needed?
+            Driver* driver = nullptr;     // still needed?
 
             // public metadata
-            int pid;
-            int index;
+            int pid = 0;
+            int index = -1;
             std::vector<double> wavelengths;
             std::vector<double> wavenumbers;
             bool isARM();
@@ -77,11 +77,11 @@ namespace WasatchVCPP
             int maxTimeoutMS = 1000;
 
             // cached properties
-            int pixels;
+            int pixels = 0;
             std::string firmwareVersion;
             std::string fpgaVersion;
-            int integrationTimeMS;
-            bool laserEnabled;
+            int integrationTimeMS = 1;
+            bool laserEnabled = false;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
 
             // opcodes
@@ -120,17 +120,17 @@ namespace WasatchVCPP
         // Private attributes
         ////////////////////////////////////////////////////////////////////////
         private:
-            WPVCPP_UDEV_TYPE* udev;
+            WPVCPP_UDEV_TYPE* udev = nullptr;
 
             std::vector<uint8_t> endpoints;
             std::vector<uint8_t> bufSubspectrum; 
-            int pixelsPerEndpoint;
+            int pixelsPerEndpoint = 0;
 
-            bool detectorTECSetpointHasBeenSet;
-            bool acquiring;
-            bool operationCancelled;
-            int cancelledIntegrationTimeMS;
-            bool lastAcquisitionWasCancelled;
+            bool detectorTECSetpointHasBeenSet = false;
+            bool acquiring = false;
+            bool operationCancelled = false;
+            int cancelledIntegrationTimeMS = 0;
+            bool lastAcquisitionWasCancelled = false;
 
             std::mutex mutAcquisition;
             std::mutex mutComm;

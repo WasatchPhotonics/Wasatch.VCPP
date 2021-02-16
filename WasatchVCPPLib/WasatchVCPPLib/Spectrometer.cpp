@@ -93,10 +93,12 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
     setDetectorOffsetOdd(eeprom.detectorOffsetOdd);
 
     // initialize integration time
+    const int MAX_SENSIBLE_STARTUP_INTEGRATION_TIME_MS = 5000;
     if (eeprom.startupIntegrationTimeMS >= eeprom.minIntegrationTimeMS &&
-        eeprom.startupIntegrationTimeMS <= eeprom.maxIntegrationTimeMS)
+        eeprom.startupIntegrationTimeMS <= eeprom.maxIntegrationTimeMS &&
+        eeprom.startupIntegrationTimeMS <= MAX_SENSIBLE_STARTUP_INTEGRATION_TIME_MS)
         setIntegrationTimeMS(eeprom.startupIntegrationTimeMS);
-    else if (eeprom.minIntegrationTimeMS <= 5000)
+    else if (eeprom.minIntegrationTimeMS <= MAX_SENSIBLE_STARTUP_INTEGRATION_TIME_MS)
         setIntegrationTimeMS(eeprom.minIntegrationTimeMS);
 
     // initialize TEC and setpoint
@@ -137,6 +139,7 @@ bool WasatchVCPP::Spectrometer::close()
         usb_release_interface(udev, 0);
         usb_close(udev);
 #else
+        logger.info("Spectrometer::close releasing interface on Linux");
         libusb_release_interface(udev, 0);
         libusb_close(udev);
 #endif
@@ -430,6 +433,7 @@ long WasatchVCPP::Spectrometer::generateTotalWaitMS()
 std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     mutAcquisition.lock();
+    logger.debug("getSpectrum startted on %", eeprom.serialNumber.c_str());
 
     // perform clean-up from cancelled operation, if any
     if (lastAcquisitionWasCancelled)

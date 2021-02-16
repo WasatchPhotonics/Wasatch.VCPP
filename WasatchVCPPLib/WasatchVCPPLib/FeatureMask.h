@@ -41,7 +41,7 @@ namespace WasatchVCPP
             //! differently due to this value; its purpose is to communicate state 
             //! between the spectrometer and driver and ensure correct internal 
             //! processing within the driver.
-            bool invertXAxis;
+            bool invertXAxis = false;
 
             //! Some 2D detectors use a Bayer filter in which pixel columns alternate
             //! between red and blue sensitivity (green is uniform throughout).  By 
@@ -53,7 +53,7 @@ namespace WasatchVCPP
             //! portion of this 2x2 binning which is performed within the software
             //! driver is the horizontal binning.  This is currently performed within
             //! Spectrometer.getSpectrumRaw.
-            bool bin2x2;
+            bool bin2x2 = false;
     };
 }
 

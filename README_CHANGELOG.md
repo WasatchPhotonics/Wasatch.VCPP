@@ -1,5 +1,10 @@
 # Changelog
 
+- 2021-02-16 1.0.4
+    - updated demo-linux with cmd-line args, 'make test'
+    - fixed uninitialized values
+- 2020-08-13 1.0.3
+    - merged in Linux updates
 - 2020-08-11 1.0.2
     - cleanup, docs, improved mutex synchronization
 - 2020-07-23 1.0.1

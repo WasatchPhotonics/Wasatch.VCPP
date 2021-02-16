@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <vector>
@@ -22,6 +23,8 @@ const int STR_LEN = 33;
 // Globals
 ////////////////////////////////////////////////////////////////////////////////
 
+int logLevel = WP_LOG_LEVEL_DEBUG;
+int count = 5;
 int pixels;
 char serialNumber[STR_LEN];
 char model[STR_LEN];
@@ -70,7 +73,7 @@ bool init()
     wp_get_library_version(libraryVersion, STR_LEN);
     printf("Wasatch.VCPP Demo (%s)\n", libraryVersion);
 
-    wp_set_log_level(WP_LOG_LEVEL_DEBUG);
+    wp_set_log_level(logLevel);
     const char* logfile = "demo.log";
     wp_set_logfile_path(logfile, strlen(logfile));
 
@@ -100,22 +103,59 @@ bool init()
     return true;
 }
 
-int demo()
+void demo()
 {
-    const int max = 5;
-    for (int i = 0; i < max; i++)
+    for (int i = 0; i < count; i++)
     {
         double spectrum[pixels];
         if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrum, pixels))
         {
-            printf("Spectrum %d of %d:", i + 1, max);
+            printf("Spectrum %3d of %3d:", i + 1, count);
             for (int i = 0; i < 10; i++)
                 printf(" %.2lf%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
         }
         else
         {
             printf("ERROR: failed getting spectrum\n");
-            break;
+            exit(-1);
+        }
+    }
+}
+
+void usage()
+{
+    printf("Usage: $ demo-linux [--count n] [--log-level DEBUG|INFO|ERROR|NEVER]\n");
+    exit(1);
+}
+
+void parseArgs(int argc, char** argv)
+{
+    for (int i = 1; i < argc; i++)
+    {
+        if (!strcmp(argv[i], "--count"))
+        {
+            if (i + 1 < argc)
+                count = atoi(argv[++i]); 
+            else
+                usage();
+        }
+        else if (!strcmp(argv[i], "--log-level"))
+        {
+            if (i + 1 < argc)
+            {
+                const char* level = argv[++i]; 
+                     if (!strcasecmp(level, "DEBUG")) logLevel = WP_LOG_LEVEL_DEBUG;
+                else if (!strcasecmp(level, "INFO" )) logLevel = WP_LOG_LEVEL_INFO;
+                else if (!strcasecmp(level, "ERROR")) logLevel = WP_LOG_LEVEL_ERROR;
+                else if (!strcasecmp(level, "NEVER")) logLevel = WP_LOG_LEVEL_NEVER;
+                else usage();
+            }
+            else
+                usage();
+        }
+        else
+        {
+            usage();
         }
     }
 }
@@ -126,8 +166,11 @@ int demo()
 
 int main(int argc, char** argv)
 {
+    parseArgs(argc, argv);
     if (!init())
         return -1;
     demo();
+
+    wp_close_all_spectrometers();
     return 0;
 }

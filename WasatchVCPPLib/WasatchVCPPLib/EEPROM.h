@@ -65,50 +65,50 @@ namespace WasatchVCPP
             // EEPROM fields
             ////////////////////////////////////////////////////////////////////
 
-            uint8_t format;
+            uint8_t format = 0;
 
             std::string model;
             std::string serialNumber;
-            uint32_t baudRate;
-            bool hasCooling;
-            bool hasBattery;
-            bool hasLaser;
-            float excitationNM;
-            uint16_t slitSizeUM;
+            uint32_t baudRate = 0;
+            bool hasCooling = false;
+            bool hasBattery = false;
+            bool hasLaser = false;
+            float excitationNM = 0;
+            uint16_t slitSizeUM = 0;
 
-            uint16_t startupIntegrationTimeMS;
-            int16_t startupDetectorTemperatureDegC;
-            uint8_t startupTriggeringMode;
-            float detectorGain;
-            int16_t detectorOffset;
-            float detectorGainOdd;
-            int16_t detectorOffsetOdd;
+            uint16_t startupIntegrationTimeMS = 0;
+            int16_t startupDetectorTemperatureDegC = 0;
+            uint8_t startupTriggeringMode = 0;
+            float detectorGain = 0;
+            int16_t detectorOffset = 0;
+            float detectorGainOdd = 0;
+            int16_t detectorOffsetOdd = 0;
 
-            float wavecalCoeffs[5];
-            float degCToDACCoeffs[3];
-            int16_t detectorTempMax;
-            int16_t detectorTempMin;
-            float adcToDegCCoeffs[3];
-            int16_t thermistorResistanceAt298K;
-            int16_t thermistorBeta;
+            float wavecalCoeffs[5] = { 0 };
+            float degCToDACCoeffs[3] = { 0 };
+            int16_t detectorTempMax = 0;
+            int16_t detectorTempMin = 0;
+            float adcToDegCCoeffs[3] = { 0 };
+            int16_t thermistorResistanceAt298K = 0;
+            int16_t thermistorBeta = 0;
             std::string calibrationDate;
             std::string calibrationBy;
 
             std::string detectorName;
-            uint16_t activePixelsHoriz;
-            uint16_t activePixelsVert;
-            uint16_t minIntegrationTimeMS;
-            uint16_t maxIntegrationTimeMS;
-            uint16_t actualPixelsHoriz;
-            uint16_t ROIHorizStart;
-            uint16_t ROIHorizEnd;
-            uint16_t ROIVertRegionStart[3];
-            uint16_t ROIVertRegionEnd[3];
-            float linearityCoeffs[5];
+            uint16_t activePixelsHoriz = 0;
+            uint16_t activePixelsVert = 0;
+            uint16_t minIntegrationTimeMS = 0;
+            uint16_t maxIntegrationTimeMS = 0;
+            uint16_t actualPixelsHoriz = 0;
+            uint16_t ROIHorizStart = 0;
+            uint16_t ROIHorizEnd = 0;
+            uint16_t ROIVertRegionStart[3] = { 0 };
+            uint16_t ROIVertRegionEnd[3] = { 0 };
+            float linearityCoeffs[5] = { 0 };
 
-            float laserPowerCoeffs[4];
-            float maxLaserPowerMW;
-            float minLaserPowerMW;
+            float laserPowerCoeffs[4] = { 0 };
+            float maxLaserPowerMW = 0;
+            float minLaserPowerMW = 0;
 
             std::vector<uint8_t> userData;
             std::string userText;
@@ -116,10 +116,10 @@ namespace WasatchVCPP
             std::set<int16_t> badPixels;
             std::string productConfiguration;
 
-            uint8_t intensityCorrectionOrder;
+            uint8_t intensityCorrectionOrder = 0;
             std::vector<float> intensityCorrectionCoeffs;
             
-            float avgResolution;
+            float avgResolution = 0;
 
             Subformats subformat;
 

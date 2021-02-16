@@ -228,14 +228,12 @@ bool WasatchVCPP::Driver::removeSpectrometer(int index)
 {
     logger.info("Driver::removeSpectrometer(%d)", index);
 
-    mutSpectrometers.lock();
     auto spec = getSpectrometer(index);
     if (spec == nullptr)
-    {
-        mutSpectrometers.unlock();
         return false;
-    }
     
+    mutSpectrometers.lock();
+
     // release resources
     bool ok = spec->close();
     delete spec;
