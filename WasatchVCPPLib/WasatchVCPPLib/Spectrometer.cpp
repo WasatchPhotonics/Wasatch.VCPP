@@ -433,7 +433,7 @@ long WasatchVCPP::Spectrometer::generateTotalWaitMS()
 std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     mutAcquisition.lock();
-    logger.debug("getSpectrum startted on %", eeprom.serialNumber.c_str());
+    logger.debug("getSpectrum started on %", eeprom.serialNumber.c_str());
 
     // perform clean-up from cancelled operation, if any
     if (lastAcquisitionWasCancelled)

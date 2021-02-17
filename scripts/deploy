@@ -64,10 +64,12 @@ then
 fi
 
 # render documentation 
+echo "rendering docs"
 export VERSION
 make doc
 
 # upload documentation
+echo "uploading docs"
 rsync --archive doxygen/html/ ${USERNAME}@wasatchphotonics.com:www/api/Wasatch.VCPP/
 
 echo
