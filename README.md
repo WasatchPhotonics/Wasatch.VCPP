@@ -49,6 +49,10 @@ files to associate our USB VID and PID with the libusb-win32 low-level driver.
 
 - see [Linux](README_LINUX.md)
 
+## MacOS
+
+- see [MacOS](README_MACOS.md)
+
 # API
 
 * [C API](https://wasatchphotonics.com/api/Wasatch.VCPP/_wasatch_v_c_p_p_8h.html#func-members)
