@@ -12,3 +12,7 @@ Use [homebrew](https://brew.sh/) to install libusb:
 You may need to update the appropriate "Cellar" include directory in this Makefile:
 
 - WasatchVCPPLib/WasatchVCPPLib/Makefile
+
+# Building and Testing
+
+- see [Linux instructions](README_LINUX.md)
