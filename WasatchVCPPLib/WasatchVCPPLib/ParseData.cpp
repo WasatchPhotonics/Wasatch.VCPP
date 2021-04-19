@@ -128,11 +128,15 @@ string WasatchVCPP::ParseData::toString(const vector<uint8_t>& buf, int index, i
 
     std::string s;
     for (int i = 0; i < len; i++)
+    {
         if (index + i < (int)buf.size())
+        {
             if (buf[index + 1] == 0)
                 break;
             else
                 s += (char)buf[index + i];
+        }
+    }
     return s;
 }
 

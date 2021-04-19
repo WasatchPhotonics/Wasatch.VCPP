@@ -10,7 +10,8 @@ OBJS = $(SRCS:.cpp=.o)
 
 CXXFLAGS += --std=c++11     \
             -I$(INC_DIR)    \
-            -I/usr/include/libusb-1.0
+            -I/usr/include/libusb-1.0 \
+            -I/usr/local/Cellar/libusb/1.0.23/include/libusb-1.0
 
 all: $(LIB)
 

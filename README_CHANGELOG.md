@@ -1,5 +1,7 @@
 # Changelog
 
+- 2021-04-19 1.0.5
+    - added README\_MACOS.md
 - 2021-02-16 1.0.4
     - updated demo-linux with cmd-line args, 'make test'
     - fixed uninitialized values

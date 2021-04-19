@@ -1,5 +1,6 @@
 
-CXXFLAGS += -I../include
+CXXFLAGS += --std=c++11     \
+            -I../include
 LDFLAGS  += -L../lib        \
             -lwasatchvcpp   \
             -lusb-1.0
