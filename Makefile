@@ -2,11 +2,13 @@
 
 all: 
 	@cd WasatchVCPPLib && $(MAKE) $@
+	@cd demo-linux && $(MAKE) $@
 
 new: clean all
 
 clean: 
 	@cd WasatchVCPPLib && $(MAKE) $@
+	@cd demo-linux && $(MAKE) $@
 	@rm -rf doxygen*                                            \
             WasatchVCPPLib/.vs                                  \
             WasatchVCPPLib/packages                             \
