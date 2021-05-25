@@ -630,7 +630,7 @@ int wp_get_vignetted_spectrum_length(int specIndex)
             return WP_ERROR_INVALID_SPECTROMETER;
     auto eeprom = spec->eeprom;
 
-    return eeprom.ROIHorizEnd - eeprom.ROIHorizStart;
+    return eeprom.ROIHorizEnd - eeprom.ROIHorizStart + 1;
 }
 
 int wp_get_raman_intensity_factors(int specIndex, double* factors, int len) 
@@ -640,8 +640,6 @@ int wp_get_raman_intensity_factors(int specIndex, double* factors, int len)
         return WP_ERROR_INVALID_SPECTROMETER;
     double* out_factor; 
     auto eeprom = spec->eeprom;
-    out_factor = (double*) malloc(len * sizeof(double));
-    vector<float> coeffs = eeprom.intensityCorrectionCoeffs;
     float logTen;
     float x_to_i;
     float scaled;
@@ -650,21 +648,20 @@ int wp_get_raman_intensity_factors(int specIndex, double* factors, int len)
     int j;
     
     // expanding coeffs and calculating factors
-    if (!coeffs.empty())
+    if (!eeprom.intensityCorrectionCoeffs.empty())
     {
         for (i = eeprom.ROIHorizStart; i < eeprom.ROIHorizEnd; i++) 
         {
             logTen = 0.0;
-            for (j = 0; j < coeffs.size(); j++)
+            for (j = 0; j < eeprom.intensityCorrectionCoeffs.size(); j++)
             {
                 x_to_i = pow(i, j);
-                scaled = coeffs[j] * x_to_i;
+                scaled = eeprom.intensityCorrectionCoeffs[j] * x_to_i;
                 logTen += scaled;
             }
             expanded = pow(10, logTen);
-            out_factor[i] = expanded;
+            factors[i] = expanded;
         }
-        factors = out_factor;
         return 0;
     }
     else 
