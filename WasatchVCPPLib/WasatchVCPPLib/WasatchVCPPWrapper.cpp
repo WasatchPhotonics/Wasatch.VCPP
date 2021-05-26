@@ -594,6 +594,27 @@ int wp_get_max_timeout_ms(int specIndex)
     return spec->maxTimeoutMS;
 }
 
+int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int dataLen)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (pageIndex < 0)
+    {
+        return WP_ERROR;
+    }
+    if (dataLen != 64)
+    {
+        return WP_ERROR;
+    }
+
+    unsigned int pageValue = (0x3c << 8) | (0x40 * pageIndex);
+    
+    wp_send_control_msg(specIndex, 0xa2, pageValue, 0, data, dataLen);
+    return 0;
+}
+
 int wp_send_control_msg(int specIndex, unsigned char bRequest, unsigned int wValue,
     unsigned int wIndex, unsigned char* data, int len)
 {
