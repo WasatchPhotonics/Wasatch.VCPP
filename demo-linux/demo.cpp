@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <vector>
 #include <string>
 #include <map>
+#include <ctime>
+#include <sstream>
+#include <cstring>
 
 #include "WasatchVCPP.h"
 
@@ -67,6 +71,26 @@ void loadEEPROM()
     free(values);
 }
 
+int writeToEEPROM()
+{
+    unsigned char buf[64];
+    string writeString;
+    wp_get_eeprom_page(specIndex, 4, buf, 64);
+    printf("The value at page 4 is %s\n", buf);
+    std::stringstream s;
+    s << "Test string. ";
+    s << time(NULL);
+    writeString = s.str();
+    strcpy((char*)buf, writeString.c_str());
+    printf("wrote string to buffer, buffer is now %s\n", buf);
+    int i = wp_write_eeprom_page(specIndex, 4, buf, 64);
+    strcpy((char*)buf, "");
+    printf("wrote the page to the eeprom and buffer now has value [%s]\n", buf);
+    wp_get_eeprom_page(specIndex, 4, buf, 64);
+    printf("The value at page 4 after edit is %s and the write operation was %d\n", buf, i);
+    return 0;
+}
+
 bool init()
 {
     char libraryVersion[STR_LEN];
@@ -120,6 +144,8 @@ void demo()
             exit(-1);
         }
     }
+
+    writeToEEPROM();
 }
 
 void usage()

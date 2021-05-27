@@ -216,6 +216,8 @@ extern "C"
     //! @see ENG-0034
     DLL_API int wp_get_eeprom_page(int specIndex, int page, unsigned char* buf, int len);
 
+    DLL_API int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int dataLen);
+
     //! Read one stringified EEPROM field by name.
     //!
     //! If you don't want to call wp_get_eeprom and only want one or two fields

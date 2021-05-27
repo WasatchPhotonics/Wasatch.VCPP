@@ -609,9 +609,17 @@ int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int 
         return WP_ERROR;
     }
 
-    unsigned int pageValue = (0x3c << 8) | (0x40 * pageIndex);
+    bool specType = spec->isARM();
+    if (specType) 
+    {
+        wp_send_control_msg(specIndex, 0xff, 0x02, 4, data, dataLen);
+    }
+    else
+    {
+        unsigned int pageValue = (0x3c << 8) | (0x40 * pageIndex);
+        wp_send_control_msg(specIndex, 0xa2, pageValue, 0, data, dataLen);
+    }
     
-    wp_send_control_msg(specIndex, 0xa2, pageValue, 0, data, dataLen);
     return 0;
 }
 
