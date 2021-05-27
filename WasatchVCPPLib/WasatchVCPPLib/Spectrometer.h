@@ -83,6 +83,7 @@ namespace WasatchVCPP
             int integrationTimeMS = 1;
             bool laserEnabled = false;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
+            bool srm_in_EEPROM = false;
 
             // opcodes
             bool setIntegrationTimeMS(unsigned long ms);

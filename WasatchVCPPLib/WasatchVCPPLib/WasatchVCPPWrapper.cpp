@@ -651,3 +651,73 @@ int wp_read_control_msg(int specIndex, unsigned char bRequest, unsigned int wInd
 
     return (int)response.size();
 }
+
+int wp_get_vignetted_spectrum_length(int specIndex) 
+{
+    auto spec = driver->getSpectrometer(specIndex);
+        if (spec == nullptr)
+            return WP_ERROR_INVALID_SPECTROMETER;
+    auto eeprom = spec->eeprom;
+
+    return eeprom.ROIHorizEnd - eeprom.ROIHorizStart + 1;
+}
+
+int wp_get_raman_intensity_factors(int specIndex, double* factors, int len) 
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+    double* out_factor; 
+    auto eeprom = spec->eeprom;
+    float logTen;
+    float x_to_i;
+    float scaled;
+    float expanded;
+    int i;
+    int j;
+    
+    // expanding coeffs and calculating factors
+    if (!eeprom.intensityCorrectionCoeffs.empty())
+    {
+        for (i = eeprom.ROIHorizStart; i < eeprom.ROIHorizEnd; i++) 
+        {
+            logTen = 0.0;
+            for (j = 0; j < eeprom.intensityCorrectionCoeffs.size(); j++)
+            {
+                x_to_i = pow(i, j);
+                scaled = eeprom.intensityCorrectionCoeffs[j] * x_to_i;
+                logTen += scaled;
+            }
+            expanded = pow(10, logTen);
+            factors[i] = expanded;
+        }
+        return 0;
+    }
+    else 
+    {
+        return 1;
+    }
+}
+
+int wp_apply_raman_intensity_factors(int specIndex, double* spectrum, int spectrum_len, double* factors, double* factors_len, int start_pixel, int end_pixel)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+    int i;
+    int j;
+    for (i = start_pixel; i < end_pixel; i++)
+    {
+        spectrum[i] *= factors[i];
+    }
+    return 0;
+}
+
+int has_srm_calibration(int specIndex)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+    return spec->srm_in_EEPROM;
+}
+
