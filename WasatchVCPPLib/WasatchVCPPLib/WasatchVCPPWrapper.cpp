@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <math.h>
 
 #include <string.h> // Linux memset
 
@@ -662,7 +663,7 @@ int wp_get_vignetted_spectrum_length(int specIndex)
     return eeprom.ROIHorizEnd - eeprom.ROIHorizStart + 1;
 }
 
-int wp_get_raman_intensity_factors(int specIndex, double* factors, int len) 
+int wp_get_raman_intensity_factors(int specIndex, double* factors) 
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
@@ -699,7 +700,7 @@ int wp_get_raman_intensity_factors(int specIndex, double* factors, int len)
     }
 }
 
-int wp_apply_raman_intensity_factors(int specIndex, double* spectrum, int spectrum_len, double* factors, double* factors_len, int start_pixel, int end_pixel)
+int wp_apply_raman_intensity_factors(int specIndex, double* spectrum, int spectrum_len, double* factors, int factors_len, int start_pixel, int end_pixel)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
@@ -713,7 +714,7 @@ int wp_apply_raman_intensity_factors(int specIndex, double* spectrum, int spectr
     return 0;
 }
 
-int has_srm_calibration(int specIndex)
+int wp_has_srm_calibration(int specIndex)
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)

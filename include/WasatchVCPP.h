@@ -101,6 +101,14 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_library_version(char* value, int len);
 
+    DLL_API int wp_get_vignetted_spectrum_length(int specIndex);
+
+    DLL_API int wp_apply_raman_intensity_factors(int specIndex, double* spectrum, int spectrum_len, double* factors, int factors_len, int start_pixel, int end_pixel);
+
+    DLL_API int wp_has_srm_calibration(int specIndex);
+
+    DLL_API int wp_get_raman_intensity_factors(int specIndex, double* factors);
+
     ////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ////////////////////////////////////////////////////////////////////////////
