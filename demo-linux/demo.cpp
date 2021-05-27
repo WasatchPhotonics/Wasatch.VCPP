@@ -150,7 +150,7 @@ void demo()
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--count n] [--log-level DEBUG|INFO|ERROR|NEVER]\n");
+    printf("Usage: $ demo-linux [--count n] [--log-level DEBUG|INFO|ERROR|NEVER] [--integration-time-ms n] [--raman-mode]\n");
     exit(1);
 }
 
@@ -158,7 +158,57 @@ void parseArgs(int argc, char** argv)
 {
     for (int i = 1; i < argc; i++)
     {
-        if (!strcmp(argv[i], "--count"))
+        printf("current arg is %s\n", argv[i]);
+        if (!strcmp(argv[i], "--integration-time-ms")) 
+        {
+            if (i + 1 < argc)
+            {
+                int ms = atoi(argv[++i]);
+                wp_set_integration_time_ms(specIndex,ms);
+            }
+            else
+            {
+                printf("not enough args according to integration time\n");
+                usage();
+            }
+        }
+        else if (!strcmp(argv[i], "--raman-mode"))
+        {
+            init();
+            double dark_spectrum[pixels];
+            double corrected_spectrum[pixels];
+            double initial_spectrum[pixels];
+            int i;
+            string stringSpec;
+            if (WP_SUCCESS == wp_get_spectrum(specIndex, dark_spectrum, pixels))
+            {
+                printf("Obtained a dark spectra\n");
+            }
+            else {
+                printf("Did not obtain a dark spectra\n");
+            }
+            printf("Took dark spectrum.\n\n");
+            printf("About to enable laser\n");
+            usleep(3000000);
+            wp_set_laser_enable(specIndex, 1);
+            usleep(1000);
+            wp_get_spectrum(specIndex, initial_spectrum, pixels);
+            wp_set_laser_enable(specIndex, 0);
+            usleep(1000);
+            for (i = 0; i < pixels; i++)
+            {
+                corrected_spectrum[i] = -1*(initial_spectrum[i] - dark_spectrum[i]);
+            }
+            printf("Took corrected_spectrum\n");
+            printf("dark,initial,corrected\n");
+            for (i = 0; i < pixels; i++)
+            {
+                printf("%.2lf,%.2lf,%.2lf\n ", dark_spectrum[i],initial_spectrum[i],corrected_spectrum[i]);
+            }
+            printf(" ... \n");
+
+        }
+        else if (!strcmp(argv[i], "--count"))
         {
             if (i + 1 < argc)
                 count = atoi(argv[++i]); 
@@ -181,6 +231,7 @@ void parseArgs(int argc, char** argv)
         }
         else
         {
+            printf("did not match with any of the args\n");
             usage();
         }
     }
