@@ -129,7 +129,7 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
         for (int i = 0; i < numCoeffs; ++i)
             intensityCorrectionCoeffs.push_back(ParseData::toFloat(pages[6], 1 + 4 * i));
         if (numCoeffs > 0)
-            srm_in_eeprom = true;
+            srm_present = true;
     }
 
     avgResolution = format >= 7 ? ParseData::toFloat(pages[3], 48) : 0.f;
@@ -171,7 +171,7 @@ void WasatchVCPP::EEPROM::stringify(const string& name, const string& value)
 
 bool WasatchVCPP::EEPROM::has_srm() 
 {
-    return srm_in_eeprom;
+    return srm_present;
 }
 
 void WasatchVCPP::EEPROM::stringifyAll()

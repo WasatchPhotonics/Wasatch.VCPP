@@ -83,7 +83,7 @@ namespace WasatchVCPP
             float detectorGain = 0;
             int16_t detectorOffset = 0;
             float detectorGainOdd = 0;
-            bool srm_in_eeprom = false;
+            bool srm_present = false;
             int16_t detectorOffsetOdd = 0;
 
             float wavecalCoeffs[5] = { 0 };
