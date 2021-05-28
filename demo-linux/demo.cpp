@@ -164,8 +164,8 @@ void ramanOperation()
 		printf("srm calibration present");
 		int ROILen;
 		ROILen = wp_get_vignetted_spectrum_length(specIndex);
-		double factors[pixels];
-		wp_get_raman_intensity_factors(specIndex, factors);
+		double factors[ROILen];
+		wp_get_raman_intensity_factors(specIndex, factors, ROILen);
 		wp_apply_raman_intensity_factors(specIndex, corrected_spectrum, pixels, factors, ROILen, 0, pixels);
 	}
 	printf("Took corrected_spectrum\n");

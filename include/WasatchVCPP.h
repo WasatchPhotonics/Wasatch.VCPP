@@ -107,7 +107,7 @@ extern "C"
 
     DLL_API int wp_has_srm_calibration(int specIndex);
 
-    DLL_API int wp_get_raman_intensity_factors(int specIndex, double* factors);
+    DLL_API int wp_get_raman_intensity_factors(int specIndex, double* factors, int factorsLen);
 
     ////////////////////////////////////////////////////////////////////////////
     // Lifecycle

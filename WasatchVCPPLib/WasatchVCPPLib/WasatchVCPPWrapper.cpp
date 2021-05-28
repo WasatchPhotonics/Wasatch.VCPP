@@ -663,7 +663,7 @@ int wp_get_vignetted_spectrum_length(int specIndex)
     return eeprom.ROIHorizEnd - eeprom.ROIHorizStart + 1;
 }
 
-int wp_get_raman_intensity_factors(int specIndex, double* factors) 
+int wp_get_raman_intensity_factors(int specIndex, double* factors, int factorsLen) 
 {
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
