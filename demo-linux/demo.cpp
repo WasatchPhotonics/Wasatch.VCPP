@@ -92,6 +92,50 @@ int writeToEEPROM()
     return 0;
 }
 
+void performRamanReading() 
+{
+	double dark_spectrum[pixels];
+	double corrected_spectrum[pixels];
+	double initial_spectrum[pixels];
+	int i;
+	string stringSpec;
+	if (WP_SUCCESS == wp_get_spectrum(specIndex, dark_spectrum, pixels))
+	{
+		printf("Obtained a dark spectra\n");
+	}
+	else {
+		printf("Did not obtain a dark spectra\n");
+	}
+	printf("Took dark spectrum.\n\n");
+	printf("About to enable laser\n");
+	wp_set_laser_enable(specIndex, 1);
+	usleep(7000000);
+	usleep(1000);
+	wp_get_spectrum(specIndex, initial_spectrum, pixels);
+	wp_set_laser_enable(specIndex, 0);
+	usleep(1000);
+	for (i = 0; i < pixels; i++)
+	{
+		corrected_spectrum[i] = initial_spectrum[i] - dark_spectrum[i];
+	}
+	if (wp_has_srm_calibration(specIndex))
+	{
+		printf("srm calibration present\n");
+		int ROILen;
+		ROILen = wp_get_vignetted_spectrum_length(specIndex);
+		double factors[ROILen];
+		wp_get_raman_intensity_factors(specIndex, factors, ROILen);
+		wp_apply_raman_intensity_factors(specIndex, corrected_spectrum, pixels, factors, ROILen, 0, pixels);
+	}
+	printf("Took corrected_spectrum\n");
+	printf("dark,initial,corrected\n");
+	for (i = 0; i < pixels; i++)
+	{
+		printf("%.2lf,%.2lf,%.2lf\n ", dark_spectrum[i],initial_spectrum[i],corrected_spectrum[i]);
+	}
+	printf(" ... \n");
+}
+
 bool init()
 {
     char libraryVersion[STR_LEN];
@@ -127,55 +171,13 @@ bool init()
 
     if (ramanModeEnabled)
     {
-
+        performRamanReading();
     }
 
     return true;
 }
 
-void ramanOperation() 
-{
-	double dark_spectrum[pixels];
-	double corrected_spectrum[pixels];
-	double initial_spectrum[pixels];
-	int i;
-	string stringSpec;
-	if (WP_SUCCESS == wp_get_spectrum(specIndex, dark_spectrum, pixels))
-	{
-		printf("Obtained a dark spectra\n");
-	}
-	else {
-		printf("Did not obtain a dark spectra\n");
-	}
-	printf("Took dark spectrum.\n\n");
-	printf("About to enable laser\n");
-	usleep(3000000);
-	wp_set_laser_enable(specIndex, 1);
-	usleep(1000);
-	wp_get_spectrum(specIndex, initial_spectrum, pixels);
-	wp_set_laser_enable(specIndex, 0);
-	usleep(1000);
-	for (i = 0; i < pixels; i++)
-	{
-		corrected_spectrum[i] = -1*(initial_spectrum[i] - dark_spectrum[i]);
-	}
-	if (wp_has_srm_calibration(specIndex))
-	{
-		printf("srm calibration present");
-		int ROILen;
-		ROILen = wp_get_vignetted_spectrum_length(specIndex);
-		double factors[ROILen];
-		wp_get_raman_intensity_factors(specIndex, factors, ROILen);
-		wp_apply_raman_intensity_factors(specIndex, corrected_spectrum, pixels, factors, ROILen, 0, pixels);
-	}
-	printf("Took corrected_spectrum\n");
-	printf("dark,initial,corrected\n");
-	for (i = 0; i < pixels; i++)
-	{
-		printf("%.2lf,%.2lf,%.2lf\n ", dark_spectrum[i],initial_spectrum[i],corrected_spectrum[i]);
-	}
-	printf(" ... \n");
-}
+
 
 void demo()
 {
