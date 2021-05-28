@@ -49,6 +49,7 @@ namespace WasatchVCPP
             EEPROM(Logger& logger);
 
             bool parse(const std::vector<std::vector<uint8_t> >& pages);
+            bool has_srm();
 
             void stringifyAll();
             void stringify(const std::string& name, const std::string& value);
@@ -82,6 +83,7 @@ namespace WasatchVCPP
             float detectorGain = 0;
             int16_t detectorOffset = 0;
             float detectorGainOdd = 0;
+            bool srm_in_eeprom = false;
             int16_t detectorOffsetOdd = 0;
 
             float wavecalCoeffs[5] = { 0 };
