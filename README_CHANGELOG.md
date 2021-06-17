@@ -1,5 +1,8 @@
 # Changelog
 
+- 2021-06-17 1.0.6
+    - fixed return values for setLaserEnable, setIntegrationTimeMS and getHighGainModeEnable
+    - updated MacOS libusb to latest Homebrew version (1.0.24)
 - 2021-04-19 1.0.5
     - added README\_MACOS.md
 - 2021-02-16 1.0.4

@@ -691,13 +691,14 @@ namespace WasatchVCPP
                 //! @returns true on success
                 bool close()
                 {
+                    bool success = false;
                     if (specIndex >= 0)
                     {
-                        wp_close_spectrometer(specIndex);
+                        success = (WP_SUCCESS == wp_close_spectrometer(specIndex));
                         specIndex = -1;
                     }
 
-                    return true;
+                    return success;
                 }
 
             ////////////////////////////////////////////////////////////////////
@@ -724,13 +725,13 @@ namespace WasatchVCPP
                 //! @param ms (Input) time in milliseconds
                 //! @return true on success
                 bool setIntegrationTimeMS(unsigned long ms)
-                { return wp_set_integration_time_ms(specIndex, ms); }
+                { return WP_SUCCESS == wp_set_integration_time_ms(specIndex, ms); }
 
                 //! set laser firing state
                 //! @param flag (Input) desired state (true for firing, false for off)
                 //! @return true on successful communication (does not represent firing state)
                 bool setLaserEnable(bool flag)
-                { return wp_set_laser_enable(specIndex, flag); }
+                { return WP_SUCCESS == wp_set_laser_enable(specIndex, flag); }
 
                 //! @see wp_set_detector_gain
                 bool setDetectorGain(float value)
@@ -789,7 +790,7 @@ namespace WasatchVCPP
                 int getDetectorTECSetpointDegC() { return wp_get_detector_tec_setpoint_deg_c(specIndex); }
 
                 //! @see wp_get_high_gain_mode_enable
-                bool getHighGainModeEnable() { return wp_get_high_gain_mode_enable(specIndex); }
+                bool getHighGainModeEnable() { return 0 != wp_get_high_gain_mode_enable(specIndex); }
 
                 //! @see wp_send_control_msg 
                 //! @warning no seriously, you need to follow that link
