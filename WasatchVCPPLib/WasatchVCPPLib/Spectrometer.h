@@ -157,7 +157,7 @@ namespace WasatchVCPP
             bool isSuccess(unsigned char opcode, int result);
             uint16_t serializeGain(float value);
             float deserializeGain(const std::vector<uint8_t>& data);
-            unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
+            inline unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
             bool lockComm();
             void unlockComm();
     };

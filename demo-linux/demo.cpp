@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <map>
@@ -30,6 +31,20 @@ char serialNumber[STR_LEN];
 char model[STR_LEN];
 map<string, string> eeprom;
 vector<double> wavelengths;
+
+////////////////////////////////////////////////////////////////////////////////
+// Utility
+////////////////////////////////////////////////////////////////////////////////
+
+void pause(const string& msg)
+{
+    string prompt = "Press <return> to continue...";
+    if (msg.size() > 0)
+        prompt = msg;
+    printf("\n%s", msg.c_str());
+    string junk;
+    std::getline(std::cin, junk);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functional Implementation
@@ -120,6 +135,20 @@ void demo()
             exit(-1);
         }
     }
+
+    pause("Press <return> to enable laser...");
+    auto result = wp_set_laser_enable(specIndex, 1);
+    if (WP_SUCCESS == result)
+        printf("successfully enabled laser\n");
+    else
+        printf("ERROR: unable to enable laser (%d)\n", result);
+
+    pause("Press <return> to disable laser...");
+    result = wp_set_laser_enable(specIndex, 0);
+    if (WP_SUCCESS == result)
+        printf("successfully disabled laser\n");
+    else
+        printf("ERROR: unable to disable laser (%d)\n", result);
 }
 
 void usage()

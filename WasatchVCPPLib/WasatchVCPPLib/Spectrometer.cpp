@@ -182,15 +182,15 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
 
     integrationTimeMS = ms;
     logger.debug("integrationTimeMS -> %lu", ms);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
 {
     auto bytesWritten = sendCmd(0xbe, flag ? 1 : 0);
     laserEnabled = flag;
-    logger.debug("laserEnable -> %d", flag);
-    return true;
+    logger.debug("laserEnable -> %d (bytesWritten %d)", flag, bytesWritten);
+    return bytesWritten >= 0;
 }
 
 uint16_t WasatchVCPP::Spectrometer::serializeGain(float value)
@@ -211,7 +211,7 @@ bool WasatchVCPP::Spectrometer::setDetectorGain(float value)
 
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorGain -> 0x%04x (%.2f)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
@@ -224,7 +224,7 @@ bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
 
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorGainOdd -> 0x%04x (%.2f)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorOffset(int16_t value)
@@ -233,7 +233,7 @@ bool WasatchVCPP::Spectrometer::setDetectorOffset(int16_t value)
     uint16_t word = *((uint16_t*) &value); // send original signed int16 bit pattern
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorOffset -> 0x%04x (%d)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorOffsetOdd(int16_t value)
@@ -242,7 +242,7 @@ bool WasatchVCPP::Spectrometer::setDetectorOffsetOdd(int16_t value)
     uint16_t word = *((uint16_t*) &value);
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorOffsetOdd -> 0x%04x (%d)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorTECEnable(bool flag)
@@ -259,7 +259,7 @@ bool WasatchVCPP::Spectrometer::setDetectorTECEnable(bool flag)
 
     auto bytesWritten = sendCmd(op, flag ? 1 : 0);
     logger.debug("detectorTECEnable -> %s", flag ? "on" : "off");
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
@@ -289,7 +289,7 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
     detectorTECSetpointHasBeenSet = true;
     detectorTECSetointDegC = degC;
 
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
@@ -307,7 +307,7 @@ bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
 
     logger.debug("highGainModeEnable -> %s", flag ? "on" : "off");
 
-    return true;
+    return bytesWritten >= 0;
 }
 
 string WasatchVCPP::Spectrometer::getFirmwareVersion()
@@ -701,7 +701,12 @@ bool WasatchVCPP::Spectrometer::getHighGainModeEnable()
 //!        than 32 bits, such as the uint40 values used for laser modulation),
 //!        can provide additional bits of precision atop wValue and wIndex
 //! @param len (Input) number of bytes provided in data
-//! @returns number of bytes written (not really indicative of success/failure)
+//! @returns number of bytes written (not really indicative of success/failure).
+//!
+//! @note I *think* this actually indicates the number of DATA bytes 
+//!       transferred, and is not actually intended to include the "control
+//!       packet" itself; therefore, bytes written will be ZERO for most 
+//!       successful setters, and negative for comms failures.
 int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint8_t* data, int len)
 {
     // ARM firmware expects all commands to include at least 8 payload bytes
@@ -864,6 +869,7 @@ bool WasatchVCPP::Spectrometer::isMicro()
 bool WasatchVCPP::Spectrometer::isSuccess(unsigned char opcode, int result)
 { return true; }
 
+//! Clamps the value between min and max.  Would make a good M4 macro.
 //! @todo move to Util
 unsigned long WasatchVCPP::Spectrometer::clamp(unsigned long value, unsigned long min, unsigned long max)
 {
