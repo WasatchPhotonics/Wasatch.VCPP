@@ -368,15 +368,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Wasatch.VCPP"
-        "ProductCode" = "8:{2BAA1AA3-08D3-44C7-9D81-BDF00C6A9ADC}"
-        "PackageCode" = "8:{249F6EC5-27EA-4F77-992D-7D811B4D1A5F}"
+        "ProductCode" = "8:{F89AC77F-0DEB-43C5-948B-29F49895AF64}"
+        "PackageCode" = "8:{5A7C48DF-61A4-4722-B0A7-F547A03466D9}"
         "UpgradeCode" = "8:{CAF4CECB-6F65-4C86-BFE3-EAEDE74BB566}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.1"
+        "ProductVersion" = "8:1.0.8"
         "Manufacturer" = "8:Wasatch Photonics"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -890,7 +890,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_3BBE8E1EEC0D4A59A4EDFE445F1156F9"
             {
-            "SourcePath" = "8:..\\x64\\Release\\WasatchVCPPDemo.exe"
+            "SourcePath" = "8:..\\x64\\Debug\\WasatchVCPPDemo.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_57408FD04A244FEAA517802490E9BE0C"
@@ -918,7 +918,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_C36902091C2A44F59C578A59A83841E6"
             {
-            "SourcePath" = "8:..\\x64\\Release\\WasatchVCPP.dll"
+            "SourcePath" = "8:..\\x64\\Debug\\WasatchVCPP.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_57408FD04A244FEAA517802490E9BE0C"

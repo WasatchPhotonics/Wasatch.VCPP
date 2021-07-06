@@ -1,8 +1,9 @@
 # Changelog
 
+- 2021-07-06 1.0.8
+    - fixed getDetectorTemperatureDegC crashing on Windows when spectrometer unplugged
 - 2021-07-06 1.0.7
     - fixed return values for most setters to correctly indicate comms success / failure
-    - fixed getDetectorTemperatureDegC
 - 2021-06-17 1.0.6
     - fixed return values for setLaserEnable, setIntegrationTimeMS and getHighGainModeEnable
     - updated MacOS libusb to latest Homebrew version (1.0.24)

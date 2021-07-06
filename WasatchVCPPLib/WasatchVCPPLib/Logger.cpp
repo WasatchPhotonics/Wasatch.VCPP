@@ -80,4 +80,3 @@ void WasatchVCPP::Logger::output(const string& lvlName, const string& msg)
         logfile.flush();
     }
 }
-

@@ -9,8 +9,8 @@
     It has a few menu-bar options (configured using the "Resource View"), and a 
     scrolling log event viewer.  It doesn't provide an on-screen chart because
     I haven't figured out a lightweight way to do that from Visual C++ without
-    adding a dependency on Qt or equivalent.  Graphing demos will likely be provided
-    via a standalone C# demo.
+    adding a dependency on Qt or equivalent.  A graphing demo is provided via 
+    the standalone WasatchVCPPNet C# GUI.
 
     @todo add some kind of charting to graph spectra
 
@@ -139,6 +139,13 @@ void doSetLaserEnable()
     log("laser -> %s", enabled ? "on" : "off");
 }
 
+void doGetDetectorTemperatureDegC()
+{
+    if (spectrometer == nullptr)
+        return;
+    auto degC = spectrometer->getDetectorTemperatureDegC(); // example
+    log("detector temperature -> %.2f degC", degC);
+}
 void doReadEEPROM()
 {
     if (spectrometer == nullptr)
@@ -316,6 +323,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         break;
                     case ID_SPECTROMETER_SETLASERENABLE:
                         doSetLaserEnable();
+                        break;
+                    case ID_SPECTROMETER_GETDETECTORTEMPERATUREDEGC:
+                        doGetDetectorTemperatureDegC();
                         break;
                     case ID_SPECTROMETER_SETOUTFILE:
                         doSetOutfile();
