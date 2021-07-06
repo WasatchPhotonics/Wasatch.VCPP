@@ -120,6 +120,10 @@ bool init()
 
 void demo()
 {
+    ////////////////////////////////////////////////////////////////////////////
+    // read the requested number of spectra
+    ////////////////////////////////////////////////////////////////////////////
+
     for (int i = 0; i < count; i++)
     {
         double spectrum[pixels];
@@ -136,12 +140,20 @@ void demo()
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // test result codes in the event of communication failures
+    ////////////////////////////////////////////////////////////////////////////
+
     pause("Press <return> to enable laser...");
     auto result = wp_set_laser_enable(specIndex, 1);
     if (WP_SUCCESS == result)
         printf("successfully enabled laser\n");
     else
         printf("ERROR: unable to enable laser (%d)\n", result);
+    auto degC = wp_get_detector_temperature_deg_c(specIndex);
+    printf("detector temperature %.2f degC\n", degC);
+
+    printf("\n<<< Disconnect spectrometer to test comms >>>\n");
 
     pause("Press <return> to disable laser...");
     result = wp_set_laser_enable(specIndex, 0);
@@ -149,6 +161,8 @@ void demo()
         printf("successfully disabled laser\n");
     else
         printf("ERROR: unable to disable laser (%d)\n", result);
+    degC = wp_get_detector_temperature_deg_c(specIndex);
+    printf("detector temperature %.2f degC\n", degC);
 }
 
 void usage()

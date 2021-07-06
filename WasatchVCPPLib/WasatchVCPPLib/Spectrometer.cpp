@@ -337,7 +337,7 @@ string WasatchVCPP::Spectrometer::getFPGAVersion()
 //! @returns negative on error, else valid uint16_t
 int32_t WasatchVCPP::Spectrometer::getDetectorTemperatureRaw()
 {
-    if (eeprom.hasCooling)
+    if (!eeprom.hasCooling)
         return -1;
 
     const uint8_t op = 0xd7;
