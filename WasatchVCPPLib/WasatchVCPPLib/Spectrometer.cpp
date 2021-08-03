@@ -856,6 +856,7 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(
 
 bool WasatchVCPP::Spectrometer::isARM() { return pid == 0x4000; }
 
+//! @todo support ARM-based InGaAs
 bool WasatchVCPP::Spectrometer::isInGaAs() { return pid == 0x2000; }
 
 bool WasatchVCPP::Spectrometer::isMicro()

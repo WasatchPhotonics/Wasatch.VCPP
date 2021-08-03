@@ -180,6 +180,9 @@ void WasatchVCPP::EEPROM::stringifyAll()
     stringify("hasLaser", toBool(hasLaser));
     stringify("bin2x2", toBool(featureMask.bin2x2));
     stringify("invertXAxis", toBool(featureMask.invertXAxis));
+    stringify("gen15", toBool(featureMask.gen15));
+    stringify("cutoffFilterInstalled", toBool(featureMask.cutoffFilterInstalled));
+    stringify("hardwareEvenOdd", toBool(featureMask.hardwareEvenOdd));
     stringify("excitationNM", Util::sprintf("%.3f", excitationNM));
     stringify("slitSizeUM", Util::sprintf("%u", slitSizeUM));
 

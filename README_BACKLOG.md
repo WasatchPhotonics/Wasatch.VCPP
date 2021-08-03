@@ -14,8 +14,13 @@ Per the "Design Remit" described in README.md:
 
 ## Not supported (pending customer use-case)
 
-- ARM features
+- Gen 1.5 features
     - hardware triggering
+    - lampEnable
+    - contStrobe
+    - fanEnable
+    - shutterEnable
+    - ...
 - laser power
     - modulated (%)
     - calibrated (mW)

@@ -1,5 +1,7 @@
 # Changelog
 
+- 2021-08-03 1.0.9
+    - added FeatureMask.gen15, .cutoffFilterInstalled, .hardwareEvenOdd
 - 2021-07-06 1.0.8
     - fixed getDetectorTemperatureDegC crashing on Windows when spectrometer unplugged
 - 2021-07-06 1.0.7
