@@ -1,5 +1,8 @@
 # Changelog
 
+- 2021-08-23 1.0.10
+    - added demo-eeprom.cpp
+    - added Proxy::Spectrometer::getWavecalCoeffs
 - 2021-08-03 1.0.9
     - added FeatureMask.gen15, .cutoffFilterInstalled, .hardwareEvenOdd
 - 2021-07-06 1.0.8

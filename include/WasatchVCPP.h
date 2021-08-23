@@ -871,6 +871,15 @@ namespace WasatchVCPP
                     return std::string(buf);
                 }
 
+                //! convenience accessor
+                std::vector<float> getWavecalCoeffs()
+                {
+                    std::vector<float> v;
+                    for (int i = 0; i < 5; i++)
+                        v.push_back(std::stof(eepromFields["wavecalCoeffs[" + std::to_string(i) + "]"]));
+                    return v;
+                }
+
             private:
                 bool readEEPROMFields()
                 {

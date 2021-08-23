@@ -1,11 +1,10 @@
-
 CXXFLAGS += --std=c++11     \
             -I../include
 LDFLAGS  += -L../lib        \
             -lwasatchvcpp   \
             -lusb-1.0
         
-all: demo
+all: demo demo-eeprom
 
 new: clean all
 
@@ -13,6 +12,9 @@ clean:
 	@rm -f *.o *.log demo test-*
 
 demo: demo.o
+	g++ $(LDFLAGS) -o $@ $^ $(LDFLAGS)
+
+demo-eeprom: demo-eeprom.o
 	g++ $(LDFLAGS) -o $@ $^ $(LDFLAGS)
 
 ##
