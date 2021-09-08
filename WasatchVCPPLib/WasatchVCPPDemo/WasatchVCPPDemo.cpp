@@ -117,7 +117,7 @@ void doConnect()
             spectrometer->serialNumber.c_str(),
             spectrometer->pixels,
             spectrometer->wavelengths[0],
-            spectrometer->wavelengths[spectrometer->pixels - 1]);
+            spectrometer->wavelengths[((int)spectrometer->pixels) - 1]);
 }
 
 void doSetIntegrationTime()
@@ -233,6 +233,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
+
+    driver.destroy();
 
     // after exiting event loop, application will terminate
     return (int) msg.wParam;

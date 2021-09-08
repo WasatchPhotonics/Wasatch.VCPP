@@ -1017,7 +1017,7 @@ namespace WasatchVCPP
             public:                    
 
                 //! number of spectrometers found (set by openAllSpectrometers)
-                int numberOfSpectrometers;
+                int numberOfSpectrometers = 0;
 
             ////////////////////////////////////////////////////////////////////
             // Private attributes

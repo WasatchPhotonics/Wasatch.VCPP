@@ -23,6 +23,10 @@ using std::vector;
 using std::max;
 using std::min;
 
+#ifdef _WIN32
+#pragma warning(disable : 26451) // using operator on 4-byte value then casting result to 8-byte value
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -886,6 +890,9 @@ bool WasatchVCPP::Spectrometer::lockComm()
     return true;
 }
 
+#ifdef _WIN32
+#pragma warning(disable : 26110) // caller failing to hold lock before calling unlock
+#endif
 void WasatchVCPP::Spectrometer::unlockComm()
 {
     mutComm.unlock();

@@ -327,8 +327,9 @@ int wp_set_logfile_path(const char* pathname, int len)
 
 int wp_set_log_level(int level)
 {
-    if (level < Logger::Levels::LOG_LEVEL_DEBUG || 
-        level > Logger::Levels::LOG_LEVEL_NEVER)
+    Logger::Levels lvl = (Logger::Levels)level;
+    if (lvl < Logger::Levels::LOG_LEVEL_DEBUG || 
+        lvl > Logger::Levels::LOG_LEVEL_NEVER)
         return WP_ERROR;
 
     driver->logger.level = (Logger::Levels) level;

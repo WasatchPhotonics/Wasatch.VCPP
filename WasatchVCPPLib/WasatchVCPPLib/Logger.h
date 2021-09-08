@@ -18,7 +18,7 @@ namespace WasatchVCPP
     {
         public:
             //! keep synchronized with like-named macros in WasatchVCPP.h
-            enum Levels 
+            enum class Levels 
             { 
                 LOG_LEVEL_DEBUG = 0, 
                 LOG_LEVEL_INFO  = 1, 
@@ -26,7 +26,7 @@ namespace WasatchVCPP
                 LOG_LEVEL_NEVER = 3
             };
 
-            Levels level = LOG_LEVEL_DEBUG;
+            Levels level = Levels::LOG_LEVEL_DEBUG;
 
             void debug(const char* fmt, ...);
             void info(const char* fmt, ...);

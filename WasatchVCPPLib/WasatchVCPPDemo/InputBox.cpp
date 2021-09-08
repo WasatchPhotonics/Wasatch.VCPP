@@ -147,7 +147,7 @@ static LRESULT CALLBACK InputBoxProc(int nCode, WPARAM wParam, LPARAM lParam)
     if (nCode < HC_ACTION)
         return CallNextHookEx(hHook, nCode, wParam, lParam);
 
-    if (nCode = HCBT_ACTIVATE)
+    if (nCode == HCBT_ACTIVATE)
     {
         if (HideInput == true)
         {
@@ -156,7 +156,7 @@ static LRESULT CALLBACK InputBoxProc(int nCode, WPARAM wParam, LPARAM lParam)
         }
     }
 
-    if (nCode = HCBT_CREATEWND)
+    if (nCode == HCBT_CREATEWND)
     {
         if (!(GetWindowLongPtr((HWND)wParam, GWL_STYLE) & WS_CHILD))
             SetWindowLongPtr((HWND)wParam, GWL_EXSTYLE, GetWindowLongPtr((HWND)wParam, GWL_EXSTYLE) | WS_EX_DLGMODALFRAME);

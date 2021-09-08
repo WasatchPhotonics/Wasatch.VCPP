@@ -136,7 +136,7 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     {
         wavecalCoeffs[4] = ParseData::toFloat(pages[2], 21);
         subformat = (Subformats) ParseData::toUInt8(pages[5], 63);
-        if (subformat == SUBFORMAT_USER_DATA)
+        if (subformat == Subformats::SUBFORMAT_USER_DATA)
         {
             intensityCorrectionOrder = 0;
             intensityCorrectionCoeffs.clear();
@@ -145,9 +145,9 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     else
     {
         if (format >= 6)
-            subformat = SUBFORMAT_RAMAN_INTENSITY_CALIBRATION;
+            subformat = Subformats::SUBFORMAT_RAMAN_INTENSITY_CALIBRATION;
         else
-            subformat = SUBFORMAT_USER_DATA;
+            subformat = Subformats::SUBFORMAT_USER_DATA;
     }
 
     if (format >= 9)

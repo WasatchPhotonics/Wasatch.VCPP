@@ -27,7 +27,7 @@ namespace WasatchVCPP
             // Datatypes
             ////////////////////////////////////////////////////////////////////
 
-            enum Subformats
+            enum class Subformats
             {
                 SUBFORMAT_USER_DATA = 0,
                 SUBFORMAT_RAMAN_INTENSITY_CALIBRATION = 1,

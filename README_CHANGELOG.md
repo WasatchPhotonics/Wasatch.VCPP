@@ -1,5 +1,8 @@
 # Changelog
 
+- 2021-09-08 1.0.12
+    - Visual Studio Code Analysis cleanup
+    - moved to enum classes
 - 2021-09-08 1.0.11
     - added wp\_destroy\_driver 
     - valgrind reports no leaks on Ubuntu 20

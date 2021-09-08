@@ -211,7 +211,10 @@ int main(int argc, char** argv)
 {
     parseArgs(argc, argv);
     if (!init())
+    {
+        wp_destroy_driver();
         return -1;
+    }
     demo();
 
     wp_close_all_spectrometers();
