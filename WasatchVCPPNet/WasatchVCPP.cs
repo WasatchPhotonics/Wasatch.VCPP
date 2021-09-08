@@ -326,6 +326,7 @@ class WasatchVCPP
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_all_spectrometers();
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_spectrometer(int specIndex);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern void               wp_destroy_driver();
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_gain(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_gain_odd(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_tec_setpoint_deg_c(int specIndex);
