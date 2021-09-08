@@ -150,6 +150,11 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_close_spectrometer(int specIndex);
 
+    //! Permanently releases all objects from memory.  It is recommended to 
+    //! close and restart the application be after calling this function, before 
+    //! wp_open_all_spectrometers can be called again.
+    DLL_API void wp_destroy_driver();
+
     ////////////////////////////////////////////////////////////////////////////
     // EEPROM 
     ////////////////////////////////////////////////////////////////////////////
@@ -696,6 +701,10 @@ namespace WasatchVCPP
                     {
                         success = (WP_SUCCESS == wp_close_spectrometer(specIndex));
                         specIndex = -1;
+
+                        wavelengths.clear();
+                        wavenumbers.clear();
+                        eepromFields.clear();
                     }
 
                     return success;
@@ -993,6 +1002,13 @@ namespace WasatchVCPP
                     spectrometers.clear();
 
                     return WP_SUCCESS == wp_close_all_spectrometers();
+                }
+
+                //! @see wp_destroy_driver()
+                void destroy()
+                {
+                    closeAllSpectrometers();
+                    wp_destroy_driver();
                 }
 
             ////////////////////////////////////////////////////////////////////

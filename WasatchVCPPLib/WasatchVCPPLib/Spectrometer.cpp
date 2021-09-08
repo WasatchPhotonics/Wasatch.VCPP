@@ -429,7 +429,6 @@ long WasatchVCPP::Spectrometer::generateTotalWaitMS()
          + 500;
 }
 
-//! @todo support 2048-pixel detectors
 std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     mutAcquisition.lock();

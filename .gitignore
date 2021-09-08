@@ -355,3 +355,4 @@ doxygen/
 *.a
 *.so
 demo-linux/demo
+demo-linux/demo-eeprom

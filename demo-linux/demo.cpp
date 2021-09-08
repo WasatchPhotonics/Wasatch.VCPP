@@ -215,5 +215,6 @@ int main(int argc, char** argv)
     demo();
 
     wp_close_all_spectrometers();
+    wp_destroy_driver();
     return 0;
 }

@@ -37,6 +37,21 @@ WasatchVCPP::Driver* WasatchVCPP::Driver::getInstance()
     return instance;
 }
 
+void WasatchVCPP::Driver::destroy()
+{
+    mutDriver.lock();
+    if (instance != nullptr)
+    {
+        instance->closeAllSpectrometers();
+        delete instance;
+        instance = nullptr;
+    }
+    mutDriver.unlock();
+#ifndef USE_LIBUSB_WIN32
+    libusb_exit(nullptr);
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Lifecycle
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,6 +216,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
             }
         }
     }
+    libusb_free_device_list(devs, 1);
 #endif
 
     mutSpectrometers.unlock();
