@@ -10,7 +10,7 @@
 #ifdef USE_LIBUSB_WIN32
 #include "libusb.h"
 #else
-//#include <libusb-1_0.h>
+//#include <libusb-1_0.h>  // some platforms may use this instead
 #include <libusb.h>
 #endif
 
@@ -63,7 +63,7 @@ namespace WasatchVCPP
             //!
             //! @note this value is checked by scripts/deploy against the given 
             //!       release tag
-            const std::string libraryVersion = "1.0.12";
+            const std::string libraryVersion = "1.0.13";
 
             static Driver* getInstance();
             static void destroy();

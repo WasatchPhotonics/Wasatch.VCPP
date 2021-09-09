@@ -153,6 +153,12 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     if (format >= 9)
         featureMask = FeatureMask(ParseData::toUInt16(pages[0], 39));
 
+    // ensure startupTemperature within bounds
+    if (startupDetectorTemperatureDegC < detectorTempMin)
+        startupDetectorTemperatureDegC = detectorTempMin;
+    if (startupDetectorTemperatureDegC > detectorTempMax)
+        startupDetectorTemperatureDegC = detectorTempMax;
+
     // log what we've read, while adding to the string map 
     stringifyAll();
 

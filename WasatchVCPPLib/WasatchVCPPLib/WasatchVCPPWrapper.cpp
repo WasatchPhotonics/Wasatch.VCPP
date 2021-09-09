@@ -332,7 +332,7 @@ int wp_set_log_level(int level)
         lvl > Logger::Levels::LOG_LEVEL_NEVER)
         return WP_ERROR;
 
-    driver->logger.level = (Logger::Levels) level;
+    driver->logger.level = lvl;
     return WP_SUCCESS;
 }
 

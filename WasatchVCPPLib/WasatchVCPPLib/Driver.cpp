@@ -47,6 +47,7 @@ void WasatchVCPP::Driver::destroy()
         instance = nullptr;
     }
     mutDriver.unlock();
+
 #ifndef USE_LIBUSB_WIN32
     libusb_exit(nullptr);
 #endif

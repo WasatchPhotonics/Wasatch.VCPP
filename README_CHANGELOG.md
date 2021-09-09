@@ -1,5 +1,9 @@
 # Changelog
 
+- 2021-09-09 1.0.13
+    - fixed debug log message
+    - clamped startup temperature to min/max range
+    - default to startupDetectorTemperatureDegC rather than detTempMin
 - 2021-09-08 1.0.12
     - Visual Studio Code Analysis cleanup
     - moved to enum classes

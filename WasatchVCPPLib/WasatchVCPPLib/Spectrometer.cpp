@@ -107,7 +107,10 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
 
     // initialize TEC and setpoint
     if (eeprom.hasCooling)
+    {
+        setDetectorTECSetpointDegC(eeprom.startupDetectorTemperatureDegC);
         setDetectorTECEnable(true);
+    }
 
     // initialize micro models
     if (isMicro())
@@ -288,7 +291,7 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
     uint16_t word = ((uint16_t)(dac + 0.5)) & 0xfff;
     auto bytesWritten = sendCmd(op, word);
 
-    logger.debug("detectorTECSetpointDegC -> 0x%04x (%.2f)", word, degC);
+    logger.debug("detectorTECSetpointDegC -> 0x%04x (%d)", word, degC);
 
     detectorTECSetpointHasBeenSet = true;
     detectorTECSetointDegC = degC;
