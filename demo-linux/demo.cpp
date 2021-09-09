@@ -30,7 +30,7 @@ int pixels;
 char serialNumber[STR_LEN];
 char model[STR_LEN];
 map<string, string> eeprom;
-vector<double> wavelengths;
+vector<float> wavelengths;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utility
@@ -53,8 +53,8 @@ void pause(const string& msg)
 void loadWavelengths()
 {
     wavelengths.clear();
-    double values[pixels];
-    if (WP_SUCCESS == wp_get_wavelengths(specIndex, values, pixels))
+    float values[pixels];
+    if (WP_SUCCESS == wp_get_wavelengths_float(specIndex, values, pixels))
         for (int i = 0; i < pixels; i++)
             wavelengths.push_back(values[i]);
 }
@@ -102,7 +102,7 @@ bool init()
     wp_get_model(specIndex, model, STR_LEN);
     loadWavelengths();
 
-    printf("Found %s %s with %d pixels (%.2lf, %.2lf)\n", model, serialNumber, pixels, 
+    printf("Found %s %s with %d pixels (%.2f, %.2f)\n", model, serialNumber, pixels, 
         wavelengths[0], wavelengths[pixels-1]);
     
     loadEEPROM();
@@ -126,12 +126,12 @@ void demo()
 
     for (int i = 0; i < count; i++)
     {
-        double spectrum[pixels];
-        if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrum, pixels))
+        float spectrum[pixels];
+        if (WP_SUCCESS == wp_get_spectrum_float(specIndex, spectrum, pixels))
         {
             printf("Spectrum %3d of %3d:", i + 1, count);
             for (int i = 0; i < 10; i++)
-                printf(" %.2lf%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
+                printf(" %.2f%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
         }
         else
         {

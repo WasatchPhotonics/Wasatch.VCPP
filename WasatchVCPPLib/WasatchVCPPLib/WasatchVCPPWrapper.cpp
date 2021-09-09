@@ -147,6 +147,21 @@ int wp_get_wavelengths(int specIndex, double* wavelengths, int len)
     return WP_SUCCESS;
 }
 
+int wp_get_wavelengths_float(int specIndex, float* wavelengths, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    for (int i = 0; i < (int)spec->wavelengths.size(); i++)
+        if (i < len)
+            wavelengths[i] = (float) spec->wavelengths[i];
+        else
+            return WP_ERROR_INSUFFICIENT_STORAGE;
+
+    return WP_SUCCESS;
+}
+
 int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len)
 {
     auto spec = driver->getSpectrometer(specIndex);
@@ -159,6 +174,24 @@ int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len)
     for (int i = 0; i < (int)spec->wavenumbers.size(); i++)
         if (i < len)
             wavenumbers[i] = spec->wavenumbers[i];
+        else
+            return WP_ERROR_INSUFFICIENT_STORAGE;
+
+    return WP_SUCCESS;
+}
+
+int wp_get_wavenumbers_float(int specIndex, float* wavenumbers, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+
+    if (spec->eeprom.excitationNM <= 0)
+        return WP_ERROR_NO_LASER;
+
+    for (int i = 0; i < (int)spec->wavenumbers.size(); i++)
+        if (i < len)
+            wavenumbers[i] = (float) spec->wavenumbers[i];
         else
             return WP_ERROR_INSUFFICIENT_STORAGE;
 
@@ -192,6 +225,35 @@ int wp_get_spectrum(int specIndex, double* spectrum, int len)
 
     return WP_SUCCESS;
 }
+
+int wp_get_spectrum_float(int specIndex, float* spectrum, int len)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+    {
+        driver->logger.error("wp_get_spectrum: invalid specIndex %d", specIndex);
+        return WP_ERROR_INVALID_SPECTROMETER;
+    }
+
+    auto intensities = spec->getSpectrum();
+    if (intensities.empty())
+    {
+        driver->logger.error("wp_get_spectrum: error generating spectrum");
+        return WP_ERROR;
+    }
+
+    if (len < (int)intensities.size())
+    {
+        driver->logger.error("wp_get_spectrum: insufficient storage");
+        return WP_ERROR_INSUFFICIENT_STORAGE;
+    }
+
+    for (int i = 0; i < (int)intensities.size(); i++)
+        spectrum[i] = (float) intensities[i];
+
+    return WP_SUCCESS;
+}
+
 
 int wp_get_eeprom_field_count(int specIndex)
 {

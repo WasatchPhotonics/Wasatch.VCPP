@@ -1,5 +1,9 @@
 # Changelog
 
+- 2021-09-09 1.0.14
+    - added Windows DLL version resource
+    - added float32 versions of wavelength, wavenumber and getSpectrum functions
+    - moved demo to float32 versions for testing
 - 2021-09-09 1.0.13
     - fixed debug log message
     - clamped startup temperature to min/max range

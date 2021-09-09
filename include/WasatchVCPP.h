@@ -273,6 +273,15 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_wavelengths(int specIndex, double* wavelengths, int len);
 
+    //! Get the selected spectrometer's calibrated wavelength x-axis in nanometers
+    //! as float.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param wavelengths (Output) pre-allocated buffer of 'len' floats
+    //! @param len (Input) allocated length of 'wavelengths' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_wavelengths_float(int specIndex, float* wavelengths, int len);
+
     //! Get the selected spectrometer's calibrated x-axis in wavenumbers (1/cm)
     //!
     //! @param specIndex (Input) which spectrometer
@@ -280,6 +289,15 @@ extern "C"
     //! @param len (Input) allocated length of 'wavenumbers' (should match 'pixels')
     //! @returns WP_SUCCESS or non-zero on error (e.g., no configured excitation)
     DLL_API int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len);
+
+    //! Get the selected spectrometer's calibrated x-axis in wavenumbers (1/cm)
+    //! as float.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param wavenumbers (Output) pre-allocated buffer of 'len' floats
+    //! @param len (Input) allocated length of 'wavenumbers' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error (e.g., no configured excitation)
+    DLL_API int wp_get_wavenumbers_float(int specIndex, float* wavenumbers, int len);
 
     ////////////////////////////////////////////////////////////////////////////
     // Acquisition
@@ -295,6 +313,17 @@ extern "C"
     //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_spectrum(int specIndex, double* spectrum, int len);
+
+    //! Read one spectrum from the selected spectrometer as float
+    //!
+    //! This sends an "ACQUIRE" command, waits for "integration time"
+    //! to pass, then performs a blocking read from the bulk endpoint.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param spectrum (Output) pre-allocated buffer of 'len' floats
+    //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_spectrum_float(int specIndex, float* spectrum, int len);
 
     //! If an acquisition is currently in progress, cancel it.
     //!
