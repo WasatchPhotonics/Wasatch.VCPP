@@ -1,5 +1,7 @@
 # Changelog
 
+- 2021-10-13 1.0.15
+    - added <algorithm> to WasatchVCPPWrapper to resolve VS2017 issue
 - 2021-09-09 1.0.14
     - added Windows DLL version resource
     - added float32 versions of wavelength, wavenumber and getSpectrum functions

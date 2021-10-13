@@ -17,6 +17,7 @@
 #include "pch.h"
 #include "WasatchVCPP.h"
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <map>
