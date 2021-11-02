@@ -53,6 +53,8 @@ WasatchVCPP::Proxy::Driver driver; // example
 WasatchVCPP::Proxy::Spectrometer* spectrometer = nullptr; // example
 std::ofstream outfile;
 
+int maxSpectra = 1;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,6 +131,12 @@ void doSetIntegrationTime()
     log("integration time -> %dms", ms);
 }
 
+void doSetMaxSpectra()
+{
+    maxSpectra = atoi(InputBox("Enter max spectra").c_str());
+    log("maxSpectra -> %d", maxSpectra);
+}
+
 void doSetLaserEnable()
 {
     if (spectrometer == nullptr)
@@ -146,6 +154,7 @@ void doGetDetectorTemperatureDegC()
     auto degC = spectrometer->getDetectorTemperatureDegC(); // example
     log("detector temperature -> %.2f degC", degC);
 }
+
 void doReadEEPROM()
 {
     if (spectrometer == nullptr)
@@ -162,22 +171,29 @@ void doAcquire()
     if (spectrometer == nullptr)
         return;
 
-    vector<double> spectrum = spectrometer->getSpectrum(); // example
-    if (spectrum.empty())
+    for (int i = 0; i < maxSpectra; i++)
     {
-        log("doAcquire: ERROR: failed to read spectrum");
-        return;
-    }
+        vector<double> spectrum = spectrometer->getSpectrum(); // example
+        if (spectrum.empty())
+        {
+            log("doAcquire: ERROR: failed to read spectrum");
+            return;
+        }
 
-    log("doAcquire: read spectrum of %u pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
-        spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
+        if (maxSpectra < 100 || ((i + 1) % 10 == 0))
+        {
+            log("doAcquire: read spectrum %d of %d: %u pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
+                i + 1, maxSpectra, spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
+            // @todo redraw window on long loops
+        }
 
-    // if we've opened an outfile, append the spectrum (row-ordered)
-    if (outfile.is_open())
-    {
-        for (auto y : spectrum)
-            outfile << y << ", ";
-        outfile << "\n";
+        // if we've opened an outfile, append the spectrum (row-ordered)
+        if (outfile.is_open())
+        {
+            for (auto y : spectrum)
+                outfile << y << ", ";
+            outfile << "\n";
+        }
     }
 }
 
@@ -311,6 +327,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         break;
 
                     // add new menu options here
+                    // (physically add them to the menu by double-clicking 
+                    //  WasatchVCPPDemo.rc -> Menu -> IDC_WASATCHVCPPDEMO)
                     case ID_SPECTROMETER_CONNECT: 
                         doConnect(); 
                         break;
@@ -331,6 +349,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         break;
                     case ID_SPECTROMETER_SETOUTFILE:
                         doSetOutfile();
+                        break;
+                    case ID_SPECTROMETER_MAXSPECTRA:
+                        doSetMaxSpectra();
                         break;
 
                     default: 
