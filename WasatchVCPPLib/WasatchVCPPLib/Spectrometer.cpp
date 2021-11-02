@@ -539,7 +539,7 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
 
     // what is the size of the individual reads we're going to perform (allowing
     // interruptions between, but not during each)?
-    long periodMS = min(allocatedMS, (long)maxTimeoutMS);
+    long periodMS = allocatedMS; // min(allocatedMS, (long)maxTimeoutMS);
 
     // what is the WALLCLOCK elapsed time we've spent so far on this venture?
     long elapsedMS = 0;

@@ -1,5 +1,9 @@
 # Changelog
 
+- 2021-11-02 1.0.18
+    - stopped limiting USB reads to 1sec while "polling" for cancellations
+- 2021-11-02 1.0.17
+    - added maxSpectra to Visual C++ Demo GUI
 - 2021-11-02 1.0.16
     - added --integration-time-ms, --laser to demo.cpp
 - 2021-10-13 1.0.15
