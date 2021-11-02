@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include <string>
 #include <map>
 
@@ -25,10 +26,12 @@ const int STR_LEN = 33;
 ////////////////////////////////////////////////////////////////////////////////
 
 int logLevel = WP_LOG_LEVEL_DEBUG;
+int integrationTimeMS = 100;
 int count = 5;
 int pixels;
 char serialNumber[STR_LEN];
 char model[STR_LEN];
+bool testLaser = false;
 map<string, string> eeprom;
 vector<float> wavelengths;
 
@@ -44,6 +47,14 @@ void pause(const string& msg)
     printf("\n%s", msg.c_str());
     string junk;
     std::getline(std::cin, junk);
+}
+
+string timestamp()
+{
+    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    char buf[100] = {0};
+    std::strftime(buf, sizeof(buf), "%F %T", std::localtime(&now));
+    return buf;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +126,8 @@ bool init()
         printf("  %30s: %s\n", name.c_str(), value.c_str());
     }
 
+    wp_set_integration_time_ms(specIndex, integrationTimeMS);
+
     return true;
 }
 
@@ -129,7 +142,8 @@ void demo()
         float spectrum[pixels];
         if (WP_SUCCESS == wp_get_spectrum_float(specIndex, spectrum, pixels))
         {
-            printf("Spectrum %3d of %3d:", i + 1, count);
+            auto now = timestamp();
+            printf("%s Spectrum %5d of %5d:", now.c_str(), i + 1, count);
             for (int i = 0; i < 10; i++)
                 printf(" %.2f%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
         }
@@ -144,30 +158,33 @@ void demo()
     // test result codes in the event of communication failures
     ////////////////////////////////////////////////////////////////////////////
 
-    pause("Press <return> to enable laser...");
-    auto result = wp_set_laser_enable(specIndex, 1);
-    if (WP_SUCCESS == result)
-        printf("successfully enabled laser\n");
-    else
-        printf("ERROR: unable to enable laser (%d)\n", result);
-    auto degC = wp_get_detector_temperature_deg_c(specIndex);
-    printf("detector temperature %.2f degC\n", degC);
+    if (testLaser)
+    {
+        pause("Press <return> to enable laser...");
+        auto result = wp_set_laser_enable(specIndex, 1);
+        if (WP_SUCCESS == result)
+            printf("successfully enabled laser\n");
+        else
+            printf("ERROR: unable to enable laser (%d)\n", result);
+        auto degC = wp_get_detector_temperature_deg_c(specIndex);
+        printf("detector temperature %.2f degC\n", degC);
 
-    printf("\n<<< Disconnect spectrometer to test comms >>>\n");
+        printf("\n<<< Disconnect spectrometer to test comms >>>\n");
 
-    pause("Press <return> to disable laser...");
-    result = wp_set_laser_enable(specIndex, 0);
-    if (WP_SUCCESS == result)
-        printf("successfully disabled laser\n");
-    else
-        printf("ERROR: unable to disable laser (%d)\n", result);
-    degC = wp_get_detector_temperature_deg_c(specIndex);
-    printf("detector temperature %.2f degC\n", degC);
+        pause("Press <return> to disable laser...");
+        result = wp_set_laser_enable(specIndex, 0);
+        if (WP_SUCCESS == result)
+            printf("successfully disabled laser\n");
+        else
+            printf("ERROR: unable to disable laser (%d)\n", result);
+        degC = wp_get_detector_temperature_deg_c(specIndex);
+        printf("detector temperature %.2f degC\n", degC);
+    }
 }
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--count n] [--log-level DEBUG|INFO|ERROR|NEVER]\n");
+    printf("Usage: $ demo-linux [--integration-time-ms n] [--count n] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER]\n");
     exit(1);
 }
 
@@ -179,6 +196,17 @@ void parseArgs(int argc, char** argv)
         {
             if (i + 1 < argc)
                 count = atoi(argv[++i]); 
+            else
+                usage();
+        }
+        else if (!strcmp(argv[i], "--laser"))
+        {
+            testLaser = true;
+        }
+        else if (!strcmp(argv[i], "--integration-time-ms"))
+        {
+            if (i + 1 < argc)
+                integrationTimeMS = atoi(argv[++i]); 
             else
                 usage();
         }
