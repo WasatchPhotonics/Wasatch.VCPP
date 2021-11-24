@@ -435,6 +435,18 @@ int wp_set_laser_enable(int specIndex, int value)
     return WP_SUCCESS;
 }
 
+int wp_set_laser_power_perc(int specIndex, float percent)
+{
+    auto spec = driver->getSpectrometer(specIndex);
+    if (spec == nullptr)
+        return WP_ERROR_INVALID_SPECTROMETER;
+    
+    if (!spec->setLaserPowerPerc(percent))
+        return WP_ERROR;
+
+    return WP_SUCCESS;
+}
+
 int wp_set_detector_gain(int specIndex, float value)
 {
     auto spec = driver->getSpectrometer(specIndex);

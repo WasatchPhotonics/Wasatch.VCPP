@@ -192,6 +192,17 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
     return bytesWritten >= 0;
 }
 
+bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
+{
+    if (!eeprom.hasLaser)
+    {
+        logger.error("Unable to control laser. EEPROM reports no laser.");
+        return false
+    }
+    float value = float(max(0, min(100, percent)));
+
+}
+
 bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
 {
     auto bytesWritten = sendCmd(0xbe, flag ? 1 : 0);

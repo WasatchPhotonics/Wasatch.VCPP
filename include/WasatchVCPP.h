@@ -393,6 +393,18 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_laser_enable(int specIndex, int value);
 
+    //! Sets laser power as a percentage of max power.
+    //!
+    //! @param percent (Input) percent of max power
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_laser_power_perc(int specIndex, float percent)
+
+    //! Sets laser power as a mW value.
+    //!
+    //! @param power (Input) mW power to set laser 
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_laser_power_mW(int specIndex, float power)
+
     //! Set detector gain.
     //!
     //! This should not be done casually by the user; detector gain is normally

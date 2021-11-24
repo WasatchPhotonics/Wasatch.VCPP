@@ -85,6 +85,8 @@ namespace WasatchVCPP
             std::string fpgaVersion;
             int integrationTimeMS = 1;
             bool laserEnabled = false;
+            float laserPowerMw = 0.0;
+            float laserPowerPerc = 0.0;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
 
             // opcodes
@@ -97,6 +99,7 @@ namespace WasatchVCPP
             bool setDetectorTECEnable(bool flag);
             bool setDetectorTECSetpointDegC(int value);
             bool setHighGainModeEnable(bool flag);
+            bool setLaserPowerPerc(float percent);
             std::string getFirmwareVersion();
             std::string getFPGAVersion();
             int32_t getDetectorTemperatureRaw(); 
