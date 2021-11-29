@@ -158,7 +158,7 @@ void doFullLaserPower()
 {
     if (spectrometer == nullptr)
         return;
-    //spectrometer->setLaserPowerPercImmediate(50.0);
+    spectrometer->setLaserPowerPercImmediate(100.0);
 }
 
 
