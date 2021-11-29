@@ -201,12 +201,12 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
     }
     float value = float(max(0, min(100, percent)));
     laserPowerPerc = value;
-    loger.debug("set_laser_power_perc: range (0, 100), requested %.2f, applying %.2f", percent, value);
+    logger.debug("set_laser_power_perc: range (0, 100), requested %.2f, applying %.2f", percent, value);
 
 	return setLaserPowerPercImmediate(value);
 }
 
-bool setLaserPowerPercImmediate(float value) {
+bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
 
     // laser can flicker if we're on the wrong ADC?
 
@@ -216,7 +216,7 @@ bool setLaserPowerPercImmediate(float value) {
     if (value >= 100) {
         uint16_t lsw;
         uint16_t msw;
-        uint16_t[8] buf;
+        uint16_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
         if (laserPowerRequireModulation) {
             logger.debug("100% power requested, yet laser modulation required, so not disabling modulation");
@@ -227,12 +227,11 @@ bool setLaserPowerPercImmediate(float value) {
             logger.debug("next_applied_laser_power = 100.0");
             lsw = 0; // disabled;
             msw = 0;
-            buf = [0, 0, 0, 0, 0, 0, 0, 0];
-            return setModEnable(False);
+            return setModEnable(false);
         }
     }
     int period_us = laserPowerHighResolution ? 1000 : 100;
-    int width_us = int(round(1.0 * value * period_us / 100.0, 0)); // note that value is in range(0, 100) not (0, 1)
+    int width_us = int((1.0 * value * period_us / 100.0, 0)); // note that value is in range(0, 100) not (0, 1)
 
     // pulse width can't be longer than period, or shorter than 1us
     width_us = max(1, min(width_us, period_us));
@@ -241,21 +240,21 @@ bool setLaserPowerPercImmediate(float value) {
     // because this implementation is hard - coded to either 100 or 1000us
     // (both fitting well within uint16)
     bool result = setModPeriodus(period_us);
-    result = setModPeriodus(period_us)
+    result = setModPeriodus(period_us);
 	if (!result) {
-        logger.critical("Hardware Failure to send laser mod. pulse period");
+        logger.error("Hardware Failure to send laser mod. pulse period");
         return false;
 	}
     // Set the pulse width to the 0 - 100 percentage of power
-    result = setModWidthus(width_us)
+    result = setModWidthus(width_us);
 	if (!result) {
-        logger.critical("Hardware Failure to send pulse width");
+        logger.error("Hardware Failure to send pulse width");
         return false;
 	}
     // Enable modulation
-    result = setModEnable(true)
+    result = setModEnable(true);
 	if (!result) {
-		logger.critical("Hardware Failure to send laser modulation");
+		logger.error("Hardware Failure to send laser modulation");
 		return false;
 	}
     logger.debug("Laser power set to: %d", value);
@@ -268,71 +267,47 @@ bool setLaserPowerPercImmediate(float value) {
 
 bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
     modEnabled = flag;
-    int value = 1 if flag else 0;
-    return self.sendCmd(0xbd, value);
+    int value = flag ? 1 : 0;
+    return sendCmd(0xbd, value);
 }
 
 bool WasatchVCPP::Spectrometer::getModEnabled(void){
-    bool flag = 0 != getCmd(0xe3, 1);
-	modEnabled = flag;
-	return flag;
+    //bool flag = 0 != getCmd(0xe3, 1);
+	//modEnabled = flag;
+	//return flag;
+    return true;
 }
 
-bool WasatchVCPP::Spectrometer::setModPeriodus(float us) {
+bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
     modPeriodus = us;
-    uint16_t bit_buf[3];
-    &bit_buf = to40bit(us);
+    uint16_t lsw;
+    uint16_t msw;
+    uint16_t* bit_buf;
+    bit_buf = to40bit(us);
     lsw = bit_buf[0];
     msw = bit_buf[1];
-    uint8_t buf[8] = [bit_buf[2], 0, 0, 0, 0, 0, 0, 0];
-    return self.sendCmd(0xc7, lsw, msw, buf);
-}
-
-bool WasatchVCPP::Spectrometer::getModPeriodus(void) {
-    value = getCmd(0xcb, 5);
-    modPeriodus = value;
-    return value;
+    uint8_t buf[8] = { bit_buf[2], 0, 0, 0, 0, 0, 0, 0 };
+    return sendCmd(0xc7, lsw, msw, buf);
 }
 
 bool  WasatchVCPP::Spectrometer::setModWidthus(float us) {
     modWidthus = us;
-    uint16_t bit_buf[3];
-    &bit_buf = to40bit(us);
-    lsw = bit_buf[0];
-    msw = bit_buf[1];
-    uint8_t buf[8] = [bit_buf[2], 0, 0, 0, 0, 0, 0, 0];
+    uint16_t* bit_buf;
+    bit_buf = to40bit(us);
+    uint16_t lsw = bit_buf[0];
+    uint16_t msw = bit_buf[1];
+    uint8_t buf[8] = {bit_buf[2], 0, 0, 0, 0, 0, 0, 0};
     return sendCmd(0xdb, lsw, msw, buf);
 }
 
-bool  WasatchVCPP::Spectrometer::getModWidthus(void) {
-    value = self.getCmd(0xdc, 5);
-    modWidthus = value;
-    return value;
-}
-
-bool WasatchVCPP::Spectrometer::getLaserPowerRampingEnabled(void) {
-    return laserPowerRampingEnabled;
-}
-
-// this is a synonym for _set_laser_enable_immediate(), but without side - effects
-bool WasatchVCPP::Spectrometer::setStrobeEnable(bool flag) {
-    value = 1 if flag else 0;
-    return self.sendCmd(0xbe, value);
-}
-
-// a literal pass - through to get_laser_enabled()
-bool WasatchVCPP::Spectrometer::getStrobeEnabled(void) {
-    return getLaserEnabled();
-}
-
-uint16_t* WasatchVCPP::Spectrometer::to40bit(float val) {
-    uint16_t ret_buf[3] = [0, 0, 0];
-    lsw = val & 0xffff;
-    msw = (val >> 16) & 0xffff;
+uint16_t* WasatchVCPP::Spectrometer::to40bit(int val) {
+    uint16_t ret_buf[3] = {0, 0, 0};
+    uint16_t lsw = val & 0xffff;
+    uint16_t msw = (val >> 16) & 0xffff;
     ret_buf[0] = lsw;
     ret_buf[1] = msw;
     ret_buf[2] = val >> 32 & 0xff;
-    return &ret_buf;
+    return ret_buf;
 }
 
 bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
