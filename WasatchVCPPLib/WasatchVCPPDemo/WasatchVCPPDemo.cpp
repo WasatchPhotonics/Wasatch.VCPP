@@ -147,6 +147,21 @@ void doSetLaserEnable()
     log("laser -> %s", enabled ? "on" : "off");
 }
 
+void doSetLaserPower()
+{
+    if (spectrometer == nullptr)
+        return;
+    spectrometer->setLaserPowerPercImmediate(50.0);
+}
+
+void doFullLaserPower()
+{
+    if (spectrometer == nullptr)
+        return;
+    //spectrometer->setLaserPowerPercImmediate(50.0);
+}
+
+
 void doGetDetectorTemperatureDegC()
 {
     if (spectrometer == nullptr)
@@ -317,6 +332,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
             {
                 int wmId = LOWORD(wParam);
+                log("calling message with id %d", wmId);
                 switch (wmId)
                 {
                     case IDM_ABOUT: 
@@ -353,7 +369,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     case ID_SPECTROMETER_MAXSPECTRA:
                         doSetMaxSpectra();
                         break;
-
+                    case ID_SPECTROMETER_SETLASERPOWER:
+                        doSetLaserPower();
+                        break;
+                    case ID_SPECTROMETER_LASERFULLPOWER:
+                        doFullLaserPower();
+                        break;
                     default: 
                         return DefWindowProc(hWnd, message, wParam, lParam);
                 }

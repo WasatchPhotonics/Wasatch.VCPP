@@ -209,7 +209,7 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
 bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
 
     // laser can flicker if we're on the wrong ADC?
-
+    logger.debug("Setting laser power to %f", value);
     // don't want anything weird when passing over USB
     value = float(max(0, min(100, value)));
     // If full power(and allowed), disable modulationand exit
@@ -239,6 +239,7 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
     // Change the pulse period.Note that we're not parsing into 40-bit
     // because this implementation is hard - coded to either 100 or 1000us
     // (both fitting well within uint16)
+    logger.debug("setting mod period");
     bool result = setModPeriodus(period_us);
     result = setModPeriodus(period_us);
 	if (!result) {
@@ -246,12 +247,14 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
         return false;
 	}
     // Set the pulse width to the 0 - 100 percentage of power
+    logger.debug("setting mod width");
     result = setModWidthus(width_us);
 	if (!result) {
         logger.error("Hardware Failure to send pulse width");
         return false;
 	}
     // Enable modulation
+    logger.debug("enabling mod");
     result = setModEnable(true);
 	if (!result) {
 		logger.error("Hardware Failure to send laser modulation");

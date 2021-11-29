@@ -33,6 +33,7 @@ char serialNumber[STR_LEN];
 char model[STR_LEN];
 bool testLaser = false;
 map<string, string> eeprom;
+<<<<<<< Updated upstream
 vector<float> wavelengths;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,6 +57,11 @@ string timestamp()
     std::strftime(buf, sizeof(buf), "%F %T", std::localtime(&now));
     return buf;
 }
+=======
+vector<double> wavelengths;
+bool ramanModeEnabled = false;
+int measurement_integration_time;
+>>>>>>> Stashed changes
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functional Implementation
@@ -93,12 +99,81 @@ void loadEEPROM()
     free(values);
 }
 
+<<<<<<< Updated upstream
+=======
+int writeToEEPROM()
+{
+    unsigned char buf[64];
+    string writeString;
+    wp_get_eeprom_page(specIndex, 4, buf, 64);
+    printf("The value at page 4 is %s\n", buf);
+    std::stringstream s;
+    s << "Test string. ";
+    s << time(NULL);
+    writeString = s.str();
+    strcpy((char*)buf, writeString.c_str());
+    printf("wrote string to buffer, buffer is now %s\n", buf);
+    int i = wp_write_eeprom_page(specIndex, 4, buf, 64);
+    strcpy((char*)buf, "");
+    printf("wrote the page to the eeprom and buffer now has value [%s]\n", buf);
+    wp_get_eeprom_page(specIndex, 4, buf, 64);
+    printf("The value at page 4 after edit is %s and the write operation was %d\n", buf, i);
+    return 0;
+}
+
+void performRamanReading() 
+{
+	double dark_spectrum[pixels];
+	double corrected_spectrum[pixels];
+	double initial_spectrum[pixels];
+	int i;
+    wp_set_integration_time_ms(specIndex,measurement_integration_time);
+	string stringSpec;
+	if (WP_SUCCESS == wp_get_spectrum(specIndex, dark_spectrum, pixels))
+	{
+		printf("Obtained a dark spectra\n");
+	}
+	else {
+		printf("Did not obtain a dark spectra\n");
+	}
+	printf("Took dark spectrum.\n\n");
+	printf("About to enable laser\n");
+	wp_set_laser_enable(specIndex, 1);
+	usleep(10000000);
+	usleep(1000);
+	wp_get_spectrum(specIndex, initial_spectrum, pixels);
+	wp_set_laser_enable(specIndex, 0);
+	usleep(1000);
+	for (i = 0; i < pixels; i++)
+	{
+		initial_spectrum[i] = initial_spectrum[i] - dark_spectrum[i];
+        corrected_spectrum[i] = initial_spectrum[i];
+	}
+	if (wp_has_srm_calibration(specIndex))
+	{
+		printf("srm calibration present\n");
+		int ROILen;
+		ROILen = wp_get_vignetted_spectrum_length(specIndex);
+		double factors[ROILen];
+		wp_get_raman_intensity_factors(specIndex, factors, ROILen);
+		wp_apply_raman_intensity_factors(specIndex, corrected_spectrum, pixels, factors, ROILen, 0, pixels);
+	}
+	printf("Took corrected_spectrum\n");
+	printf("dark,initial,corrected\n");
+	for (i = 0; i < pixels; i++)
+	{
+		printf("%.2lf,%.2lf,%.2lf\n ", dark_spectrum[i],initial_spectrum[i],corrected_spectrum[i]);
+	}
+	printf(" ... \n");
+}
+
+>>>>>>> Stashed changes
 bool init()
 {
     char libraryVersion[STR_LEN];
     wp_get_library_version(libraryVersion, STR_LEN);
     printf("Wasatch.VCPP Demo (%s)\n", libraryVersion);
-
+    wp_set_integration_time_ms(specIndex,measurement_integration_time);
     wp_set_log_level(logLevel);
     const char* logfile = "demo.log";
     wp_set_logfile_path(logfile, strlen(logfile));
@@ -195,7 +270,15 @@ void parseArgs(int argc, char** argv)
         if (!strcmp(argv[i], "--count"))
         {
             if (i + 1 < argc)
+<<<<<<< Updated upstream
                 count = atoi(argv[++i]); 
+=======
+            {
+                int ms = atoi(argv[++i]);
+                measurement_integration_time = ms;
+                
+            }
+>>>>>>> Stashed changes
             else
                 usage();
         }

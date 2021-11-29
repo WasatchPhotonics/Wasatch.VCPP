@@ -397,13 +397,13 @@ extern "C"
     //!
     //! @param percent (Input) percent of max power
     //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_set_laser_power_perc(int specIndex, float percent)
+    DLL_API int wp_set_laser_power_perc(int specIndex, float percent);
 
-    //! Sets laser power as a mW value.
-    //!
-    //! @param power (Input) mW power to set laser 
-    //! @returns WP_SUCCESS or non-zero on error
-    DLL_API int wp_set_laser_power_mW(int specIndex, float power)
+	//! Sets laser power as a mW value.
+	//!
+	//! @param power (Input) mW power to set laser 
+	//! @returns WP_SUCCESS or non-zero on error
+	DLL_API int wp_set_laser_power_mW(int specIndex, float power);
 
     //! Set detector gain.
     //!
@@ -786,6 +786,11 @@ namespace WasatchVCPP
                 //! @see wp_set_detector_gain
                 bool setDetectorGain(float value)
                 { return WP_SUCCESS == wp_set_detector_gain(specIndex, value); }
+
+                bool setLaserPowerPercImmediate(float value)
+                {
+                    return WP_SUCCESS == wp_set_laser_power_perc(specIndex, value);
+                }
 
                 //! @see wp_set_detector_gain_odd
                 bool setDetectorGainOdd(float value)

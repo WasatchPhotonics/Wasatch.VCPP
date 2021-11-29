@@ -437,6 +437,7 @@ int wp_set_laser_enable(int specIndex, int value)
 
 int wp_set_laser_power_perc(int specIndex, float percent)
 {
+    driver->logger.debug("API calling to set laser power perc");
     auto spec = driver->getSpectrometer(specIndex);
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
