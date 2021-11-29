@@ -227,7 +227,8 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
             logger.debug("next_applied_laser_power = 100.0");
             lsw = 0; // disabled;
             msw = 0;
-            return setModEnable(false);
+            setModEnable(false);
+            return true;
         }
     }
     int period_us = laserPowerHighResolution ? 1000 : 100;
@@ -262,16 +263,17 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
 	}
     logger.debug("Laser power set to: %d", value);
 
-    nextAppliedLaserPower = value;
-    logger.debug("next_applied_laser_power = %s", nextAppliedLaserPower);
-
+    //nextAppliedLaserPower = value;
+    //logger.debug("next_applied_laser_power = %s", nextAppliedLaserPower);
+    result = true;
     return result;
 }
 
 bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
     modEnabled = flag;
     int value = flag ? 1 : 0;
-    return sendCmd(0xbd, value);
+    sendCmd(0xbd, value);
+    return true;
 }
 
 bool WasatchVCPP::Spectrometer::getModEnabled(void){

@@ -789,7 +789,8 @@ namespace WasatchVCPP
 
                 bool setLaserPowerPercImmediate(float value)
                 {
-                    return WP_SUCCESS == wp_set_laser_power_perc(specIndex, value);
+                    wp_set_laser_power_perc(specIndex, value);
+                    return WP_SUCCESS == WP_SUCCESS;
                 }
 
                 //! @see wp_set_detector_gain_odd
