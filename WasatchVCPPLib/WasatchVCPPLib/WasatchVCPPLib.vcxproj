@@ -214,6 +214,7 @@ copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64</Command>
     <ClCompile Include="WasatchVCPPWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -197,10 +197,111 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
     if (!eeprom.hasLaser)
     {
         logger.error("Unable to control laser. EEPROM reports no laser.");
-        return false
+        return false;
     }
     float value = float(max(0, min(100, percent)));
+    laserPowerPerc = value;
+    loger.debug("set_laser_power_perc: range (0, 100), requested %.2f, applying %.2f", percent, value);
 
+	if (getLaserPowerRampingEnabled() and laserEnabled)
+	{
+        nextAppliedLaserPower = value;
+        return setLaserEnableRamp();
+	}
+    else
+    {
+        return setLaserPowerPercImmediate(value);
+    }
+}
+
+bool WasatchVCPP::Spectrometer::setLaserEnableRamp(void) {
+    string prefix = "set_laser_enable_ramp"
+
+	float currentLaserSetpoint = lastAppliedLaserPower;
+	float targetLaserSetpoint = nextAppliedLaserPower;
+	logger.debug("%s: ramping from %s to %s", prefix, currentLaserSetpoint, targetLaserSetpoint);
+
+	auto timeStart = std::chrono::high_resolution_clock::now();
+
+    //set modulation period to 100us
+	setModPeriodus(100);
+
+    int width = int(round(current_laser_setpoint));
+    int buf[8] = [0, 0, 0, 0, 0, 0, 0, 0];
+
+    //re - apply current power(possibly redundant, but also enabling laser);
+    setModEnable(true);
+    setModWidthus(width);
+    setStrobeEnable(true);
+}
+
+bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
+    modEnabled = flag;
+    int value = 1 if flag else 0;
+    return self.sendCmd(0xbd, value);
+}
+
+bool WasatchVCPP::Spectrometer::getModEnabled(void){
+    bool flag = 0 != getCmd(0xe3, 1);
+	modEnabled = flag;
+	return flag;
+}
+
+bool WasatchVCPP::Spectrometer::setModPeriodus(float us) {
+    modPeriodus = us;
+    uint16_t bit_buf[10];
+    &bit_buf = to40bit(us);
+    lsw = bit_buf[0];
+    msw = bit_buf[1];
+    uint8_t buf[8] = [bit_buf[2], 0, 0, 0, 0, 0, 0, 0];
+    return self.send_code(0xc7, lsw, msw, buf);
+}
+
+bool WasatchVCPP::Spectrometer::getModPeriodus(void) {
+    value = getCmd(0xcb, 5);
+    modPeriodus = value;
+    return value;
+}
+
+bool  WasatchVCPP::Spectrometer::setModWidthus(float us) {
+    modWidthus = us;
+    uint16_t bit_buf[10];
+    &bit_buf = to40bit(us);
+    lsw = bit_buf[0];
+    msw = bit_buf[1];
+    uint8_t buf[8] = [bit_buf[2], 0, 0, 0, 0, 0, 0, 0];
+    return sendCmd(0xdb, lsw, msw, buf);
+}
+
+bool  WasatchVCPP::Spectrometer::getModWidthus(void) {
+    value = self.getCmd(0xdc, 5);
+    modWidthus = value;
+    return value;
+}
+
+bool WasatchVCPP::Spectrometer::getLaserPowerRampingEnabled(void) {
+    return laserPowerRampingEnabled;
+}
+
+// this is a synonym for _set_laser_enable_immediate(), but without side - effects
+bool WasatchVCPP::Spectrometer::setStrobeEnable(bool flag) {
+    value = 1 if flag else 0;
+    return self.sendCmd(0xbe, value);
+}
+
+// a literal pass - through to get_laser_enabled()
+bool WasatchVCPP::Spectrometer::getStrobeEnabled(void) {
+    return getLaserEnabled();
+}
+
+uint16_t* WasatchVCPP::Spectrometer::to40bit(float val) {
+    uint16_t ret_buf[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    lsw = val & 0xffff;
+    msw = (val >> 16) & 0xffff;
+    ret_buf[0] = lsw;
+    ret_buf[1] = msw;
+    ret_buf[2] = val >> 32 & 0xff;
+    return &ret_buf;
 }
 
 bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)

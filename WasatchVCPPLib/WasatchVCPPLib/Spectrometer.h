@@ -85,8 +85,14 @@ namespace WasatchVCPP
             std::string fpgaVersion;
             int integrationTimeMS = 1;
             bool laserEnabled = false;
+            bool laserPowerRampingEnabled = false;
+            bool modEnabled = false;
             float laserPowerMw = 0.0;
+            float modWidthus = 0.0;
+            float modPeriodus = 0.0;
             float laserPowerPerc = 0.0;
+            float lastAppliedLaserPower = 0.0;
+            float nextAppliedLaserPower = 0.0;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
 
             // opcodes
