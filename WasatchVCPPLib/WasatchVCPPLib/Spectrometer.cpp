@@ -214,19 +214,56 @@ bool setLaserPowerPercImmediate(float value) {
     value = float(max(0, min(100, value)));
     // If full power(and allowed), disable modulationand exit
     if (value >= 100) {
+        uint16_t lsw;
+        uint16_t msw;
+        uint16_t[8] buf;
+
         if (laserPowerRequireModulation) {
-            log.debug("100% power requested, yet laser modulation required, so not disabling modulation");
+            logger.debug("100% power requested, yet laser modulation required, so not disabling modulation");
         }
         else {
-            log.debug("Turning off laser modulation (full power)");
-            self.next_applied_laser_power = 100.0;
-            log.debug("next_applied_laser_power = 100.0");
-            lsw = 0 // disabled;
+            logger.debug("Turning off laser modulation (full power)");
+            nextAppliedLaserPower = 100.0;
+            logger.debug("next_applied_laser_power = 100.0");
+            lsw = 0; // disabled;
             msw = 0;
             buf = [0, 0, 0, 0, 0, 0, 0, 0];
             return setModEnable(False);
         }
     }
+    int period_us = laserPowerHighResolution ? 1000 : 100;
+    int width_us = int(round(1.0 * value * period_us / 100.0, 0)); // note that value is in range(0, 100) not (0, 1)
+
+    // pulse width can't be longer than period, or shorter than 1us
+    width_us = max(1, min(width_us, period_us));
+
+    // Change the pulse period.Note that we're not parsing into 40-bit
+    // because this implementation is hard - coded to either 100 or 1000us
+    // (both fitting well within uint16)
+    bool result = setModPeriodus(period_us);
+    result = setModPeriodus(period_us)
+	if (!result) {
+        logger.critical("Hardware Failure to send laser mod. pulse period");
+        return false;
+	}
+    // Set the pulse width to the 0 - 100 percentage of power
+    result = setModWidthus(width_us)
+	if (!result) {
+        logger.critical("Hardware Failure to send pulse width");
+        return false;
+	}
+    // Enable modulation
+    result = setModEnable(true)
+	if (!result) {
+		logger.critical("Hardware Failure to send laser modulation");
+		return false;
+	}
+    logger.debug("Laser power set to: %d", value);
+
+    nextAppliedLaserPower = value;
+    logger.debug("next_applied_laser_power = %s", nextAppliedLaserPower);
+
+    return result;
 }
 
 bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
