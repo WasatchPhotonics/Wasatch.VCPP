@@ -203,36 +203,30 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
     laserPowerPerc = value;
     loger.debug("set_laser_power_perc: range (0, 100), requested %.2f, applying %.2f", percent, value);
 
-	if (getLaserPowerRampingEnabled() and laserEnabled)
-	{
-        nextAppliedLaserPower = value;
-        return setLaserEnableRamp();
-	}
-    else
-    {
-        return setLaserPowerPercImmediate(value);
-    }
+	return setLaserPowerPercImmediate(value);
 }
 
-bool WasatchVCPP::Spectrometer::setLaserEnableRamp(void) {
-    string prefix = "set_laser_enable_ramp"
+bool setLaserPowerPercImmediate(float value) {
 
-	float currentLaserSetpoint = lastAppliedLaserPower;
-	float targetLaserSetpoint = nextAppliedLaserPower;
-	logger.debug("%s: ramping from %s to %s", prefix, currentLaserSetpoint, targetLaserSetpoint);
+    // laser can flicker if we're on the wrong ADC?
 
-	auto timeStart = std::chrono::high_resolution_clock::now();
-
-    //set modulation period to 100us
-	setModPeriodus(100);
-
-    int width = int(round(current_laser_setpoint));
-    int buf[8] = [0, 0, 0, 0, 0, 0, 0, 0];
-
-    //re - apply current power(possibly redundant, but also enabling laser);
-    setModEnable(true);
-    setModWidthus(width);
-    setStrobeEnable(true);
+    // don't want anything weird when passing over USB
+    value = float(max(0, min(100, value)));
+    // If full power(and allowed), disable modulationand exit
+    if (value >= 100) {
+        if (laserPowerRequireModulation) {
+            log.debug("100% power requested, yet laser modulation required, so not disabling modulation");
+        }
+        else {
+            log.debug("Turning off laser modulation (full power)");
+            self.next_applied_laser_power = 100.0;
+            log.debug("next_applied_laser_power = 100.0");
+            lsw = 0 // disabled;
+            msw = 0;
+            buf = [0, 0, 0, 0, 0, 0, 0, 0];
+            return setModEnable(False);
+        }
+    }
 }
 
 bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
@@ -249,12 +243,12 @@ bool WasatchVCPP::Spectrometer::getModEnabled(void){
 
 bool WasatchVCPP::Spectrometer::setModPeriodus(float us) {
     modPeriodus = us;
-    uint16_t bit_buf[10];
+    uint16_t bit_buf[3];
     &bit_buf = to40bit(us);
     lsw = bit_buf[0];
     msw = bit_buf[1];
     uint8_t buf[8] = [bit_buf[2], 0, 0, 0, 0, 0, 0, 0];
-    return self.send_code(0xc7, lsw, msw, buf);
+    return self.sendCmd(0xc7, lsw, msw, buf);
 }
 
 bool WasatchVCPP::Spectrometer::getModPeriodus(void) {
@@ -265,7 +259,7 @@ bool WasatchVCPP::Spectrometer::getModPeriodus(void) {
 
 bool  WasatchVCPP::Spectrometer::setModWidthus(float us) {
     modWidthus = us;
-    uint16_t bit_buf[10];
+    uint16_t bit_buf[3];
     &bit_buf = to40bit(us);
     lsw = bit_buf[0];
     msw = bit_buf[1];
@@ -295,7 +289,7 @@ bool WasatchVCPP::Spectrometer::getStrobeEnabled(void) {
 }
 
 uint16_t* WasatchVCPP::Spectrometer::to40bit(float val) {
-    uint16_t ret_buf[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    uint16_t ret_buf[3] = [0, 0, 0];
     lsw = val & 0xffff;
     msw = (val >> 16) & 0xffff;
     ret_buf[0] = lsw;
