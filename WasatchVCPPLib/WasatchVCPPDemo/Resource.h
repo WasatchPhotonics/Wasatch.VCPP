@@ -21,7 +21,7 @@
 #define ID_SPECTROMETER_GETDETECTORTEMPERATUREDEGC 32780
 #define ID_SPECTROMETER_MAXSPECTRA      32781
 #define ID_SPECTROMETER_SETLASERPOWER   32782
-#define ID_SPECTROMETER_LASERFULLPOWER  32783
+#define ID_SPECTROMETER_SETLASERPOWER_MW 32783
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -30,7 +30,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
-#define _APS_NEXT_COMMAND_VALUE         32784
+#define _APS_NEXT_COMMAND_VALUE         32785
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

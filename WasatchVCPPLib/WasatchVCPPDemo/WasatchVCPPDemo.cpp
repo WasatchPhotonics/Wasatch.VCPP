@@ -163,11 +163,20 @@ void doSetLaserPower()
     spectrometer->setLaserPowerPercImmediate(res_val);
 }
 
-void doFullLaserPower()
+void doLaserPowerMW()
 {
     if (spectrometer == nullptr)
         return;
-    spectrometer->setLaserPowerPercImmediate(100.0);
+    string response = InputBox("Input laser power in mW");
+    float res_val = 0.0;
+    try {
+        res_val = std::stof(response);
+    }
+    catch (const std::exception& e) {
+        log("Could not get float from input. Try again.");
+        return;
+    }
+    spectrometer->setLaserPowerPercImmediate(res_val);
 }
 
 
@@ -381,8 +390,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     case ID_SPECTROMETER_SETLASERPOWER:
                         doSetLaserPower();
                         break;
-                    case ID_SPECTROMETER_LASERFULLPOWER:
-                        doFullLaserPower();
+                    case ID_SPECTROMETER_SETLASERPOWER_MW:
+                        doLaserPowerMW();
                         break;
                     default: 
                         return DefWindowProc(hWnd, message, wParam, lParam);
