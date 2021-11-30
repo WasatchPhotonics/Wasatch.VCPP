@@ -242,7 +242,7 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
     // because this implementation is hard - coded to either 100 or 1000us
     // (both fitting well within uint16)
     logger.debug("setting mod period");
-    bool result = setModPeriodus(period_us);
+    bool result = setModPeriodus(int(period_us));
 	if (!result) {
         logger.error("Hardware Failure to send laser mod. pulse period");
         return false;
@@ -311,7 +311,6 @@ bool WasatchVCPP::Spectrometer::getModPeriodus(void) {
 }
 
 bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
-    modPeriodus = us;
     uint16_t lsw;
     uint16_t msw;
     uint16_t* bit_buf;
@@ -324,7 +323,6 @@ bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
 }
 
 bool  WasatchVCPP::Spectrometer::setModWidthus(int us) {
-    modWidthus = us;
     uint16_t* bit_buf;
     bit_buf = to40bit(int(us));
     uint16_t lsw = bit_buf[0];
