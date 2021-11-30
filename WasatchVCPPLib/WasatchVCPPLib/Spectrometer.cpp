@@ -269,6 +269,23 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
     return result;
 }
 
+bool WasatchVCPP::Spectrometer::setLaserPowermW(float mW_in) {
+    if (mW_in == NULL || !eeprom.hasLaserPowerCalibration()) {
+        logger.error("EEPROM doesn't have laser power calibration");
+        return false;
+    }
+    float mW = min(eeprom.maxLaserPowerMW, max(eeprom.minLaserPowerMW, mW_in));
+
+    float perc = eeprom.laserPowermWToPercent(mW);
+	logger.debug("set_laser_power_mW: range (%.2f, %.2f), requested %.2f, approved %.2f, percent = %.2f",
+            eeprom.minLaserPowerMW,
+            eeprom.maxLaserPowerMW,
+            mW_in,
+            mW,
+            perc);
+    return setLaserPowerPerc(perc);
+}
+
 bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
     modEnabled = flag;
     int value = flag ? 1 : 0;

@@ -173,6 +173,52 @@ void WasatchVCPP::EEPROM::stringify(const string& name, const string& value)
     logger.debug("EEPROM: %30s = %s", name.c_str(), value.c_str());
 }
 
+bool WasatchVCPP::EEPROM::hasLaserPowerCalibration(void) {
+    if (maxLaserPowerMW <= 0) {
+        return false;
+    }
+    int coeffsLength = sizeof(laserPowerCoeffs) / sizeof(laserPowerCoeffs[0]);
+    for (int i = 0; i < coeffsLength; i++) {
+        if (isnan(laserPowerCoeffs[i])) {
+            return false;
+        }
+    }
+    bool allDefault = true;
+    for (int i = 0; i < coeffsLength; i++) {
+        if (i == 0 && laserPowerCoeffs[i] != 1.0) {
+            allDefault = false;
+        }
+        else if (laserPowerCoeffs[i] != 0.0) {
+            allDefault = false;
+        }
+    }
+    if (allDefault) {
+        return false;
+    }
+    bool allConst = true;
+    for (int i = 0; i < coeffsLength; i++) {
+        if (laserPowerCoeffs[0] != laserPowerCoeffs[i]) {
+            allConst = false;
+        }
+    }
+    if (allConst) {
+        return false;
+    }
+    return true;
+}
+
+float WasatchVCPP::EEPROM::laserPowermWToPercent(float mW) {
+    if (!hasLaserPowerCalibration()) {
+        return 0.0;
+    }
+    float perc = laserPowerCoeffs[0] \
+        + laserPowerCoeffs[1] * mW \
+        + laserPowerCoeffs[2] * mW * mW \
+        + laserPowerCoeffs[3] * mW * mW * mW;
+
+    return perc;
+}
+
 void WasatchVCPP::EEPROM::stringifyAll()
 {
     stringified.clear();

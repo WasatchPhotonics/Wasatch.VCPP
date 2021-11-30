@@ -151,7 +151,16 @@ void doSetLaserPower()
 {
     if (spectrometer == nullptr)
         return;
-    spectrometer->setLaserPowerPercImmediate(50.0);
+    string response = InputBox("Enter laser percentage");
+    float res_val = 0.0;
+    try {
+        res_val = std::stof(response);
+    }
+    catch (const std::exception& e) {
+        log("Could not get float from input. Try again.");
+        return;
+    }
+    spectrometer->setLaserPowerPercImmediate(res_val);
 }
 
 void doFullLaserPower()
