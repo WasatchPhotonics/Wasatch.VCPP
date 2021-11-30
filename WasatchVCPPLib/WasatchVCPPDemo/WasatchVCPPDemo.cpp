@@ -350,7 +350,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_COMMAND:
             {
                 int wmId = LOWORD(wParam);
-                log("calling message with id %d", wmId);
                 switch (wmId)
                 {
                     case IDM_ABOUT: 
