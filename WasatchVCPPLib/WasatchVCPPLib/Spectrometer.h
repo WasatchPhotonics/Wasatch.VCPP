@@ -126,12 +126,12 @@ namespace WasatchVCPP
             bool setLaserPowerPercImmediate(float value);
             bool setModEnable(bool flag);
             bool setModPeriodus(int us);
-            bool setModWidthus(float us);
-            bool getModEnabled(void);
+            bool setModWidthus(int us);
+            int getModEnabled(void);
             bool getModWidthus(void);
             bool getModPeriodus(void);
             bool setLaserPowermW(float mW_in);
-            uint16_t* to40bit(int val);
+            uint16_t* to40bit(long long val);
             std::vector<uint8_t> getCmd(uint8_t bRequest, int len, uint16_t wIndex=0, int fullLen=0);
 
             // acquisition

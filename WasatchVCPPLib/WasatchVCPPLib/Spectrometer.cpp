@@ -212,6 +212,7 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
     logger.debug("Setting laser power to %f", value);
     // don't want anything weird when passing over USB
     value = float(max(0, min(100, value)));
+    logger.debug("After setting limits value is %f", value);
     // If full power(and allowed), disable modulationand exit
     if (value >= 100) {
         uint16_t lsw;
@@ -232,24 +233,24 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
         }
     }
     int period_us = laserPowerHighResolution ? 1000 : 100;
-    int width_us = int((1.0 * value * period_us / 100.0, 0)); // note that value is in range(0, 100) not (0, 1)
-
+    int width_us = int((1.0 * value * period_us / 100.0)); // note that value is in range(0, 100) not (0, 1)
     // pulse width can't be longer than period, or shorter than 1us
     width_us = max(1, min(width_us, period_us));
 
+    logger.debug("Writing values of period %d and width %d", period_us, width_us);
     // Change the pulse period.Note that we're not parsing into 40-bit
     // because this implementation is hard - coded to either 100 or 1000us
     // (both fitting well within uint16)
     logger.debug("setting mod period");
     bool result = setModPeriodus(period_us);
-    result = setModPeriodus(period_us);
 	if (!result) {
         logger.error("Hardware Failure to send laser mod. pulse period");
         return false;
 	}
+    getModPeriodus();
     // Set the pulse width to the 0 - 100 percentage of power
     logger.debug("setting mod width");
-    result = setModWidthus(width_us);
+    result = setModWidthus(int(width_us));
 	if (!result) {
         logger.error("Hardware Failure to send pulse width");
         return false;
@@ -261,11 +262,11 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
 		logger.error("Hardware Failure to send laser modulation");
 		return false;
 	}
-    logger.debug("Laser power set to: %d", value);
+    getModEnabled();
 
     //nextAppliedLaserPower = value;
     //logger.debug("next_applied_laser_power = %s", nextAppliedLaserPower);
-    result = true;
+    //result = true;
     return result;
 }
 
@@ -293,10 +294,19 @@ bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
     return true;
 }
 
-bool WasatchVCPP::Spectrometer::getModEnabled(void){
-    //bool flag = 0 != getCmd(0xe3, 1);
-	//modEnabled = flag;
-	//return flag;
+int WasatchVCPP::Spectrometer::getModEnabled(void){
+    vector<uint8_t> getRes = getCmd(0xe3, 1);
+    logger.debug("got modulation status response is");
+    for (auto i : getRes)
+        logger.debug("%d", i);
+    return getRes[0];
+}
+
+bool WasatchVCPP::Spectrometer::getModPeriodus(void) {
+    vector<uint8_t> getRes = getCmd(0xcb, 5);
+    logger.debug("got modulation period. response is");
+    for (auto i : getRes)
+        logger.debug("%d", i);
     return true;
 }
 
@@ -305,24 +315,26 @@ bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
     uint16_t lsw;
     uint16_t msw;
     uint16_t* bit_buf;
-    bit_buf = to40bit(us);
+    bit_buf = to40bit(int(us));
     lsw = bit_buf[0];
     msw = bit_buf[1];
-    uint8_t buf[8] = { bit_buf[2], 0, 0, 0, 0, 0, 0, 0 };
-    return sendCmd(0xc7, lsw, msw, buf);
+    uint8_t buf[8] = { (uint8_t)bit_buf[2], 0, 0, 0, 0, 0, 0, 0 };
+    auto bytesWritten = sendCmd(0xc7, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
+    return bytesWritten >= 0;
 }
 
-bool  WasatchVCPP::Spectrometer::setModWidthus(float us) {
+bool  WasatchVCPP::Spectrometer::setModWidthus(int us) {
     modWidthus = us;
     uint16_t* bit_buf;
-    bit_buf = to40bit(us);
+    bit_buf = to40bit(int(us));
     uint16_t lsw = bit_buf[0];
     uint16_t msw = bit_buf[1];
-    uint8_t buf[8] = {bit_buf[2], 0, 0, 0, 0, 0, 0, 0};
-    return sendCmd(0xdb, lsw, msw, buf);
+    uint8_t buf[8] = { (uint8_t)bit_buf[2], 0, 0, 0, 0, 0, 0, 0 };
+    auto bytesWritten = sendCmd(0xdb, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
+    return bytesWritten >= 0;
 }
 
-uint16_t* WasatchVCPP::Spectrometer::to40bit(int val) {
+uint16_t* WasatchVCPP::Spectrometer::to40bit(long long val) {
     uint16_t ret_buf[3] = {0, 0, 0};
     uint16_t lsw = val & 0xffff;
     uint16_t msw = (val >> 16) & 0xffff;
