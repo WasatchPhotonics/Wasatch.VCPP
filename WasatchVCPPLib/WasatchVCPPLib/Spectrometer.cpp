@@ -208,11 +208,7 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
 
 bool WasatchVCPP::Spectrometer::setLaserPowerPercImmediate(float value) {
 
-    // laser can flicker if we're on the wrong ADC?
-    logger.debug("Setting laser power to %f", value);
-    // don't want anything weird when passing over USB
     value = float(max(0, min(100, value)));
-    logger.debug("After setting limits value is %f", value);
     // If full power(and allowed), disable modulationand exit
     if (value >= 100) {
         uint16_t lsw;
