@@ -33,7 +33,6 @@ char serialNumber[STR_LEN];
 char model[STR_LEN];
 bool testLaser = false;
 map<string, string> eeprom;
-<<<<<<< Updated upstream
 vector<float> wavelengths;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,11 +56,6 @@ string timestamp()
     std::strftime(buf, sizeof(buf), "%F %T", std::localtime(&now));
     return buf;
 }
-=======
-vector<double> wavelengths;
-bool ramanModeEnabled = false;
-int measurement_integration_time;
->>>>>>> Stashed changes
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functional Implementation
@@ -99,8 +93,6 @@ void loadEEPROM()
     free(values);
 }
 
-<<<<<<< Updated upstream
-=======
 int writeToEEPROM()
 {
     unsigned char buf[64];
@@ -167,7 +159,6 @@ void performRamanReading()
 	printf(" ... \n");
 }
 
->>>>>>> Stashed changes
 bool init()
 {
     char libraryVersion[STR_LEN];
@@ -270,15 +261,11 @@ void parseArgs(int argc, char** argv)
         if (!strcmp(argv[i], "--count"))
         {
             if (i + 1 < argc)
-<<<<<<< Updated upstream
-                count = atoi(argv[++i]); 
-=======
             {
                 int ms = atoi(argv[++i]);
                 measurement_integration_time = ms;
                 
             }
->>>>>>> Stashed changes
             else
                 usage();
         }

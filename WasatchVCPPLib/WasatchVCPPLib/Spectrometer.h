@@ -85,7 +85,7 @@ namespace WasatchVCPP
             std::string fpgaVersion;
             int integrationTimeMS = 1;
             bool laserEnabled = false;
-            bool laserPowerHighResolution = false;
+            bool laserPowerHighResolution = true;
             bool laserPowerRequireModulation = false;
             bool modEnabled = false;
             float laserPowerMw = 0.0;
@@ -123,13 +123,12 @@ namespace WasatchVCPP
 
             // public to support wp_send/read_control_msg()
             int sendCmd(uint8_t bRequest, uint16_t wValue = 0, uint16_t wIndex = 0, uint8_t* data = NULL, int len = 0);
-            bool setLaserPowerPercImmediate(float value);
             bool setModEnable(bool flag);
             bool setModPeriodus(int us);
             bool setModWidthus(int us);
             int getModEnabled(void);
             bool getModWidthus(void);
-            bool getModPeriodus(void);
+            unsigned long long getModPeriodus(void);
             bool setLaserPowermW(float mW_in);
             uint16_t* to40bit(long long val);
             std::vector<uint8_t> getCmd(uint8_t bRequest, int len, uint16_t wIndex=0, int fullLen=0);

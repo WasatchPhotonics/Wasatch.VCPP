@@ -787,9 +787,14 @@ namespace WasatchVCPP
                 bool setDetectorGain(float value)
                 { return WP_SUCCESS == wp_set_detector_gain(specIndex, value); }
 
-                bool setLaserPowerPercImmediate(float value)
+                bool setLaserPowerPerc(float value)
                 {
                     return WP_SUCCESS == wp_set_laser_power_perc(specIndex, value);
+                }
+
+                bool setLaserPowermW(float value)
+                {
+                    return WP_SUCCESS == wp_set_laser_power_mW(specIndex, value);
                 }
 
                 //! @see wp_set_detector_gain_odd

@@ -160,7 +160,7 @@ void doSetLaserPower()
         log("Could not get float from input. Try again.");
         return;
     }
-    spectrometer->setLaserPowerPercImmediate(res_val);
+    spectrometer->setLaserPowerPerc(res_val);
 }
 
 void doLaserPowerMW()
@@ -176,7 +176,7 @@ void doLaserPowerMW()
         log("Could not get float from input. Try again.");
         return;
     }
-    spectrometer->setLaserPowerPercImmediate(res_val);
+    spectrometer->setLaserPowermW(res_val);
 }
 
 
