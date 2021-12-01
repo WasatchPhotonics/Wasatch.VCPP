@@ -200,11 +200,11 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
         logger.error("Unable to control laser. EEPROM reports no laser.");
         return false;
     }
-    float value = float(max(0, min(100, percent)));
+    float value = float(max(0.f, min(100.f, percent)));
     laserPowerPerc = value;
     logger.debug("set_laser_power_perc: range (0, 100), requested %.2f, applying %.2f", percent, value);
 
-    value = float(max(0, min(100, value)));
+    value = float(max(0.f, min(100.f, value)));
     // If full power(and allowed), disable modulationand exit
     if (value >= 100) {
         uint16_t lsw;

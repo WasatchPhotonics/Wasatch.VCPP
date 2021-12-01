@@ -10,9 +10,12 @@
 #include "ParseData.h"
 #include "Util.h"
 
+#include <cmath>
+
 using std::vector;
 using std::string;
 using std::set;
+using std::isnan;
 
 WasatchVCPP::EEPROM::EEPROM(Logger& logger)
     : logger(logger)
