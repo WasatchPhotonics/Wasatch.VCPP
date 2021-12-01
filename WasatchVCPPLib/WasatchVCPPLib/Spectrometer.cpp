@@ -296,12 +296,16 @@ int WasatchVCPP::Spectrometer::getModEnabled(void){
 }
 
 // currently for debugging
-unsigned long long WasatchVCPP::Spectrometer::getModPeriodus(void) {
+uint64_t WasatchVCPP::Spectrometer::getModPeriodus(void) {
     vector<uint8_t> getRes = getCmd(0xcb, 5);
     logger.debug("got modulation period. response is");
     for (auto i : getRes)
         logger.debug("%d", i);
-    unsigned long long modPeriod = getRes[2] >> 32 | getRes[1] >> 16 | getRes[0];
+    uint64_t modPeriod = getRes[4] << 32
+                       | getRes[3] << 24
+                       | getRes[2] << 16
+                       | getRes[1] << 8
+                       | getRes[0];
     return modPeriod;
 }
 

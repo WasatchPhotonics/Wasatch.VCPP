@@ -1,14 +1,16 @@
 #pragma once
-#include <mutex>
+
+#include <stdint.h>
 
 namespace WasatchVCPP
 {
-    class Uint40 {
-    public:
-        uint16_t LSW;
-        uint16_t MidW;
-        uint8_t MSB;
-        uint8_t buf[3];
-		Uint40(long long val);
+    class Uint40 
+    {
+        public:
+            Uint40(long long val);
+
+            uint16_t LSW;
+            uint16_t MidW;
+            uint8_t MSB;
     };
 }
