@@ -35,6 +35,9 @@ char model[STR_LEN];
 map<string, string> eeprom;
 vector<double> wavelengths;
 bool ramanModeEnabled = false;
+bool EEPROMedit = false;
+bool integrationTimeEdit = false;
+int intEditms = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functional Implementation
@@ -181,6 +184,10 @@ bool init()
 
 void demo()
 {
+    if (integrationTimeEdit) {
+		wp_set_integration_time_ms(specIndex,intEditms);
+    }
+
     for (int i = 0; i < count; i++)
     {
         double spectrum[pixels];
@@ -195,6 +202,10 @@ void demo()
             printf("ERROR: failed getting spectrum\n");
             exit(-1);
         }
+    }
+
+    if (EEPROMedit) {
+		writeToEEPROM();
     }
 }
 
@@ -213,8 +224,8 @@ void parseArgs(int argc, char** argv)
         {
             if (i + 1 < argc)
             {
-                int ms = atoi(argv[++i]);
-                wp_set_integration_time_ms(specIndex,ms);
+                intEditms = atoi(argv[++i]);
+                integrationTimeEdit = true;
             }
             else
             {
@@ -249,7 +260,7 @@ void parseArgs(int argc, char** argv)
         }
         else if (!strcmp(argv[i], "--write-eeprom"))
         {
-			writeToEEPROM();
+            EEPROMedit = true;
         }
         else
         {
