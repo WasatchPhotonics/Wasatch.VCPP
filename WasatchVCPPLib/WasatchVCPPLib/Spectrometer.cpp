@@ -207,9 +207,6 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
     value = float(max(0.f, min(100.f, value)));
     // If full power(and allowed), disable modulationand exit
     if (value >= 100) {
-        uint16_t lsw;
-        uint16_t msw;
-        uint16_t buf[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
         if (laserPowerRequireModulation) {
             logger.debug("100% power requested, yet laser modulation required, so not disabling modulation");
@@ -218,8 +215,6 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
             logger.debug("Turning off laser modulation (full power)");
             nextAppliedLaserPower = 100.0;
             logger.debug("next_applied_laser_power = 100.0");
-            lsw = 0; // disabled;
-            msw = 0;
             setModEnable(false);
             return true;
         }
@@ -239,7 +234,7 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
         logger.error("Hardware Failure to send laser mod. pulse period");
         return false;
 	}
-    getModPeriodus();
+    //getModPeriodus();
     // Set the pulse width to the 0 - 100 percentage of power
     logger.debug("setting mod width");
     result = setModWidthus(width_us);
@@ -254,7 +249,7 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
 		logger.error("Hardware Failure to send laser modulation");
 		return false;
 	}
-    getModEnabled();
+    //getModEnabled();
 
     //nextAppliedLaserPower = value;
     //logger.debug("next_applied_laser_power = %s", nextAppliedLaserPower);
