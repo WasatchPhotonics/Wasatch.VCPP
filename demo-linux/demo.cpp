@@ -82,10 +82,10 @@ int writeToEEPROM()
     s << "Test string. ";
     s << time(NULL);
     writeString = s.str();
-    strcpy((char*)buf, writeString.c_str());
+    strncpy((char*)buf, writeString.c_str(),writeString.length());
     printf("wrote string to buffer, buffer is now %s\n", buf);
     int i = wp_write_eeprom_page(specIndex, 4, buf, 64);
-    strcpy((char*)buf, "");
+    memset(buf, 0, 64);
     printf("wrote the page to the eeprom and buffer now has value [%s]\n", buf);
     wp_get_eeprom_page(specIndex, 4, buf, 64);
     printf("The value at page 4 after edit is %s and the write operation was %d\n", buf, i);

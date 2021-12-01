@@ -611,17 +611,18 @@ int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int 
     }
 
     bool specType = spec->isARM();
+    int resVal;
     if (specType) 
     {
-        wp_send_control_msg(specIndex, 0xff, 0x02, 4, data, dataLen);
+       resVal = wp_send_control_msg(specIndex, 0xff, 0x02, 4, data, dataLen);
     }
     else
     {
         unsigned int pageValue = (0x3c << 8) | (0x40 * pageIndex);
-        wp_send_control_msg(specIndex, 0xa2, pageValue, 0, data, dataLen);
+        resVal = wp_send_control_msg(specIndex, 0xa2, pageValue, 0, data, dataLen);
     }
     
-    return 0;
+    return resVal;
 }
 
 int wp_send_control_msg(int specIndex, unsigned char bRequest, unsigned int wValue,
