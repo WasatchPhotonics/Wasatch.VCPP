@@ -10,6 +10,7 @@
 #include "Driver.h"
 #include "Spectrometer.h"
 #include "ParseData.h"
+#include "Uint40.h"
 #include "Util.h"
 
 #include <math.h>
@@ -306,33 +307,23 @@ unsigned long long WasatchVCPP::Spectrometer::getModPeriodus(void) {
 bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
     uint16_t lsw;
     uint16_t msw;
-    uint16_t* bit_buf;
-    bit_buf = to40bit(us);
-    lsw = bit_buf[0];
-    msw = bit_buf[1];
-    uint8_t buf[8] = { (uint8_t)bit_buf[2], 0, 0, 0, 0, 0, 0, 0 };
+    //uint16_t* bit_buf;
+    Uint40 bit_buf = Uint40(us);
+    //bit_buf = to40bit(us);
+    lsw = bit_buf.lsw;
+    msw = bit_buf.msw;
+    uint8_t buf[8] = { (uint8_t)bit_buf.msb, 0, 0, 0, 0, 0, 0, 0 };
     auto bytesWritten = sendCmd(0xc7, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
     return bytesWritten >= 0;
 }
 
 bool  WasatchVCPP::Spectrometer::setModWidthus(int us) {
-    uint16_t* bit_buf;
-    bit_buf = to40bit(int(us));
-    uint16_t lsw = bit_buf[0];
-    uint16_t msw = bit_buf[1];
-    uint8_t buf[8] = { (uint8_t)bit_buf[2], 0, 0, 0, 0, 0, 0, 0 };
+    Uint40 bit_buf = Uint40(us);
+    uint16_t lsw = bit_buf.lsw;
+    uint16_t msw = bit_buf.msw;
+    uint8_t buf[8] = { (uint8_t)bit_buf.msb, 0, 0, 0, 0, 0, 0, 0 };
     auto bytesWritten = sendCmd(0xdb, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
     return bytesWritten >= 0;
-}
-
-uint16_t* WasatchVCPP::Spectrometer::to40bit(long long val) {
-    uint16_t ret_buf[3] = {0, 0, 0};
-    uint16_t lsw = val & 0xffff;
-    uint16_t msw = (val >> 16) & 0xffff;
-    ret_buf[0] = lsw;
-    ret_buf[1] = msw;
-    ret_buf[2] = val >> 32 & 0xff;
-    return ret_buf;
 }
 
 bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)

@@ -26,6 +26,7 @@ namespace WasatchVCPP
 {
     class Driver;
 
+
     //! Internal class encapsulating state and control of one spectrometer.
     //!
     //! All "Hungarian notation" parameter names (bRequest, wValue etc) are taken 
