@@ -196,8 +196,6 @@ void demo()
             exit(-1);
         }
     }
-
-    writeToEEPROM();
 }
 
 void usage()
@@ -248,6 +246,10 @@ void parseArgs(int argc, char** argv)
             }
             else
                 usage();
+        }
+        else if (!strcmp(argv[i], "--write-eeprom"))
+        {
+			writeToEEPROM();
         }
         else
         {
