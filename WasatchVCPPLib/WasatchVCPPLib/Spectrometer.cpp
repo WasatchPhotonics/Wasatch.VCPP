@@ -302,6 +302,7 @@ unsigned long long WasatchVCPP::Spectrometer::getModPeriodus(void) {
     for (auto i : getRes)
         logger.debug("%d", i);
     unsigned long long modPeriod = getRes[2] >> 32 | getRes[1] >> 16 | getRes[0];
+    return modPeriod;
 }
 
 bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
@@ -310,18 +311,18 @@ bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
     //uint16_t* bit_buf;
     Uint40 bit_buf = Uint40(us);
     //bit_buf = to40bit(us);
-    lsw = bit_buf.lsw;
-    msw = bit_buf.msw;
-    uint8_t buf[8] = { (uint8_t)bit_buf.msb, 0, 0, 0, 0, 0, 0, 0 };
+    lsw = bit_buf.LSW;
+    msw = bit_buf.MidW;
+    uint8_t buf[8] = { (uint8_t)bit_buf.MSB, 0, 0, 0, 0, 0, 0, 0 };
     auto bytesWritten = sendCmd(0xc7, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
     return bytesWritten >= 0;
 }
 
 bool  WasatchVCPP::Spectrometer::setModWidthus(int us) {
     Uint40 bit_buf = Uint40(us);
-    uint16_t lsw = bit_buf.lsw;
-    uint16_t msw = bit_buf.msw;
-    uint8_t buf[8] = { (uint8_t)bit_buf.msb, 0, 0, 0, 0, 0, 0, 0 };
+    uint16_t lsw = bit_buf.LSW;
+    uint16_t msw = bit_buf.MidW;
+    uint8_t buf[8] = { (uint8_t)bit_buf.MSB, 0, 0, 0, 0, 0, 0, 0 };
     auto bytesWritten = sendCmd(0xdb, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
     return bytesWritten >= 0;
 }

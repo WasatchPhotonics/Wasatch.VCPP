@@ -5,10 +5,10 @@ namespace WasatchVCPP
 {
     class Uint40 {
     public:
-        uint16_t ret_buf[3];
-        uint16_t lsw;
-        uint16_t msw;
-        uint16_t msb;
-        Uint40(long long val);
+        uint16_t LSW;
+        uint16_t MidW;
+        uint8_t MSB;
+        uint8_t buf[3];
+		Uint40(long long val);
     };
 }
