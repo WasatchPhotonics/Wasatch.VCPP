@@ -131,6 +131,8 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
             numCoeffs = 0;
         for (int i = 0; i < numCoeffs; ++i)
             intensityCorrectionCoeffs.push_back(ParseData::toFloat(pages[6], 1 + 4 * i));
+        if (numCoeffs > 0)
+            srm_present = true;
     }
 
     avgResolution = format >= 7 ? ParseData::toFloat(pages[3], 48) : 0.f;
@@ -220,6 +222,10 @@ float WasatchVCPP::EEPROM::laserPowermWToPercent(float mW) {
         + laserPowerCoeffs[3] * mW * mW * mW;
 
     return perc;
+}
+bool WasatchVCPP::EEPROM::has_srm() 
+{
+    return srm_present;
 }
 
 void WasatchVCPP::EEPROM::stringifyAll()

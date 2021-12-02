@@ -96,6 +96,7 @@ namespace WasatchVCPP
             float lastAppliedLaserPower = 0.0;
             float nextAppliedLaserPower = 0.0;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
+            bool srm_in_EEPROM = false;
 
             // opcodes
             bool setIntegrationTimeMS(unsigned long ms);

@@ -1,12 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <vector>
 #include <chrono>
 #include <string>
 #include <map>
+#include <ctime>
+#include <sstream>
+#include <cstring>
 
 #include "WasatchVCPP.h"
 
@@ -33,6 +37,9 @@ char serialNumber[STR_LEN];
 char model[STR_LEN];
 bool testLaser = false;
 map<string, string> eeprom;
+bool ramanModeEnabled = false;
+bool EEPROMedit = false;
+bool integrationTimeEdit = false;
 vector<float> wavelengths;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,10 +110,10 @@ int writeToEEPROM()
     s << "Test string. ";
     s << time(NULL);
     writeString = s.str();
-    strcpy((char*)buf, writeString.c_str());
+    strncpy((char*)buf, writeString.c_str(),writeString.length());
     printf("wrote string to buffer, buffer is now %s\n", buf);
     int i = wp_write_eeprom_page(specIndex, 4, buf, 64);
-    strcpy((char*)buf, "");
+    memset(buf, 0, 64);
     printf("wrote the page to the eeprom and buffer now has value [%s]\n", buf);
     wp_get_eeprom_page(specIndex, 4, buf, 64);
     printf("The value at page 4 after edit is %s and the write operation was %d\n", buf, i);
@@ -119,7 +126,6 @@ void performRamanReading()
 	double corrected_spectrum[pixels];
 	double initial_spectrum[pixels];
 	int i;
-    wp_set_integration_time_ms(specIndex,measurement_integration_time);
 	string stringSpec;
 	if (WP_SUCCESS == wp_get_spectrum(specIndex, dark_spectrum, pixels))
 	{
@@ -131,15 +137,14 @@ void performRamanReading()
 	printf("Took dark spectrum.\n\n");
 	printf("About to enable laser\n");
 	wp_set_laser_enable(specIndex, 1);
-	usleep(10000000);
+	usleep(7000000);
 	usleep(1000);
 	wp_get_spectrum(specIndex, initial_spectrum, pixels);
 	wp_set_laser_enable(specIndex, 0);
 	usleep(1000);
 	for (i = 0; i < pixels; i++)
 	{
-		initial_spectrum[i] = initial_spectrum[i] - dark_spectrum[i];
-        corrected_spectrum[i] = initial_spectrum[i];
+		corrected_spectrum[i] = initial_spectrum[i] - dark_spectrum[i];
 	}
 	if (wp_has_srm_calibration(specIndex))
 	{
@@ -164,7 +169,6 @@ bool init()
     char libraryVersion[STR_LEN];
     wp_get_library_version(libraryVersion, STR_LEN);
     printf("Wasatch.VCPP Demo (%s)\n", libraryVersion);
-    wp_set_integration_time_ms(specIndex,measurement_integration_time);
     wp_set_log_level(logLevel);
     const char* logfile = "demo.log";
     wp_set_logfile_path(logfile, strlen(logfile));
@@ -192,10 +196,19 @@ bool init()
         printf("  %30s: %s\n", name.c_str(), value.c_str());
     }
 
-    wp_set_integration_time_ms(specIndex, integrationTimeMS);
+    if (integrationTimeEdit) {
+		wp_set_integration_time_ms(specIndex,integrationTimeMS);
+    }
+
+    if (ramanModeEnabled)
+    {
+        performRamanReading();
+    }
 
     return true;
 }
+
+
 
 void demo()
 {
@@ -220,6 +233,9 @@ void demo()
         }
     }
 
+    if (EEPROMedit) {
+        writeToEEPROM();
+    }
     ////////////////////////////////////////////////////////////////////////////
     // test result codes in the event of communication failures
     ////////////////////////////////////////////////////////////////////////////
@@ -250,7 +266,7 @@ void demo()
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--integration-time-ms n] [--count n] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER]\n");
+    printf("Usage: $ demo-linux [--count n] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER] [--raman-mode] [--write-eeprom]\n");
     exit(1);
 }
 
@@ -258,12 +274,18 @@ void parseArgs(int argc, char** argv)
 {
     for (int i = 1; i < argc; i++)
     {
-        if (!strcmp(argv[i], "--count"))
+        printf("current arg is %s\n", argv[i]);
+        if (!strcmp(argv[i], "--raman-mode"))
+        {
+            ramanModeEnabled = true;
+        }
+        else if (!strcmp(argv[i], "--count"))
         {
             if (i + 1 < argc)
             {
                 int ms = atoi(argv[++i]);
-                measurement_integration_time = ms;
+                integrationTimeMS = ms; 
+                integrationTimeEdit = true;
                 
             }
             else
@@ -272,13 +294,6 @@ void parseArgs(int argc, char** argv)
         else if (!strcmp(argv[i], "--laser"))
         {
             testLaser = true;
-        }
-        else if (!strcmp(argv[i], "--integration-time-ms"))
-        {
-            if (i + 1 < argc)
-                integrationTimeMS = atoi(argv[++i]); 
-            else
-                usage();
         }
         else if (!strcmp(argv[i], "--log-level"))
         {
@@ -294,8 +309,13 @@ void parseArgs(int argc, char** argv)
             else
                 usage();
         }
+        else if (!strcmp(argv[i], "--write-eeprom"))
+        {
+            EEPROMedit = true;
+        }
         else
         {
+            printf("did not match with any of the args\n");
             usage();
         }
     }
