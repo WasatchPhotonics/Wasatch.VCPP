@@ -194,6 +194,7 @@ copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64</Command>
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Spectrometer.h" />
+    <ClInclude Include="Uint40.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -210,10 +211,12 @@ copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64</Command>
     </ClCompile>
     <ClCompile Include="Driver.cpp" />
     <ClCompile Include="Spectrometer.cpp" />
+    <ClCompile Include="Uint40.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="WasatchVCPPWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

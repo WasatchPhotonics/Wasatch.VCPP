@@ -53,7 +53,8 @@ namespace WasatchVCPP
 
             void stringifyAll();
             void stringify(const std::string& name, const std::string& value);
-
+            bool hasLaserPowerCalibration(void);
+            float laserPowermWToPercent(float mW);
             ////////////////////////////////////////////////////////////////////
             // Attributes
             ////////////////////////////////////////////////////////////////////

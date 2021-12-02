@@ -147,6 +147,39 @@ void doSetLaserEnable()
     log("laser -> %s", enabled ? "on" : "off");
 }
 
+void doSetLaserPower()
+{
+    if (spectrometer == nullptr)
+        return;
+    string response = InputBox("Enter laser percentage");
+    float res_val = 0.0;
+    try {
+        res_val = std::stof(response);
+    }
+    catch (const std::exception& e) {
+        log("Could not get float from input. Try again.");
+        return;
+    }
+    spectrometer->setLaserPowerPerc(res_val);
+}
+
+void doLaserPowerMW()
+{
+    if (spectrometer == nullptr)
+        return;
+    string response = InputBox("Input laser power in mW");
+    float res_val = 0.0;
+    try {
+        res_val = std::stof(response);
+    }
+    catch (const std::exception& e) {
+        log("Could not get float from input. Try again.");
+        return;
+    }
+    spectrometer->setLaserPowermW(res_val);
+}
+
+
 void doGetDetectorTemperatureDegC()
 {
     if (spectrometer == nullptr)
@@ -353,7 +386,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     case ID_SPECTROMETER_MAXSPECTRA:
                         doSetMaxSpectra();
                         break;
-
+                    case ID_SPECTROMETER_SETLASERPOWER:
+                        doSetLaserPower();
+                        break;
+                    case ID_SPECTROMETER_SETLASERPOWER_MW:
+                        doLaserPowerMW();
+                        break;
                     default: 
                         return DefWindowProc(hWnd, message, wParam, lParam);
                 }

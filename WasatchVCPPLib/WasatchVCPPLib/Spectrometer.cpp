@@ -10,6 +10,7 @@
 #include "Driver.h"
 #include "Spectrometer.h"
 #include "ParseData.h"
+#include "Uint40.h"
 #include "Util.h"
 
 #include <math.h>
@@ -193,6 +194,139 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
 
     integrationTimeMS = ms;
     logger.debug("integrationTimeMS -> %lu", ms);
+    return bytesWritten >= 0;
+}
+
+bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
+{
+    if (!eeprom.hasLaser)
+    {
+        logger.error("Unable to control laser. EEPROM reports no laser.");
+        return false;
+    }
+    float value = float(max(0.f, min(100.f, percent)));
+    laserPowerPerc = value;
+    logger.debug("set_laser_power_perc: range (0, 100), requested %.2f, applying %.2f", percent, value);
+
+    value = float(max(0.f, min(100.f, value)));
+    // If full power(and allowed), disable modulationand exit
+    if (value >= 100) {
+
+        if (laserPowerRequireModulation) {
+            logger.debug("100% power requested, yet laser modulation required, so not disabling modulation");
+        }
+        else {
+            logger.debug("Turning off laser modulation (full power)");
+            nextAppliedLaserPower = 100.0;
+            logger.debug("next_applied_laser_power = 100.0");
+            setModEnable(false);
+            return true;
+        }
+    }
+    int period_us = laserPowerHighResolution ? 1000 : 100;
+    int width_us = int((value * period_us / 100.0)); // note that value is in range(0, 100) not (0, 1)
+    // pulse width can't be longer than period, or shorter than 1us
+    width_us = max(1, min(width_us, period_us));
+
+    logger.debug("Writing values of period %d and width %d", period_us, width_us);
+    // Change the pulse period.Note that we're not parsing into 40-bit
+    // because this implementation is hard - coded to either 100 or 1000us
+    // (both fitting well within uint16)
+    logger.debug("setting mod period");
+    bool result = setModPeriodus(period_us);
+	if (!result) {
+        logger.error("Hardware Failure to send laser mod. pulse period");
+        return false;
+	}
+    //getModPeriodus();
+    // Set the pulse width to the 0 - 100 percentage of power
+    logger.debug("setting mod width");
+    result = setModWidthus(width_us);
+	if (!result) {
+        logger.error("Hardware Failure to send pulse width");
+        return false;
+	}
+    // Enable modulation
+    logger.debug("enabling mod");
+    result = setModEnable(true);
+	if (!result) {
+		logger.error("Hardware Failure to send laser modulation");
+		return false;
+	}
+    //getModEnabled();
+
+    //nextAppliedLaserPower = value;
+    //logger.debug("next_applied_laser_power = %s", nextAppliedLaserPower);
+    //result = true;
+    return result;
+}
+
+bool WasatchVCPP::Spectrometer::setLaserPowermW(float mW_in) {
+    if (!eeprom.hasLaserPowerCalibration()) {
+        logger.error("EEPROM doesn't have laser power calibration");
+        return false;
+    }
+    float mW = min(eeprom.maxLaserPowerMW, max(eeprom.minLaserPowerMW, mW_in));
+
+    float perc = eeprom.laserPowermWToPercent(mW);
+	logger.debug("set_laser_power_mW: range (%.2f, %.2f), requested %.2f, approved %.2f, percent = %.2f",
+            eeprom.minLaserPowerMW,
+            eeprom.maxLaserPowerMW,
+            mW_in,
+            mW,
+            perc);
+    return setLaserPowerPerc(perc);
+}
+
+bool WasatchVCPP::Spectrometer::setModEnable(bool flag) {
+    modEnabled = flag;
+    int value = flag ? 1 : 0;
+    sendCmd(0xbd, value);
+    return true;
+}
+
+// currently for debugging
+int WasatchVCPP::Spectrometer::getModEnabled(void){
+    vector<uint8_t> getRes = getCmd(0xe3, 1);
+    logger.debug("got modulation status response is");
+    for (auto i : getRes)
+        logger.debug("%d", i);
+    return getRes[0];
+}
+
+// currently for debugging
+uint64_t WasatchVCPP::Spectrometer::getModPeriodus(void) {
+    vector<uint8_t> getRes = getCmd(0xcb, 5);
+    logger.debug("got modulation period. response is");
+    for (auto i : getRes)
+        logger.debug("%d", i);
+    uint64_t modPeriod = getRes[4]
+						| getRes[3] >> 8
+						| getRes[2] >> 16
+						| getRes[1] >> 24
+						| (((uint64_t)getRes[0]) >> 32);
+    return modPeriod;
+}
+
+bool WasatchVCPP::Spectrometer::setModPeriodus(int us) {
+    uint16_t lsw;
+    uint16_t msw;
+    //uint16_t* bit_buf;
+    Uint40 bit_buf = Uint40(us);
+    //bit_buf = to40bit(us);
+    lsw = bit_buf.LSW;
+    msw = bit_buf.MidW;
+    uint8_t buf[8] = { (uint8_t)bit_buf.MSB, 0, 0, 0, 0, 0, 0, 0 };
+    auto bytesWritten = sendCmd(0xc7, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
+    return bytesWritten >= 0;
+}
+
+bool  WasatchVCPP::Spectrometer::setModWidthus(int us) {
+    Uint40 bit_buf = Uint40(us);
+    uint16_t lsw = bit_buf.LSW;
+    uint16_t msw = bit_buf.MidW;
+    uint8_t buf[8] = { (uint8_t)bit_buf.MSB, 0, 0, 0, 0, 0, 0, 0 };
+    auto bytesWritten = sendCmd(0xdb, lsw, msw, buf, sizeof(buf)/sizeof(buf[0]));
     return bytesWritten >= 0;
 }
 

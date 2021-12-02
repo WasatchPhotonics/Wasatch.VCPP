@@ -26,6 +26,7 @@ namespace WasatchVCPP
 {
     class Driver;
 
+
     //! Internal class encapsulating state and control of one spectrometer.
     //!
     //! All "Hungarian notation" parameter names (bRequest, wValue etc) are taken 
@@ -85,6 +86,15 @@ namespace WasatchVCPP
             std::string fpgaVersion;
             int integrationTimeMS = 1;
             bool laserEnabled = false;
+            bool laserPowerHighResolution = true;
+            bool laserPowerRequireModulation = false;
+            bool modEnabled = false;
+            float laserPowerMw = 0.0;
+            float modWidthus = 0.0;
+            float modPeriodus = 0.0;
+            float laserPowerPerc = 0.0;
+            float lastAppliedLaserPower = 0.0;
+            float nextAppliedLaserPower = 0.0;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
             bool srm_in_EEPROM = false;
 
@@ -98,6 +108,7 @@ namespace WasatchVCPP
             bool setDetectorTECEnable(bool flag);
             bool setDetectorTECSetpointDegC(int value);
             bool setHighGainModeEnable(bool flag);
+            bool setLaserPowerPerc(float percent);
             std::string getFirmwareVersion();
             std::string getFPGAVersion();
             int32_t getDetectorTemperatureRaw(); 
@@ -114,6 +125,12 @@ namespace WasatchVCPP
 
             // public to support wp_send/read_control_msg()
             int sendCmd(uint8_t bRequest, uint16_t wValue = 0, uint16_t wIndex = 0, uint8_t* data = NULL, int len = 0);
+            bool setModEnable(bool flag);
+            bool setModPeriodus(int us);
+            bool setModWidthus(int us);
+            int getModEnabled(void);
+            uint64_t getModPeriodus(void);
+            bool setLaserPowermW(float mW_in);
             std::vector<uint8_t> getCmd(uint8_t bRequest, int len, uint16_t wIndex=0, int fullLen=0);
 
             // acquisition

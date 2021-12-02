@@ -40,7 +40,6 @@ map<string, string> eeprom;
 bool ramanModeEnabled = false;
 bool EEPROMedit = false;
 bool integrationTimeEdit = false;
-int intEditms = 0;
 vector<float> wavelengths;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,21 +79,21 @@ void loadWavelengths()
 
 void loadEEPROM()
 {
-    int count = wp_get_eeprom_field_count(specIndex);
-    if (count <= 0)
+    int eeprom_count = wp_get_eeprom_field_count(specIndex);
+    if (eeprom_count <= 0)
         return;
 
-    const char** names  = (const char**)malloc(count * sizeof(const char*));
-    const char** values = (const char**)malloc(count * sizeof(const char*));
+    const char** names  = (const char**)malloc(eeprom_count * sizeof(const char*));
+    const char** values = (const char**)malloc(eeprom_count * sizeof(const char*));
 
-    if (WP_SUCCESS != wp_get_eeprom(specIndex, names, values, count))
+    if (WP_SUCCESS != wp_get_eeprom(specIndex, names, values, eeprom_count))
     {
         free(names);
         free(values);
         return;
     }
 
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < eeprom_count; i++)
         eeprom.insert(std::make_pair(string(names[i]), string(values[i])));
 
     free(names);
@@ -170,7 +169,6 @@ bool init()
     char libraryVersion[STR_LEN];
     wp_get_library_version(libraryVersion, STR_LEN);
     printf("Wasatch.VCPP Demo (%s)\n", libraryVersion);
-
     wp_set_log_level(logLevel);
     const char* logfile = "demo.log";
     wp_set_logfile_path(logfile, strlen(logfile));
@@ -198,9 +196,8 @@ bool init()
         printf("  %30s: %s\n", name.c_str(), value.c_str());
     }
 
-    if (ramanModeEnabled)
-    {
-        performRamanReading();
+    if (integrationTimeEdit) {
+		wp_set_integration_time_ms(specIndex,integrationTimeMS);
     }
 
     return true;
@@ -210,12 +207,13 @@ bool init()
 
 void demo()
 {
-    if (integrationTimeEdit) {
-		wp_set_integration_time_ms(specIndex,intEditms);
-    }
     ////////////////////////////////////////////////////////////////////////////
     // read the requested number of spectra
     ////////////////////////////////////////////////////////////////////////////
+    if (ramanModeEnabled)
+    {
+        performRamanReading();
+    }
 
     for (int i = 0; i < count; i++)
     {
@@ -267,7 +265,7 @@ void demo()
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--integration-time-ms n] [--count n] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER] [--raman-mode] [--write-eeprom]\n");
+    printf("Usage: $ demo-linux [--count n] [--integration-time-ms] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER] [--raman-mode] [--write-eeprom]\n");
     exit(1);
 }
 
@@ -276,27 +274,16 @@ void parseArgs(int argc, char** argv)
     for (int i = 1; i < argc; i++)
     {
         printf("current arg is %s\n", argv[i]);
-        if (!strcmp(argv[i], "--integration-time-ms")) 
-        {
-            if (i + 1 < argc)
-            {
-                intEditms = atoi(argv[++i]);
-                integrationTimeEdit = true;
-            }
-            else
-            {
-                printf("not enough args according to integration time\n");
-                usage();
-            }
-        }
-        else if (!strcmp(argv[i], "--raman-mode"))
+        if (!strcmp(argv[i], "--raman-mode"))
         {
             ramanModeEnabled = true;
         }
         else if (!strcmp(argv[i], "--count"))
         {
             if (i + 1 < argc)
-                count = atoi(argv[++i]); 
+            {
+                count = atoi(argv[++i]);
+            }
             else
                 usage();
         }
@@ -306,8 +293,11 @@ void parseArgs(int argc, char** argv)
         }
         else if (!strcmp(argv[i], "--integration-time-ms"))
         {
-            if (i + 1 < argc)
-                integrationTimeMS = atoi(argv[++i]); 
+            if (i + 1 < argc) {
+                int ms = atoi(argv[++i]);
+                integrationTimeMS = ms;
+                integrationTimeEdit = true;
+            }
             else
                 usage();
         }
