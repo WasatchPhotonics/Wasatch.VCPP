@@ -79,21 +79,21 @@ void loadWavelengths()
 
 void loadEEPROM()
 {
-    int count = wp_get_eeprom_field_count(specIndex);
-    if (count <= 0)
+    int eeprom_count = wp_get_eeprom_field_count(specIndex);
+    if (eeprom_count <= 0)
         return;
 
-    const char** names  = (const char**)malloc(count * sizeof(const char*));
-    const char** values = (const char**)malloc(count * sizeof(const char*));
+    const char** names  = (const char**)malloc(eeprom_count * sizeof(const char*));
+    const char** values = (const char**)malloc(eeprom_count * sizeof(const char*));
 
-    if (WP_SUCCESS != wp_get_eeprom(specIndex, names, values, count))
+    if (WP_SUCCESS != wp_get_eeprom(specIndex, names, values, eeprom_count))
     {
         free(names);
         free(values);
         return;
     }
 
-    for (int i = 0; i < count; i++)
+    for (int i = 0; i < eeprom_count; i++)
         eeprom.insert(std::make_pair(string(names[i]), string(values[i])));
 
     free(names);
@@ -266,7 +266,7 @@ void demo()
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--count n] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER] [--raman-mode] [--write-eeprom]\n");
+    printf("Usage: $ demo-linux [--count n] [--integration-time-ms] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER] [--raman-mode] [--write-eeprom]\n");
     exit(1);
 }
 
@@ -283,10 +283,7 @@ void parseArgs(int argc, char** argv)
         {
             if (i + 1 < argc)
             {
-                int ms = atoi(argv[++i]);
-                integrationTimeMS = ms; 
-                integrationTimeEdit = true;
-                
+                count = atoi(argv[++i]);
             }
             else
                 usage();
@@ -294,6 +291,16 @@ void parseArgs(int argc, char** argv)
         else if (!strcmp(argv[i], "--laser"))
         {
             testLaser = true;
+        }
+        else if (!strcmp(argv[i], "--integration-time-ms"))
+        {
+            if (i + 1 < argc) {
+                int ms = atoi(argv[++i]);
+                integrationTimeMS = ms;
+                integrationTimeEdit = true;
+            }
+            else
+                usage();
         }
         else if (!strcmp(argv[i], "--log-level"))
         {
