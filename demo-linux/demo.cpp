@@ -73,7 +73,7 @@ void loadWavelengths()
 {
     wavelengths.clear();
     float values[pixels];
-    if (WP_SUCCESS == WP_SUCCESS)//wp_get_wavelengths_float(specIndex, values, pixels))
+    if (WP_SUCCESS == wp_get_wavelengths_float(specIndex, values, pixels))
         for (int i = 0; i < pixels; i++)
             wavelengths.push_back(values[i]);
 }
@@ -220,7 +220,7 @@ void demo()
     for (int i = 0; i < count; i++)
     {
         float spectrum[pixels];
-        if (WP_SUCCESS == WP_SUCCESS)//wp_get_spectrum_float(specIndex, spectrum, pixels))
+        if (WP_SUCCESS == wp_get_spectrum_float(specIndex, spectrum, pixels))
         {
             auto now = timestamp();
             printf("%s Spectrum %5d of %5d:", now.c_str(), i + 1, count);
@@ -346,7 +346,7 @@ int main(int argc, char** argv)
     parseArgs(argc, argv);
     if (!init())
     {
-        //wp_destroy_driver();
+        wp_destroy_driver();
         return -1;
     }
     demo();
