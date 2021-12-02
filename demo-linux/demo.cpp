@@ -200,11 +200,6 @@ bool init()
 		wp_set_integration_time_ms(specIndex,integrationTimeMS);
     }
 
-    if (ramanModeEnabled)
-    {
-        performRamanReading();
-    }
-
     return true;
 }
 
@@ -215,6 +210,10 @@ void demo()
     ////////////////////////////////////////////////////////////////////////////
     // read the requested number of spectra
     ////////////////////////////////////////////////////////////////////////////
+    if (ramanModeEnabled)
+    {
+        performRamanReading();
+    }
 
     for (int i = 0; i < count; i++)
     {
