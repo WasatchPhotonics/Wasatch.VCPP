@@ -1,5 +1,39 @@
 # Changelog
 
+- 2021-11-02 1.0.18
+    - stopped limiting USB reads to 1sec while "polling" for cancellations
+- 2021-11-02 1.0.17
+    - added maxSpectra to Visual C++ Demo GUI
+- 2021-11-02 1.0.16
+    - added --integration-time-ms, --laser to demo.cpp
+- 2021-10-13 1.0.15
+    - added <algorithm> to WasatchVCPPWrapper to resolve VS2017 issue
+- 2021-09-09 1.0.14
+    - added Windows DLL version resource
+    - added float32 versions of wavelength, wavenumber and getSpectrum functions
+    - moved demo to float32 versions for testing
+- 2021-09-09 1.0.13
+    - fixed debug log message
+    - clamped startup temperature to min/max range
+    - default to startupDetectorTemperatureDegC rather than detTempMin
+- 2021-09-08 1.0.12
+    - Visual Studio Code Analysis cleanup
+    - moved to enum classes
+- 2021-09-08 1.0.11
+    - added wp\_destroy\_driver 
+    - valgrind reports no leaks on Ubuntu 20
+- 2021-08-23 1.0.10
+    - added demo-eeprom.cpp
+    - added Proxy::Spectrometer::getWavecalCoeffs
+- 2021-08-03 1.0.9
+    - added FeatureMask.gen15, .cutoffFilterInstalled, .hardwareEvenOdd
+- 2021-07-06 1.0.8
+    - fixed getDetectorTemperatureDegC crashing on Windows when spectrometer unplugged
+- 2021-07-06 1.0.7
+    - fixed return values for most setters to correctly indicate comms success / failure
+- 2021-06-17 1.0.6
+    - fixed return values for setLaserEnable, setIntegrationTimeMS and getHighGainModeEnable
+    - updated MacOS libusb to latest Homebrew version (1.0.24)
 - 2021-04-19 1.0.5
     - added README\_MACOS.md
 - 2021-02-16 1.0.4

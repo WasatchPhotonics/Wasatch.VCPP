@@ -192,6 +192,7 @@ copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64</Command>
     <ClInclude Include="Logger.h" />
     <ClInclude Include="ParseData.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Spectrometer.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
@@ -214,6 +215,9 @@ copy $(TargetDir)WasatchVCPP.lib $(SolutionDir)..\lib\x64</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WasatchVCPPLib.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

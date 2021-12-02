@@ -158,6 +158,11 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_close_spectrometer(int specIndex);
 
+    //! Permanently releases all objects from memory.  It is recommended to 
+    //! close and restart the application be after calling this function, before 
+    //! wp_open_all_spectrometers can be called again.
+    DLL_API void wp_destroy_driver();
+
     ////////////////////////////////////////////////////////////////////////////
     // EEPROM 
     ////////////////////////////////////////////////////////////////////////////
@@ -278,6 +283,15 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_wavelengths(int specIndex, double* wavelengths, int len);
 
+    //! Get the selected spectrometer's calibrated wavelength x-axis in nanometers
+    //! as float.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param wavelengths (Output) pre-allocated buffer of 'len' floats
+    //! @param len (Input) allocated length of 'wavelengths' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_wavelengths_float(int specIndex, float* wavelengths, int len);
+
     //! Get the selected spectrometer's calibrated x-axis in wavenumbers (1/cm)
     //!
     //! @param specIndex (Input) which spectrometer
@@ -285,6 +299,15 @@ extern "C"
     //! @param len (Input) allocated length of 'wavenumbers' (should match 'pixels')
     //! @returns WP_SUCCESS or non-zero on error (e.g., no configured excitation)
     DLL_API int wp_get_wavenumbers(int specIndex, double* wavenumbers, int len);
+
+    //! Get the selected spectrometer's calibrated x-axis in wavenumbers (1/cm)
+    //! as float.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param wavenumbers (Output) pre-allocated buffer of 'len' floats
+    //! @param len (Input) allocated length of 'wavenumbers' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error (e.g., no configured excitation)
+    DLL_API int wp_get_wavenumbers_float(int specIndex, float* wavenumbers, int len);
 
     ////////////////////////////////////////////////////////////////////////////
     // Acquisition
@@ -300,6 +323,17 @@ extern "C"
     //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_spectrum(int specIndex, double* spectrum, int len);
+
+    //! Read one spectrum from the selected spectrometer as float
+    //!
+    //! This sends an "ACQUIRE" command, waits for "integration time"
+    //! to pass, then performs a blocking read from the bulk endpoint.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param spectrum (Output) pre-allocated buffer of 'len' floats
+    //! @param len (Input) allocated length of 'xAxis' (should match 'pixels')
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_spectrum_float(int specIndex, float* spectrum, int len);
 
     //! If an acquisition is currently in progress, cancel it.
     //!
@@ -701,13 +735,18 @@ namespace WasatchVCPP
                 //! @returns true on success
                 bool close()
                 {
+                    bool success = false;
                     if (specIndex >= 0)
                     {
-                        wp_close_spectrometer(specIndex);
+                        success = (WP_SUCCESS == wp_close_spectrometer(specIndex));
                         specIndex = -1;
+
+                        wavelengths.clear();
+                        wavenumbers.clear();
+                        eepromFields.clear();
                     }
 
-                    return true;
+                    return success;
                 }
 
             ////////////////////////////////////////////////////////////////////
@@ -734,13 +773,13 @@ namespace WasatchVCPP
                 //! @param ms (Input) time in milliseconds
                 //! @return true on success
                 bool setIntegrationTimeMS(unsigned long ms)
-                { return wp_set_integration_time_ms(specIndex, ms); }
+                { return WP_SUCCESS == wp_set_integration_time_ms(specIndex, ms); }
 
                 //! set laser firing state
                 //! @param flag (Input) desired state (true for firing, false for off)
                 //! @return true on successful communication (does not represent firing state)
                 bool setLaserEnable(bool flag)
-                { return wp_set_laser_enable(specIndex, flag); }
+                { return WP_SUCCESS == wp_set_laser_enable(specIndex, flag); }
 
                 //! @see wp_set_detector_gain
                 bool setDetectorGain(float value)
@@ -799,7 +838,7 @@ namespace WasatchVCPP
                 int getDetectorTECSetpointDegC() { return wp_get_detector_tec_setpoint_deg_c(specIndex); }
 
                 //! @see wp_get_high_gain_mode_enable
-                bool getHighGainModeEnable() { return wp_get_high_gain_mode_enable(specIndex); }
+                bool getHighGainModeEnable() { return 0 != wp_get_high_gain_mode_enable(specIndex); }
 
                 //! @see wp_send_control_msg 
                 //! @warning no seriously, you need to follow that link
@@ -878,6 +917,15 @@ namespace WasatchVCPP
                     if (WP_SUCCESS != wp_get_eeprom_field_name(specIndex, index, buf, sizeof(buf)))
                         return std::string();
                     return std::string(buf);
+                }
+
+                //! convenience accessor
+                std::vector<float> getWavecalCoeffs()
+                {
+                    std::vector<float> v;
+                    for (int i = 0; i < 5; i++)
+                        v.push_back(std::stof(eepromFields["wavecalCoeffs[" + std::to_string(i) + "]"]));
+                    return v;
                 }
 
             private:
@@ -995,13 +1043,20 @@ namespace WasatchVCPP
                     return WP_SUCCESS == wp_close_all_spectrometers();
                 }
 
+                //! @see wp_destroy_driver()
+                void destroy()
+                {
+                    closeAllSpectrometers();
+                    wp_destroy_driver();
+                }
+
             ////////////////////////////////////////////////////////////////////
             // Public attributes
             ////////////////////////////////////////////////////////////////////
             public:                    
 
                 //! number of spectrometers found (set by openAllSpectrometers)
-                int numberOfSpectrometers;
+                int numberOfSpectrometers = 0;
 
             ////////////////////////////////////////////////////////////////////
             // Private attributes

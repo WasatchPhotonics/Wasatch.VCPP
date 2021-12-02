@@ -9,8 +9,8 @@
     It has a few menu-bar options (configured using the "Resource View"), and a 
     scrolling log event viewer.  It doesn't provide an on-screen chart because
     I haven't figured out a lightweight way to do that from Visual C++ without
-    adding a dependency on Qt or equivalent.  Graphing demos will likely be provided
-    via a standalone C# demo.
+    adding a dependency on Qt or equivalent.  A graphing demo is provided via 
+    the standalone WasatchVCPPNet C# GUI.
 
     @todo add some kind of charting to graph spectra
 
@@ -52,6 +52,8 @@ const int MAX_LOG_LEN = 16 * 1024;
 WasatchVCPP::Proxy::Driver driver; // example
 WasatchVCPP::Proxy::Spectrometer* spectrometer = nullptr; // example
 std::ofstream outfile;
+
+int maxSpectra = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utilities
@@ -117,7 +119,7 @@ void doConnect()
             spectrometer->serialNumber.c_str(),
             spectrometer->pixels,
             spectrometer->wavelengths[0],
-            spectrometer->wavelengths[spectrometer->pixels - 1]);
+            spectrometer->wavelengths[((int)spectrometer->pixels) - 1]);
 }
 
 void doSetIntegrationTime()
@@ -129,6 +131,12 @@ void doSetIntegrationTime()
     log("integration time -> %dms", ms);
 }
 
+void doSetMaxSpectra()
+{
+    maxSpectra = atoi(InputBox("Enter max spectra").c_str());
+    log("maxSpectra -> %d", maxSpectra);
+}
+
 void doSetLaserEnable()
 {
     if (spectrometer == nullptr)
@@ -137,6 +145,14 @@ void doSetLaserEnable()
     bool enabled = response.size() > 0 && (response[0] == 'y' || response[0] == 'Y');
     spectrometer->setLaserEnable(enabled); // example
     log("laser -> %s", enabled ? "on" : "off");
+}
+
+void doGetDetectorTemperatureDegC()
+{
+    if (spectrometer == nullptr)
+        return;
+    auto degC = spectrometer->getDetectorTemperatureDegC(); // example
+    log("detector temperature -> %.2f degC", degC);
 }
 
 void doReadEEPROM()
@@ -155,22 +171,29 @@ void doAcquire()
     if (spectrometer == nullptr)
         return;
 
-    vector<double> spectrum = spectrometer->getSpectrum(); // example
-    if (spectrum.empty())
+    for (int i = 0; i < maxSpectra; i++)
     {
-        log("doAcquire: ERROR: failed to read spectrum");
-        return;
-    }
+        vector<double> spectrum = spectrometer->getSpectrum(); // example
+        if (spectrum.empty())
+        {
+            log("doAcquire: ERROR: failed to read spectrum");
+            return;
+        }
 
-    log("doAcquire: read spectrum of %u pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
-        spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
+        if (maxSpectra < 100 || ((i + 1) % 10 == 0))
+        {
+            log("doAcquire: read spectrum %d of %d: %u pixels: %.2f, %.2f, %.2f, %.2f, %.2f ...",
+                i + 1, maxSpectra, spectrum.size(), spectrum[0], spectrum[1], spectrum[2], spectrum[3], spectrum[4]);
+            // @todo redraw window on long loops
+        }
 
-    // if we've opened an outfile, append the spectrum (row-ordered)
-    if (outfile.is_open())
-    {
-        for (auto y : spectrum)
-            outfile << y << ", ";
-        outfile << "\n";
+        // if we've opened an outfile, append the spectrum (row-ordered)
+        if (outfile.is_open())
+        {
+            for (auto y : spectrum)
+                outfile << y << ", ";
+            outfile << "\n";
+        }
     }
 }
 
@@ -226,6 +249,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
+
+    driver.destroy();
 
     // after exiting event loop, application will terminate
     return (int) msg.wParam;
@@ -302,6 +327,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         break;
 
                     // add new menu options here
+                    // (physically add them to the menu by double-clicking 
+                    //  WasatchVCPPDemo.rc -> Menu -> IDC_WASATCHVCPPDEMO)
                     case ID_SPECTROMETER_CONNECT: 
                         doConnect(); 
                         break;
@@ -317,8 +344,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     case ID_SPECTROMETER_SETLASERENABLE:
                         doSetLaserEnable();
                         break;
+                    case ID_SPECTROMETER_GETDETECTORTEMPERATUREDEGC:
+                        doGetDetectorTemperatureDegC();
+                        break;
                     case ID_SPECTROMETER_SETOUTFILE:
                         doSetOutfile();
+                        break;
+                    case ID_SPECTROMETER_MAXSPECTRA:
+                        doSetMaxSpectra();
                         break;
 
                     default: 

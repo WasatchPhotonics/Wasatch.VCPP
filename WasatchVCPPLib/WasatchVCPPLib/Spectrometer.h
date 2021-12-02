@@ -74,6 +74,9 @@ namespace WasatchVCPP
             //! Keeping this value small and controllable is key to being able to
             //! interrupt and cancel long integrations (5-10min) within a 
             //! reasonable response time.
+            //!
+            //! @todo we probably need to remove this variable altogether when we 
+            //! implement "interruptable acquisitions" in the FPGA.
             int maxTimeoutMS = 1000;
 
             // cached properties
@@ -158,7 +161,7 @@ namespace WasatchVCPP
             bool isSuccess(unsigned char opcode, int result);
             uint16_t serializeGain(float value);
             float deserializeGain(const std::vector<uint8_t>& data);
-            unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
+            inline unsigned long clamp(unsigned long value, unsigned long min, unsigned long max);
             bool lockComm();
             void unlockComm();
     };

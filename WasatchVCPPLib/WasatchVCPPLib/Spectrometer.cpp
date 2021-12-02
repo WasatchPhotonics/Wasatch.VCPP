@@ -23,6 +23,10 @@ using std::vector;
 using std::max;
 using std::min;
 
+#ifdef _WIN32
+#pragma warning(disable : 26451) // using operator on 4-byte value then casting result to 8-byte value
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +107,10 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
 
     // initialize TEC and setpoint
     if (eeprom.hasCooling)
+    {
+        setDetectorTECSetpointDegC(eeprom.startupDetectorTemperatureDegC);
         setDetectorTECEnable(true);
+    }
 
     // initialize micro models
     if (isMicro())
@@ -186,15 +193,15 @@ bool WasatchVCPP::Spectrometer::setIntegrationTimeMS(unsigned long ms)
 
     integrationTimeMS = ms;
     logger.debug("integrationTimeMS -> %lu", ms);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setLaserEnable(bool flag)
 {
     auto bytesWritten = sendCmd(0xbe, flag ? 1 : 0);
     laserEnabled = flag;
-    logger.debug("laserEnable -> %d", flag);
-    return true;
+    logger.debug("laserEnable -> %d (bytesWritten %d)", flag, bytesWritten);
+    return bytesWritten >= 0;
 }
 
 uint16_t WasatchVCPP::Spectrometer::serializeGain(float value)
@@ -215,7 +222,7 @@ bool WasatchVCPP::Spectrometer::setDetectorGain(float value)
 
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorGain -> 0x%04x (%.2f)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
@@ -228,7 +235,7 @@ bool WasatchVCPP::Spectrometer::setDetectorGainOdd(float value)
 
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorGainOdd -> 0x%04x (%.2f)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorOffset(int16_t value)
@@ -237,7 +244,7 @@ bool WasatchVCPP::Spectrometer::setDetectorOffset(int16_t value)
     uint16_t word = *((uint16_t*) &value); // send original signed int16 bit pattern
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorOffset -> 0x%04x (%d)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorOffsetOdd(int16_t value)
@@ -246,7 +253,7 @@ bool WasatchVCPP::Spectrometer::setDetectorOffsetOdd(int16_t value)
     uint16_t word = *((uint16_t*) &value);
     auto bytesWritten = sendCmd(op, word);
     logger.debug("detectorOffsetOdd -> 0x%04x (%d)", word, value);
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorTECEnable(bool flag)
@@ -263,7 +270,7 @@ bool WasatchVCPP::Spectrometer::setDetectorTECEnable(bool flag)
 
     auto bytesWritten = sendCmd(op, flag ? 1 : 0);
     logger.debug("detectorTECEnable -> %s", flag ? "on" : "off");
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
@@ -288,12 +295,12 @@ bool WasatchVCPP::Spectrometer::setDetectorTECSetpointDegC(int degC)
     uint16_t word = ((uint16_t)(dac + 0.5)) & 0xfff;
     auto bytesWritten = sendCmd(op, word);
 
-    logger.debug("detectorTECSetpointDegC -> 0x%04x (%.2f)", word, degC);
+    logger.debug("detectorTECSetpointDegC -> 0x%04x (%d)", word, degC);
 
     detectorTECSetpointHasBeenSet = true;
     detectorTECSetointDegC = degC;
 
-    return true;
+    return bytesWritten >= 0;
 }
 
 bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
@@ -311,7 +318,7 @@ bool WasatchVCPP::Spectrometer::setHighGainModeEnable(bool flag)
 
     logger.debug("highGainModeEnable -> %s", flag ? "on" : "off");
 
-    return true;
+    return bytesWritten >= 0;
 }
 
 string WasatchVCPP::Spectrometer::getFirmwareVersion()
@@ -341,7 +348,7 @@ string WasatchVCPP::Spectrometer::getFPGAVersion()
 //! @returns negative on error, else valid uint16_t
 int32_t WasatchVCPP::Spectrometer::getDetectorTemperatureRaw()
 {
-    if (eeprom.hasCooling)
+    if (!eeprom.hasCooling)
         return -1;
 
     const uint8_t op = 0xd7;
@@ -433,7 +440,6 @@ long WasatchVCPP::Spectrometer::generateTotalWaitMS()
          + 500;
 }
 
-//! @todo support 2048-pixel detectors
 std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
 {
     mutAcquisition.lock();
@@ -538,7 +544,7 @@ std::vector<uint16_t> WasatchVCPP::Spectrometer::getSubspectrum(uint8_t ep, long
 
     // what is the size of the individual reads we're going to perform (allowing
     // interruptions between, but not during each)?
-    long periodMS = min(allocatedMS, (long)maxTimeoutMS);
+    long periodMS = allocatedMS; // min(allocatedMS, (long)maxTimeoutMS);
 
     // what is the WALLCLOCK elapsed time we've spent so far on this venture?
     long elapsedMS = 0;
@@ -706,7 +712,12 @@ bool WasatchVCPP::Spectrometer::getHighGainModeEnable()
 //!        than 32 bits, such as the uint40 values used for laser modulation),
 //!        can provide additional bits of precision atop wValue and wIndex
 //! @param len (Input) number of bytes provided in data
-//! @returns number of bytes written (not really indicative of success/failure)
+//! @returns number of bytes written (not really indicative of success/failure).
+//!
+//! @note I *think* this actually indicates the number of DATA bytes 
+//!       transferred, and is not actually intended to include the "control
+//!       packet" itself; therefore, bytes written will be ZERO for most 
+//!       successful setters, and negative for comms failures.
 int WasatchVCPP::Spectrometer::sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, uint8_t* data, int len)
 {
     // ARM firmware expects all commands to include at least 8 payload bytes
@@ -856,6 +867,7 @@ vector<uint8_t> WasatchVCPP::Spectrometer::getCmdReal(
 
 bool WasatchVCPP::Spectrometer::isARM() { return pid == 0x4000; }
 
+//! @todo support ARM-based InGaAs
 bool WasatchVCPP::Spectrometer::isInGaAs() { return pid == 0x2000; }
 
 bool WasatchVCPP::Spectrometer::isMicro()
@@ -869,6 +881,7 @@ bool WasatchVCPP::Spectrometer::isMicro()
 bool WasatchVCPP::Spectrometer::isSuccess(unsigned char opcode, int result)
 { return true; }
 
+//! Clamps the value between min and max.  Would make a good M4 macro.
 //! @todo move to Util
 unsigned long WasatchVCPP::Spectrometer::clamp(unsigned long value, unsigned long min, unsigned long max)
 {
@@ -885,6 +898,9 @@ bool WasatchVCPP::Spectrometer::lockComm()
     return true;
 }
 
+#ifdef _WIN32
+#pragma warning(disable : 26110) // caller failing to hold lock before calling unlock
+#endif
 void WasatchVCPP::Spectrometer::unlockComm()
 {
     mutComm.unlock();

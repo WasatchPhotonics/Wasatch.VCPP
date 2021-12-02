@@ -3,7 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <iostream>
 #include <vector>
+#include <chrono>
 #include <string>
 #include <map>
 #include <ctime>
@@ -28,16 +30,40 @@ const int STR_LEN = 33;
 ////////////////////////////////////////////////////////////////////////////////
 
 int logLevel = WP_LOG_LEVEL_DEBUG;
+int integrationTimeMS = 100;
 int count = 5;
 int pixels;
 char serialNumber[STR_LEN];
 char model[STR_LEN];
+bool testLaser = false;
 map<string, string> eeprom;
-vector<double> wavelengths;
 bool ramanModeEnabled = false;
 bool EEPROMedit = false;
 bool integrationTimeEdit = false;
 int intEditms = 0;
+vector<float> wavelengths;
+
+////////////////////////////////////////////////////////////////////////////////
+// Utility
+////////////////////////////////////////////////////////////////////////////////
+
+void pause(const string& msg)
+{
+    string prompt = "Press <return> to continue...";
+    if (msg.size() > 0)
+        prompt = msg;
+    printf("\n%s", msg.c_str());
+    string junk;
+    std::getline(std::cin, junk);
+}
+
+string timestamp()
+{
+    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    char buf[100] = {0};
+    std::strftime(buf, sizeof(buf), "%F %T", std::localtime(&now));
+    return buf;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Functional Implementation
@@ -46,8 +72,8 @@ int intEditms = 0;
 void loadWavelengths()
 {
     wavelengths.clear();
-    double values[pixels];
-    if (WP_SUCCESS == wp_get_wavelengths(specIndex, values, pixels))
+    float values[pixels];
+    if (WP_SUCCESS == WP_SUCCESS)//wp_get_wavelengths_float(specIndex, values, pixels))
         for (int i = 0; i < pixels; i++)
             wavelengths.push_back(values[i]);
 }
@@ -159,7 +185,7 @@ bool init()
     wp_get_model(specIndex, model, STR_LEN);
     loadWavelengths();
 
-    printf("Found %s %s with %d pixels (%.2lf, %.2lf)\n", model, serialNumber, pixels, 
+    printf("Found %s %s with %d pixels (%.2f, %.2f)\n", model, serialNumber, pixels, 
         wavelengths[0], wavelengths[pixels-1]);
     
     loadEEPROM();
@@ -187,15 +213,19 @@ void demo()
     if (integrationTimeEdit) {
 		wp_set_integration_time_ms(specIndex,intEditms);
     }
+    ////////////////////////////////////////////////////////////////////////////
+    // read the requested number of spectra
+    ////////////////////////////////////////////////////////////////////////////
 
     for (int i = 0; i < count; i++)
     {
-        double spectrum[pixels];
-        if (WP_SUCCESS == wp_get_spectrum(specIndex, spectrum, pixels))
+        float spectrum[pixels];
+        if (WP_SUCCESS == WP_SUCCESS)//wp_get_spectrum_float(specIndex, spectrum, pixels))
         {
-            printf("Spectrum %3d of %3d:", i + 1, count);
+            auto now = timestamp();
+            printf("%s Spectrum %5d of %5d:", now.c_str(), i + 1, count);
             for (int i = 0; i < 10; i++)
-                printf(" %.2lf%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
+                printf(" %.2f%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
         }
         else
         {
@@ -205,13 +235,39 @@ void demo()
     }
 
     if (EEPROMedit) {
-		writeToEEPROM();
+        writeToEEPROM();
+    }
+    ////////////////////////////////////////////////////////////////////////////
+    // test result codes in the event of communication failures
+    ////////////////////////////////////////////////////////////////////////////
+
+    if (testLaser)
+    {
+        pause("Press <return> to enable laser...");
+        auto result = wp_set_laser_enable(specIndex, 1);
+        if (WP_SUCCESS == result)
+            printf("successfully enabled laser\n");
+        else
+            printf("ERROR: unable to enable laser (%d)\n", result);
+        auto degC = wp_get_detector_temperature_deg_c(specIndex);
+        printf("detector temperature %.2f degC\n", degC);
+
+        printf("\n<<< Disconnect spectrometer to test comms >>>\n");
+
+        pause("Press <return> to disable laser...");
+        result = wp_set_laser_enable(specIndex, 0);
+        if (WP_SUCCESS == result)
+            printf("successfully disabled laser\n");
+        else
+            printf("ERROR: unable to disable laser (%d)\n", result);
+        degC = wp_get_detector_temperature_deg_c(specIndex);
+        printf("detector temperature %.2f degC\n", degC);
     }
 }
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--count n] [--log-level DEBUG|INFO|ERROR|NEVER] [--integration-time-ms n] [--raman-mode]\n");
+    printf("Usage: $ demo-linux [--integration-time-ms n] [--count n] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER] [--raman-mode] [--write-eeprom]\n");
     exit(1);
 }
 
@@ -241,6 +297,17 @@ void parseArgs(int argc, char** argv)
         {
             if (i + 1 < argc)
                 count = atoi(argv[++i]); 
+            else
+                usage();
+        }
+        else if (!strcmp(argv[i], "--laser"))
+        {
+            testLaser = true;
+        }
+        else if (!strcmp(argv[i], "--integration-time-ms"))
+        {
+            if (i + 1 < argc)
+                integrationTimeMS = atoi(argv[++i]); 
             else
                 usage();
         }
@@ -278,9 +345,13 @@ int main(int argc, char** argv)
 {
     parseArgs(argc, argv);
     if (!init())
+    {
+        //wp_destroy_driver();
         return -1;
+    }
     demo();
 
     wp_close_all_spectrometers();
+    wp_destroy_driver();
     return 0;
 }

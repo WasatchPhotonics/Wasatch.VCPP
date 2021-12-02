@@ -34,7 +34,12 @@ string WasatchVCPP::Util::toLower(const std::string& s)
 }
 
 string WasatchVCPP::Util::toHex(const std::vector<uint8_t>& data)
-{ return toHex(&(data[0]), (int)data.size()); }
+{ 
+    if (data.size() == 0)
+        return "";
+    else
+        return toHex(&(data[0]), (int)data.size()); 
+}
 
 string WasatchVCPP::Util::toHex(const uint8_t* data, int len)
 {

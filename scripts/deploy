@@ -23,7 +23,7 @@ function renameAndPost()
             then
                 scp $LOCAL_PATH $USERNAME@$REMOTE_HOST:$REMOTE_PATH/$REMOTE_FILE
             else
-                echo "not found: $LOCAL_PATH"
+                echo "not found: $LOCAL_PATH" # soft failure
             fi
         done
     done
@@ -44,6 +44,29 @@ else
     echo "Can't find $VERSION in $DRIVER_H"
     exit 1
 fi
+
+# verify version number in Resource
+RC=WasatchVCPPLib/WasatchVCPPLib/WasatchVCPPLib.rc
+if egrep -q "ProductVersion.*$VERSION" $RC
+then
+    echo "Correct version in $RC"
+else
+    echo "Can't find $VERSION in $RC"
+    exit 1
+fi
+
+# verify version number in Setup projects
+for ARCH in 32 64 
+do 
+    VDPROJ=WasatchVCPPLib/Setup${ARCH}/Setup${ARCH}.vdproj
+    if egrep -q "ProductVersion.*$VERSION" $VDPROJ
+    then
+        echo "Correct version in $VDPROJ"
+    else
+        echo "Can't find $VERSION in $VDPROJ"
+        # exit 1   # soft failure
+    fi
+done
 
 # verify version number is tagged
 if git tag | egrep -q $VERSION

@@ -326,6 +326,7 @@ class WasatchVCPP
 
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_all_spectrometers();
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_close_spectrometer(int specIndex);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern void               wp_destroy_driver();
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_gain(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern float /* tested */ wp_get_detector_gain_odd(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_detector_tec_setpoint_deg_c(int specIndex);
@@ -350,8 +351,11 @@ class WasatchVCPP
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_pixels(int specIndex);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_serial_number(int specIndex, ref byte value, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_spectrum(int specIndex, ref double spectrum, int len);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int                wp_get_spectrum_float(int specIndex, ref float spectrum, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_wavelengths(int specIndex, ref double wavelengths, int len);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int                wp_get_wavelengths_float(int specIndex, ref float wavelengths, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_get_wavenumbers(int specIndex, ref double wavenumbers, int len);
+    [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int                wp_get_wavenumbers_float(int specIndex, ref float wavenumbers, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_log_debug(ref byte msg, int len);
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int   /* tested */ wp_open_all_spectrometers();
     [DllImport(DLL, CallingConvention = CallingConvention.Cdecl)] public static extern int                wp_read_control_msg(byte bRequest, ushort wIndex, ref byte data, int len, int fullLen);

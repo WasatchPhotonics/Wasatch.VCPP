@@ -21,7 +21,10 @@ namespace WasatchVCPP
             enum Flags
             {
                 FLAG_INVERT_X_AXIS = 0x0001, // 2^0 
-                FLAG_BIN_2X2       = 0x0002  // 2^1
+                FLAG_BIN_2X2       = 0x0002, // 2^1
+                FLAG_GEN15         = 0x0004, // 2^2
+                FLAG_CUTOFF_FILTER = 0x0008, // 2^3
+                FLAG_EVEN_ODD      = 0x0010  // 2^4
             };
 
             FeatureMask(uint16_t value = 0);
@@ -54,6 +57,18 @@ namespace WasatchVCPP
             //! driver is the horizontal binning.  This is currently performed within
             //! Spectrometer.getSpectrumRaw.
             bool bin2x2 = false;
+
+            //! Spectrometer has the new "Gen 1.5" OEM Accessory Connector 
+            //! providing triggering, external lamp control, continuous strobe, 
+            //! fan control, shutter control, load-switch reset, external power
+            //! etc.
+            bool gen15 = false;
+
+            //! Spectrometer has a cutoff filter installed.
+            bool cutoffFilterInstalled = false;
+
+            //! InGaAs spectrometer has even/odd pixel gain/offset correction 
+            //! implemented in the FPGA.
+            bool hardwareEvenOdd = false;
     };
 }
-

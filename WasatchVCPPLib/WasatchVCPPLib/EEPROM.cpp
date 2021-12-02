@@ -138,7 +138,7 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     {
         wavecalCoeffs[4] = ParseData::toFloat(pages[2], 21);
         subformat = (Subformats) ParseData::toUInt8(pages[5], 63);
-        if (subformat == SUBFORMAT_USER_DATA)
+        if (subformat == Subformats::SUBFORMAT_USER_DATA)
         {
             intensityCorrectionOrder = 0;
             intensityCorrectionCoeffs.clear();
@@ -147,13 +147,19 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     else
     {
         if (format >= 6)
-            subformat = SUBFORMAT_RAMAN_INTENSITY_CALIBRATION;
+            subformat = Subformats::SUBFORMAT_RAMAN_INTENSITY_CALIBRATION;
         else
-            subformat = SUBFORMAT_USER_DATA;
+            subformat = Subformats::SUBFORMAT_USER_DATA;
     }
 
     if (format >= 9)
         featureMask = FeatureMask(ParseData::toUInt16(pages[0], 39));
+
+    // ensure startupTemperature within bounds
+    if (startupDetectorTemperatureDegC < detectorTempMin)
+        startupDetectorTemperatureDegC = detectorTempMin;
+    if (startupDetectorTemperatureDegC > detectorTempMax)
+        startupDetectorTemperatureDegC = detectorTempMax;
 
     // log what we've read, while adding to the string map 
     stringifyAll();
@@ -187,6 +193,9 @@ void WasatchVCPP::EEPROM::stringifyAll()
     stringify("hasLaser", toBool(hasLaser));
     stringify("bin2x2", toBool(featureMask.bin2x2));
     stringify("invertXAxis", toBool(featureMask.invertXAxis));
+    stringify("gen15", toBool(featureMask.gen15));
+    stringify("cutoffFilterInstalled", toBool(featureMask.cutoffFilterInstalled));
+    stringify("hardwareEvenOdd", toBool(featureMask.hardwareEvenOdd));
     stringify("excitationNM", Util::sprintf("%.3f", excitationNM));
     stringify("slitSizeUM", Util::sprintf("%u", slitSizeUM));
 
