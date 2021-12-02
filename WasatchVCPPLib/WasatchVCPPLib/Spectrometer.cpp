@@ -300,11 +300,11 @@ uint64_t WasatchVCPP::Spectrometer::getModPeriodus(void) {
     logger.debug("got modulation period. response is");
     for (auto i : getRes)
         logger.debug("%d", i);
-    uint64_t modPeriod = getRes[4] << 32
-                       | getRes[3] << 24
-                       | getRes[2] << 16
-                       | getRes[1] << 8
-                       | getRes[0];
+    uint64_t modPeriod = getRes[4]
+                       | getRes[3] >> 8
+                       | getRes[2] >> 16
+                       | getRes[1] >> 24
+                       | getRes[0] >> 32;
     return modPeriod;
 }
 
