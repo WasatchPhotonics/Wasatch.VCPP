@@ -171,6 +171,10 @@ bool WasatchVCPP::Spectrometer::readEEPROM()
         logger.error("Spectrometer::readEEPROM: unable to parse EEPROM");
         return false;
     }
+    if (eeprom.has_srm()) 
+    {
+        srm_in_EEPROM = true;
+    }
     return true;
 }
 
@@ -514,6 +518,7 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
     mutAcquisition.unlock();
     return spectrum;
 }
+
 
 //! @param allocatedMS (Input) total time allocated in milliseconds (wall-clock)
 //! @returns either a populated subspectrum of exactly 'pixelsPerEndpoint' 
