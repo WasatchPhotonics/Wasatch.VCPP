@@ -301,10 +301,10 @@ uint64_t WasatchVCPP::Spectrometer::getModPeriodus(void) {
     for (auto i : getRes)
         logger.debug("%d", i);
     uint64_t modPeriod = getRes[4]
-                       | getRes[3] >> 8
-                       | getRes[2] >> 16
-                       | getRes[1] >> 24
-                       | getRes[0] >> 32;
+						| getRes[3] >> 8
+						| getRes[2] >> 16
+						| getRes[1] >> 24
+						| (((uint64_t)getRes[0]) >> 32);
     return modPeriod;
 }
 
