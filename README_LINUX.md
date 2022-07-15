@@ -13,6 +13,18 @@ sharing the basic source tree straightforward.
 
 - libusb-1.0
 
+## udev
+
+To access Wasatch spectrometers from "userland" on Linux (without running with 
+sudo or root privs), you need to "grant user access" to our devices by installing
+the following file:
+
+    $ cd Wasatch.VCPP
+    $ sudo cp udev/10-wasatch.rules /etc/udev/rules.d
+
+After installing the file, you need to restart or "HUP" udev (simplest method is
+just to reboot the computer).
+
 # Building
 
     $ cd Wasatch.VCPP
