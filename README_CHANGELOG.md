@@ -1,5 +1,9 @@
 # Changelog
 
+- 2022-07-15 1.0.19
+    - fixed nullptr bugs in Linux openAllSpectrometers
+    - deprecated PID 0x3000
+    - renamed symlinks in udev rules
 - 2021-11-02 1.0.18
     - stopped limiting USB reads to 1sec while "polling" for cancellations
 - 2021-11-02 1.0.17

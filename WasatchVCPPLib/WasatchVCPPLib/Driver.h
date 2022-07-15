@@ -63,7 +63,7 @@ namespace WasatchVCPP
             //!
             //! @note this value is checked by scripts/deploy against the given 
             //!       release tag
-            const std::string libraryVersion = "1.0.18";
+            const std::string libraryVersion = "1.0.19";
 
             static Driver* getInstance();
             static void destroy();
