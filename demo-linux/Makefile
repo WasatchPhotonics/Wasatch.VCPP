@@ -4,7 +4,7 @@ LDFLAGS  += -L../lib        \
             -lwasatchvcpp   \
             -lusb-1.0
         
-all: demo demo-eeprom
+all: demo demo-eeprom demo-continuous
 
 new: clean all
 
@@ -15,6 +15,9 @@ demo: demo.o
 	g++ $(LDFLAGS) -o $@ $^ $(LDFLAGS)
 
 demo-eeprom: demo-eeprom.o
+	g++ $(LDFLAGS) -o $@ $^ $(LDFLAGS)
+
+demo-continuous: demo-continuous.o
 	g++ $(LDFLAGS) -o $@ $^ $(LDFLAGS)
 
 ##

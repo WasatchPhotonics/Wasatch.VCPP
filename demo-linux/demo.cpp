@@ -31,7 +31,7 @@ const int STR_LEN = 33;
 
 int logLevel = WP_LOG_LEVEL_DEBUG;
 int integrationTimeMS = 100;
-int count = 5;
+int count = 30;
 int pixels;
 char serialNumber[STR_LEN];
 char model[STR_LEN];
