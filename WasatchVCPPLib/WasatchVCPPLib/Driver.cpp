@@ -138,7 +138,7 @@ int WasatchVCPP::Driver::openAllSpectrometers()
         }
     }
 #else
-    libusb_device **devs;
+    libusb_device **devs = nullptr;
     int r = libusb_init(nullptr);
 
     if (r < 0) 
@@ -148,14 +148,14 @@ int WasatchVCPP::Driver::openAllSpectrometers()
     }
 
     ssize_t cnt = libusb_get_device_list(nullptr, &devs);
-
-    if (cnt < 0){
+    if (cnt < 0)
+    {
         logger.debug("Failed to get USB device list");
         libusb_exit(nullptr);
         return int(cnt);
     }
 
-    libusb_device *dev;
+    libusb_device *dev = nullptr;
     int i = 0;
 
     while ((dev = devs[i++]) != nullptr)
@@ -176,10 +176,10 @@ int WasatchVCPP::Driver::openAllSpectrometers()
             {
                 logger.debug("opening device");
 
-                libusb_device_handle *udev;
+                libusb_device_handle *udev = nullptr;
                 int openResult = libusb_open(dev, &udev);
 
-                if(udev != nullptr)
+                if (udev != nullptr)
                 {
                     if (desc.bNumConfigurations)
                     {
