@@ -1,5 +1,7 @@
 # Changelog
 
+- 2023-06-?? 1.0.20
+    - fixed writing EEPROM on ARM
 - 2022-07-15 1.0.19
     - fixed nullptr bugs in Linux openAllSpectrometers
     - deprecated PID 0x3000

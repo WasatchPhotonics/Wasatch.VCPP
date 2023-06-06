@@ -710,7 +710,7 @@ int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int 
     int resVal;
     if (specType) 
     {
-       resVal = wp_send_control_msg(specIndex, 0xff, 0x02, 4, data, dataLen);
+       resVal = wp_send_control_msg(specIndex, 0xff, 0x02, pageIndex, data, dataLen);
     }
     else
     {
