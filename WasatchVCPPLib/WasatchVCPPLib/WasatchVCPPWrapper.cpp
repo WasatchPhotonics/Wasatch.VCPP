@@ -706,18 +706,18 @@ int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int 
         return WP_ERROR;
     }
 
-    int resVal;
+    int bytesWritten;
     if (spec->isARM())
     {
-       resVal = wp_send_control_msg(specIndex, 0xff, 0x02, pageIndex, data, dataLen);
+       bytesWritten = wp_send_control_msg(specIndex, 0xff, 0x02, pageIndex, data, dataLen);
     }
     else
     {
         unsigned int pageValue = (0x3c << 8) | (0x40 * pageIndex);
-        resVal = wp_send_control_msg(specIndex, 0xa2, pageValue, 0, data, dataLen);
+        bytesWritten = wp_send_control_msg(specIndex, 0xa2, pageValue, 0, data, dataLen);
     }
     
-    return resVal;
+    return bytesWritten == dataLen ? WP_SUCCESS : WP_ERROR;
 }
 
 int wp_send_control_msg(int specIndex, unsigned char bRequest, unsigned int wValue,

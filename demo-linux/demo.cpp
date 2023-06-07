@@ -128,42 +128,21 @@ void writeToEEPROM()
     unsigned char buf[PAGE_SIZE];
     wp_get_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
     string orig = bufToString(buf, PAGE_SIZE);
-    printf("The original value at page %d is: %s\n", USER_DATA, orig.c_str());
+    printf("Original contents of EEPROM page %d: [%s]\n", USER_DATA, orig.c_str());
 
     // generate new page contents
-    std::stringstream s;
-    s << "Test string at " << time(NULL);
-    string writeString = s.str();
+    string writeString = "Wasatch.VCPP demo at " + timestamp();
 
     // write the EEPROM page
-    printf("About to write: %s\n", writeString.c_str());
+    printf("Overwriting page contents with: [%s]\n", writeString.c_str());
     strncpy((char*)buf, writeString.c_str(), writeString.length());
     auto result = wp_write_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
-    if (WP_SUCCESS == result)
-    {
-        printf("write successful");
-    }
-    else
+    if (WP_SUCCESS != result)
     {
         printf("ERROR *** failed to write EEPROM (result %d)\n", result);
         return;
     }
-
-    // validate we can read what we wrote
-    memset(buf, 0, PAGE_SIZE); // zero buffer
-    printf("emptied buffer: [%s]\n", buf);
-    result = wp_get_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
-    if (WP_SUCCESS == result)
-    {
-        printf("read successful\n");
-    }
-    else
-    {
-        printf("ERROR *** failed to read EEPROM page (result %d)\n", result);
-        return;
-    }
-
-    printf("Retrieved page contents: [%s] (result %d)\n", buf, result);
+    printf("write successful");
 }
 
 void performRamanReading() 
