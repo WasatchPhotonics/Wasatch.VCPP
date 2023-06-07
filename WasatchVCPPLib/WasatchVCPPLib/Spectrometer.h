@@ -97,7 +97,6 @@ namespace WasatchVCPP
             float nextAppliedLaserPower = 0.0;
             int detectorTECSetointDegC = ErrorCodes::InvalidTemperature;
             bool srm_in_EEPROM = false;
-            std::vector<double> ramanIntensityCorrectionFactors;
 
             // opcodes
             bool setIntegrationTimeMS(unsigned long ms);
