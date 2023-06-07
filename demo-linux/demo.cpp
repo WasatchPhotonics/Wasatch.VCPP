@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -14,6 +15,7 @@
 
 #include "WasatchVCPP.h"
 
+using std::getline;
 using std::vector;
 using std::string;
 using std::map;
@@ -24,6 +26,8 @@ using std::map;
 
 const int specIndex = 0;
 const int STR_LEN = 33;
+const int LASER_WARMUP_SEC = 10;
+const int PAGE_SIZE = 64;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -100,68 +104,153 @@ void loadEEPROM()
     free(values);
 }
 
-int writeToEEPROM()
+string bufToString(unsigned char* buf, int len)
 {
-    unsigned char buf[64];
-    string writeString;
-    wp_get_eeprom_page(specIndex, 4, buf, 64);
-    printf("The value at page 4 is %s\n", buf);
+    std::string s;
+    for (int i = 0; i < len; i++)
+    {
+        char c = (char)buf[i];    
+        if (c == 0)
+            break;
+        else if (isprint(c))
+            s += (char)buf[i];
+        else
+            s += '.';
+    }
+    return s;
+}
+
+// This function writes a demo string to page 4 of the EEPROM ("User Data")
+void writeToEEPROM()
+{
+    const int USER_DATA = 4;
+
+    // read the current page contents
+    unsigned char buf[PAGE_SIZE];
+    wp_get_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
+    string orig = bufToString(buf, PAGE_SIZE);
+    printf("The original value at page %d is: %s\n", USER_DATA, orig.c_str());
+
+    // generate new page contents
     std::stringstream s;
-    s << "Test string. ";
-    s << time(NULL);
-    writeString = s.str();
-    strncpy((char*)buf, writeString.c_str(),writeString.length());
-    printf("wrote string to buffer, buffer is now %s\n", buf);
-    int i = wp_write_eeprom_page(specIndex, 4, buf, 64);
-    memset(buf, 0, 64);
-    printf("wrote the page to the eeprom and buffer now has value [%s]\n", buf);
-    wp_get_eeprom_page(specIndex, 4, buf, 64);
-    printf("The value at page 4 after edit is %s and the write operation was %d\n", buf, i);
-    return 0;
+    s << "Test string at " << time(NULL);
+    string writeString = s.str();
+
+    // write the EEPROM page
+    printf("About to write: %s\n", writeString.c_str());
+    strncpy((char*)buf, writeString.c_str(), writeString.length());
+    auto result = wp_write_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
+    if (WP_SUCCESS == result)
+    {
+        printf("write successful");
+    }
+    else
+    {
+        printf("ERROR *** failed to write EEPROM (result %d)\n", result);
+        return;
+    }
+
+    // validate we can read what we wrote
+    memset(buf, 0, PAGE_SIZE); // zero buffer
+    printf("emptied buffer: [%s]\n", buf);
+    result = wp_get_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
+    if (WP_SUCCESS == result)
+    {
+        printf("read successful\n");
+    }
+    else
+    {
+        printf("ERROR *** failed to read EEPROM page (result %d)\n", result);
+        return;
+    }
+
+    printf("Retrieved page contents: [%s] (result %d)\n", buf, result);
 }
 
 void performRamanReading() 
 {
-	double dark_spectrum[pixels];
-	double corrected_spectrum[pixels];
-	double initial_spectrum[pixels];
-	int i;
-	string stringSpec;
-	if (WP_SUCCESS == wp_get_spectrum(specIndex, dark_spectrum, pixels))
-	{
-		printf("Obtained a dark spectra\n");
-	}
-	else {
-		printf("Did not obtain a dark spectra\n");
-	}
-	printf("Took dark spectrum.\n\n");
-	printf("About to enable laser\n");
-	wp_set_laser_enable(specIndex, 1);
-	usleep(7000000);
-	usleep(1000);
-	wp_get_spectrum(specIndex, initial_spectrum, pixels);
-	wp_set_laser_enable(specIndex, 0);
-	usleep(1000);
-	for (i = 0; i < pixels; i++)
-	{
-		corrected_spectrum[i] = initial_spectrum[i] - dark_spectrum[i];
-	}
-	if (wp_has_srm_calibration(specIndex))
-	{
-		printf("srm calibration present\n");
-		int ROILen;
-		ROILen = wp_get_vignetted_spectrum_length(specIndex);
-		double factors[ROILen];
-		wp_get_raman_intensity_factors(specIndex, factors, ROILen);
-		wp_apply_raman_intensity_factors(specIndex, corrected_spectrum, pixels, factors, ROILen, 0, pixels);
-	}
-	printf("Took corrected_spectrum\n");
-	printf("dark,initial,corrected\n");
-	for (i = 0; i < pixels; i++)
-	{
-		printf("%.2lf,%.2lf,%.2lf\n ", dark_spectrum[i],initial_spectrum[i],corrected_spectrum[i]);
-	}
-	printf(" ... \n");
+    double dark[pixels];
+    printf("taking dark spectrum\n");
+    if (WP_SUCCESS == wp_get_spectrum(specIndex, dark, pixels))
+    {
+        printf("Obtained dark spectrum\n");
+    }
+    else 
+    {
+        printf("ERROR *** failed to obtain dark spectrum\n");
+        return;
+    }
+
+    pause("Press <return> to enable laser...");
+    wp_set_laser_enable(specIndex, 1);
+
+    printf("Waiting %d sec for laser to warm-up\n", LASER_WARMUP_SEC);
+    usleep(LASER_WARMUP_SEC * 1000000);
+
+    double raw[pixels];
+    printf("taking raw spectrum\n");
+    wp_get_spectrum(specIndex, raw, pixels);
+
+    printf("disabling laser\n");
+    wp_set_laser_enable(specIndex, 0);
+
+    double darkCorrected[pixels];
+    printf("performing dark correction\n");
+    for (int i = 0; i < pixels; i++)
+        darkCorrected[i] = raw[i] - dark[i];
+
+    double srmCorrected[pixels];
+    memset(srmCorrected, 0, pixels * sizeof(srmCorrected[0]));
+    auto result = wp_has_srm_calibration(specIndex);
+    if (WP_SUCCESS == result)
+    {
+        int start = atoi(eeprom["ROIHorizStart"].c_str());
+        int end = atoi(eeprom["ROIHorizEnd"].c_str());
+        int ROILen = wp_get_vignetted_spectrum_length(specIndex);
+
+        printf("found Raman Intensity Calibration from pixels %d to %d (%d total)\n",
+            start, end, ROILen);
+        if (ROILen != end - start) // MZ: end - start + 1?
+            printf("WARNING: ROILen %d != end %d - start %d\n", ROILen, end, start);
+
+        if (ROILen > 0)
+        {
+            // we would normally want to cache the factors rather than re-generate 
+            // them for each spectrum, but this is just a demo
+            double factors[ROILen];
+            result = wp_get_raman_intensity_factors(specIndex, factors, ROILen);
+            if (WP_SUCCESS == result)
+            {
+                printf("read %d Raman Intensity Correction factors\n", ROILen);
+
+                printf("Applying Raman Intensity Correction\n");
+                memcpy(srmCorrected, darkCorrected, pixels * sizeof(darkCorrected[0]));
+                result = wp_apply_raman_intensity_factors(
+                    specIndex,      // specIndex
+                    srmCorrected,   // spectrum to be corrected in-place
+                    pixels,         // spectrum_len
+                    factors,        // generated factors
+                    ROILen,         // number of factors
+                    start,          // start of horizontal ROI
+                    end);           // end+1 of horizontal ROI
+                if (WP_SUCCESS == result)
+                    printf("Raman Intensity Correction successfully applied\n");
+                else
+                    printf("ERROR *** failed to apply Raman Intensity Correction (result %d)\n", result);
+            }
+            else
+                printf("ERROR *** failed to read Raman Intensity Correction factors (result %d)\n", result);
+        }
+        else
+            printf("ERROR *** ROILen %d\n", ROILen);
+    }
+    else
+        printf("skipping Raman Intensity Correction as no Raman Intensity Calibration found (result %d)\n", result);
+
+    printf("pixel,dark,raw,darkCorrected,srmCorrected\n");
+    for (int i = 0; i < pixels; i++)
+        printf("%d,%.2lf,%.2lf,%.2lf,%.2lf\n", i, dark[i], raw[i], darkCorrected[i], srmCorrected[i]);
+    printf(" ... \n");
 }
 
 bool init()
@@ -197,7 +286,7 @@ bool init()
     }
 
     if (integrationTimeEdit) {
-		wp_set_integration_time_ms(specIndex,integrationTimeMS);
+        wp_set_integration_time_ms(specIndex,integrationTimeMS);
     }
 
     return true;
@@ -214,27 +303,29 @@ void demo()
     {
         performRamanReading();
     }
-
-    for (int i = 0; i < count; i++)
+    else
     {
-        float spectrum[pixels];
-        if (WP_SUCCESS == wp_get_spectrum_float(specIndex, spectrum, pixels))
+        for (int i = 0; i < count; i++)
         {
-            auto now = timestamp();
-            printf("%s Spectrum %5d of %5d:", now.c_str(), i + 1, count);
-            for (int i = 0; i < 10; i++)
-                printf(" %.2f%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
-        }
-        else
-        {
-            printf("ERROR: failed getting spectrum\n");
-            exit(-1);
+            float spectrum[pixels];
+            if (WP_SUCCESS == wp_get_spectrum_float(specIndex, spectrum, pixels))
+            {
+                auto now = timestamp();
+                printf("%s Spectrum %5d of %5d:", now.c_str(), i + 1, count);
+                for (int i = 0; i < 10; i++)
+                    printf(" %.2f%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
+            }
+            else
+            {
+                printf("ERROR: failed getting spectrum\n");
+                exit(-1);
+            }
         }
     }
 
-    if (EEPROMedit) {
+    if (EEPROMedit) 
         writeToEEPROM();
-    }
+
     ////////////////////////////////////////////////////////////////////////////
     // test result codes in the event of communication failures
     ////////////////////////////////////////////////////////////////////////////

@@ -20,6 +20,7 @@ using std::isnan;
 WasatchVCPP::EEPROM::EEPROM(Logger& logger)
     : logger(logger)
 {
+    subformat = Subformats::SUBFORMAT_USER_DATA;
 }
 
 bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
@@ -120,10 +121,13 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     else
         productConfiguration.clear();
 
+    if (format >= 8)
+        subformat = (Subformats) ParseData::toUInt8(pages[5], 63);
+
     // Raman Intensity Calibration (SRM)
     intensityCorrectionOrder = 0;
     intensityCorrectionCoeffs.clear();
-    if (format >= 6)
+    if (subformat == Subformats::SUBFORMAT_RAMAN_INTENSITY_CALIBRATION)
     {
         intensityCorrectionOrder = ParseData::toUInt8(pages[6], 0);
         auto numCoeffs = intensityCorrectionOrder + 1;
@@ -131,6 +135,8 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
             numCoeffs = 0;
         for (int i = 0; i < numCoeffs; ++i)
             intensityCorrectionCoeffs.push_back(ParseData::toFloat(pages[6], 1 + 4 * i));
+
+        // Wasatch.PY and Wasatch.NET check if coeffs "look valid," not adding at this time
         if (numCoeffs > 0)
             srm_present = true;
     }
@@ -138,22 +144,7 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     avgResolution = format >= 7 ? ParseData::toFloat(pages[3], 48) : 0.f;
 
     if (format >= 8)
-    {
         wavecalCoeffs[4] = ParseData::toFloat(pages[2], 21);
-        subformat = (Subformats) ParseData::toUInt8(pages[5], 63);
-        if (subformat == Subformats::SUBFORMAT_USER_DATA)
-        {
-            intensityCorrectionOrder = 0;
-            intensityCorrectionCoeffs.clear();
-        }
-    }
-    else
-    {
-        if (format >= 6)
-            subformat = Subformats::SUBFORMAT_RAMAN_INTENSITY_CALIBRATION;
-        else
-            subformat = Subformats::SUBFORMAT_USER_DATA;
-    }
 
     if (format >= 9)
         featureMask = FeatureMask(ParseData::toUInt16(pages[0], 39));
