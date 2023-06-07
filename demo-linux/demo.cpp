@@ -15,7 +15,6 @@
 
 #include "WasatchVCPP.h"
 
-using std::getline;
 using std::vector;
 using std::string;
 using std::map;
