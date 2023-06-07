@@ -706,9 +706,8 @@ int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int 
         return WP_ERROR;
     }
 
-    bool specType = spec->isARM();
     int resVal;
-    if (specType) 
+    if (spec->isARM())
     {
        resVal = wp_send_control_msg(specIndex, 0xff, 0x02, pageIndex, data, dataLen);
     }
