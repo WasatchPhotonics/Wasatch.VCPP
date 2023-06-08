@@ -55,6 +55,7 @@
 #define WP_ERROR_INSUFFICIENT_STORAGE  -3     //!< insufficient storage was allocated to receive the full value
 #define WP_ERROR_NO_LASER              -4     //!< command is only valid on models with a laser and/or defined excitation wavelength
 #define WP_ERROR_NOT_INGAAS            -5     //!< command is only valid on models with an InGaAs detector
+#define WP_ERROR_NO_CALIBRATION        -6     //!< command requires a missing calibration
 #define WP_ERROR_INVALID_GAIN          -256   //!< detector gain could not be determined (impossible value)
 #define WP_ERROR_INVALID_TEMPERATURE   -999   //!< temperature could not be measured (impossible value)
 #define WP_ERROR_INVALID_OFFSET        -32768 //!< offset could not be determined (unreasonable value)
@@ -100,14 +101,6 @@ extern "C"
     //! @param len (Input) length of allocated buffer (16 recommended)
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_library_version(char* value, int len);
-
-    DLL_API int wp_get_vignetted_spectrum_length(int specIndex);
-
-    DLL_API int wp_apply_raman_intensity_factors(int specIndex, double* spectrum, int spectrum_len, double* factors, int factors_len, int start_pixel, int end_pixel);
-
-    DLL_API int wp_has_srm_calibration(int specIndex);
-
-    DLL_API int wp_get_raman_intensity_factors(int specIndex, double* factors, int factorsLen);
 
     ////////////////////////////////////////////////////////////////////////////
     // Lifecycle
@@ -229,6 +222,14 @@ extern "C"
     //! @see ENG-0034
     DLL_API int wp_get_eeprom_page(int specIndex, int page, unsigned char* buf, int len);
 
+    //! Write one page of the EEPROM in raw binary form.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param page (Input) which page (0-7)
+    //! @param buf (Input) array of bytes holding the page to be written
+    //! @param dataLen (Input) size of page in bytes (normally 64)
+    //! @return WP_SUCCESS or non-zero on error
+    //! @see ENG-0034
     DLL_API int wp_write_eeprom_page(int specIndex, int pageIndex, unsigned char* data, int dataLen);
 
     //! Read one stringified EEPROM field by name.
@@ -243,6 +244,49 @@ extern "C"
     //! @param len (Input) length of pre-allocated array
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_eeprom_field(int specIndex, const char* name, char* value, int len);
+
+    //! Determine whether the given spectrometer contains a NIST SRM
+    //! Raman Intensity Calibration.
+    //! @param specIndex (Input) which spectrometer
+    //! @returns WP_SUCCESS if calibration found, WP_ERROR otherwise
+    DLL_API int wp_has_srm_calibration(int specIndex);
+
+    //! Get the length of a vignetted spectrum (the width of the horizontal ROI).
+    //!
+    //! If a spectrometer has an SRM calibration for Raman Intensity Correction,
+    //! this indicates the number of scaling "factors" which the calibration
+    //! will generate.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @returns length (number of pixels)
+    DLL_API int wp_get_vignetted_spectrum_length(int specIndex);
+
+    //! Generate and populate an array of intensity scaling factors based on a 
+    //! NIST SRM Raman Intensity Calibration in the EEPROM. 
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param factors (Output) a pre-allocated array of doubles to hold the generated factors
+    //! @param factorsLen (Input) length of pre-allocated array
+    //!
+    //! @see wp_has_srm_calibration
+    //! @see wp_get_vignetted_spectrum_length
+    //!
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_get_raman_intensity_factors(int specIndex, double* factors, int factorsLen);
+
+    //! Apply a pre-generated array of NIST-traceable intensity scaling factors 
+    //! to a given spectrum.
+    //!
+    //! @param specIndex (Input) which spectrometer
+    //! @param spectrum (In/Out) input spectrum (modified in-place)
+    //! @param spectrum_len (Input) length of spectrum
+    //! @param factors (Input) pre-generated scaling factors (generated via wp_get_raman_intensity_factors)
+    //! @param factors_len (Input) length of factors (may be smaller than full spectrum)
+    //! @param start_pixel (Input) the "start" of the horizontal ROI, i.e. index within 'spectrum' where the first factor (factor[0] should be applied)
+    //! @param end_pixel (Input) the "last+1" pixel of the horizontal ROI (should be just past the final element of factors)
+    //!
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_apply_raman_intensity_factors(int specIndex, double* spectrum, int spectrum_len, double* factors, int factors_len, int start_pixel, int end_pixel);
 
     ////////////////////////////////////////////////////////////////////////////
     // Convenience accessors
@@ -409,11 +453,11 @@ extern "C"
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_set_laser_power_perc(int specIndex, float percent);
 
-	//! Sets laser power as a mW value.
-	//!
-	//! @param power (Input) mW power to set laser 
-	//! @returns WP_SUCCESS or non-zero on error
-	DLL_API int wp_set_laser_power_mW(int specIndex, float power);
+    //! Sets laser power as a mW value.
+    //!
+    //! @param power (Input) mW power to set laser 
+    //! @returns WP_SUCCESS or non-zero on error
+    DLL_API int wp_set_laser_power_mW(int specIndex, float power);
 
     //! Set detector gain.
     //!
