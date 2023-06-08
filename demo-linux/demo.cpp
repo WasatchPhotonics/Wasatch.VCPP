@@ -135,7 +135,7 @@ void writeToEEPROM()
 
     // write the EEPROM page
     printf("Overwriting page contents with: [%s]\n", writeString.c_str());
-    strncpy((char*)buf, writeString.c_str(), PAGE_SIZE);
+    strncpy((char*)buf, writeString.c_str(), PAGE_SIZE-1);
     auto result = wp_write_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
     if (WP_SUCCESS != result)
     {
