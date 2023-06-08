@@ -62,7 +62,7 @@ void pause(const string& msg)
 string timestamp()
 {
     std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    char buf[100] = {0};
+    char buf[100] = {0}; // currently using 19 bytes
     std::strftime(buf, sizeof(buf), "%F %T", std::localtime(&now));
     return buf;
 }
@@ -130,12 +130,12 @@ void writeToEEPROM()
     string orig = bufToString(buf, PAGE_SIZE);
     printf("Original contents of EEPROM page %d: [%s]\n", USER_DATA, orig.c_str());
 
-    // generate new page contents
+    // generate new page contents 
     string writeString = "Wasatch.VCPP demo at " + timestamp();
 
     // write the EEPROM page
     printf("Overwriting page contents with: [%s]\n", writeString.c_str());
-    strncpy((char*)buf, writeString.c_str(), writeString.length());
+    strncpy((char*)buf, writeString.c_str(), PAGE_SIZE);
     auto result = wp_write_eeprom_page(specIndex, USER_DATA, buf, PAGE_SIZE);
     if (WP_SUCCESS != result)
     {
