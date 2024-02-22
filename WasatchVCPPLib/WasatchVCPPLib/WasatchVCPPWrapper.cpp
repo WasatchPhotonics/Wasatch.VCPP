@@ -749,7 +749,7 @@ int wp_read_control_msg(int specIndex, unsigned char bRequest, unsigned int wInd
     return (int)response.size();
 }
 
-int wp_get_vignetted_spectrum_length(int specIndex) 
+int wp_get_cropped_spectrum_length(int specIndex) 
 {
     auto spec = driver->getSpectrometer(specIndex);
         if (spec == nullptr)

@@ -184,11 +184,11 @@ void performRamanReading()
     {
         int start = atoi(eeprom["ROIHorizStart"].c_str());
         int end = atoi(eeprom["ROIHorizEnd"].c_str());
-        int ROILen = wp_get_vignetted_spectrum_length(specIndex);
+        int ROILen = wp_get_cropped_spectrum_length(specIndex);
 
         printf("found Raman Intensity Calibration from pixels %d to %d (%d total)\n",
             start, end, ROILen);
-        if (ROILen != end - start) // MZ: end - start + 1?
+        if (ROILen != end - start) // MZ: wp_get_cropped_spectrum_length uses end - start + 1
             printf("WARNING: ROILen %d != end %d - start %d\n", ROILen, end, start);
 
         if (ROILen > 0)
