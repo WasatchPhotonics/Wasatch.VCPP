@@ -254,7 +254,7 @@ import a graphing framework into Visual C++ :-(
 
 # Changelog
 
-- see [Changelog](README_CHANGELOG.md)
+- see [Changelog](CHANGELOG.md)
 
 # References
 

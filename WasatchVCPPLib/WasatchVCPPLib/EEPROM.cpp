@@ -107,6 +107,16 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
     }
 
     userData = pages[4]; // technically, on format < 4, should only be 63 bytes
+    for (int i = 0; i <= 64; i++)
+    {
+        char c = userData[i];
+        if (0 == c)
+            break;
+        else if (32 <= c && c < 127)
+            userText += c;
+        else
+            userText += '.';
+    }
 
     badPixels.clear();
     for (int i = 0; i < 15; i++)
@@ -276,16 +286,10 @@ void WasatchVCPP::EEPROM::stringifyAll()
     stringify("intensityCorrectionOrder", Util::sprintf("%u", intensityCorrectionOrder));
     stringify("intensityCorrectionCoeffs", Util::join(intensityCorrectionCoeffs, "%g"));
 
-    for (int i = 0; i < 5; i++)
-        stringify(Util::sprintf("wavecalCoeffs[%d]", i), Util::sprintf("%g", wavecalCoeffs[i]));
-    for (int i = 0; i < 3; i++)
-        stringify(Util::sprintf("degCToDACCoeffs[%d]", i), Util::sprintf("%g", degCToDACCoeffs[i]));
-    for (int i = 0; i < 3; i++)
-        stringify(Util::sprintf("adcToDegCCoeffs[%d]", i), Util::sprintf("%g", adcToDegCCoeffs[i]));
-    for (int i = 0; i < 3; i++)
-        stringify(Util::sprintf("ROIVertRegion[%d]", i), Util::sprintf("(%u, %u)", ROIVertRegionStart[i], ROIVertRegionEnd[i]));
-    for (int i = 0; i < 5; i++)
-        stringify(Util::sprintf("linearityCoeffs[%d]", i), Util::sprintf("%g", linearityCoeffs[i]));
-    for (int i = 0; i < 4; i++)
-        stringify(Util::sprintf("laserPowerCoeffs[%d]", i), Util::sprintf("%g", laserPowerCoeffs[i]));
+    for (int i = 0; i < 5; i++) stringify(Util::sprintf("wavecalCoeffs[%d]",    i), Util::sprintf("%g", wavecalCoeffs[i]));
+    for (int i = 0; i < 3; i++) stringify(Util::sprintf("degCToDACCoeffs[%d]",  i), Util::sprintf("%g", degCToDACCoeffs[i]));
+    for (int i = 0; i < 3; i++) stringify(Util::sprintf("adcToDegCCoeffs[%d]",  i), Util::sprintf("%g", adcToDegCCoeffs[i]));
+    for (int i = 0; i < 3; i++) stringify(Util::sprintf("ROIVertRegion[%d]",    i), Util::sprintf("(%u, %u)", ROIVertRegionStart[i], ROIVertRegionEnd[i]));
+    for (int i = 0; i < 5; i++) stringify(Util::sprintf("linearityCoeffs[%d]",  i), Util::sprintf("%g", linearityCoeffs[i]));
+    for (int i = 0; i < 4; i++) stringify(Util::sprintf("laserPowerCoeffs[%d]", i), Util::sprintf("%g", laserPowerCoeffs[i]));
 }

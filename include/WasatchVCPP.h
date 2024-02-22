@@ -251,7 +251,7 @@ extern "C"
     //! @returns WP_SUCCESS if calibration found, WP_ERROR otherwise
     DLL_API int wp_has_srm_calibration(int specIndex);
 
-    //! Get the length of a vignetted spectrum (the width of the horizontal ROI).
+    //! Get the length of a cropped spectrum (the width of the horizontal ROI).
     //!
     //! If a spectrometer has an SRM calibration for Raman Intensity Correction,
     //! this indicates the number of scaling "factors" which the calibration
@@ -259,7 +259,7 @@ extern "C"
     //!
     //! @param specIndex (Input) which spectrometer
     //! @returns length (number of pixels)
-    DLL_API int wp_get_vignetted_spectrum_length(int specIndex);
+    DLL_API int wp_get_cropped_spectrum_length(int specIndex);
 
     //! Generate and populate an array of intensity scaling factors based on a 
     //! NIST SRM Raman Intensity Calibration in the EEPROM. 
@@ -269,7 +269,7 @@ extern "C"
     //! @param factorsLen (Input) length of pre-allocated array
     //!
     //! @see wp_has_srm_calibration
-    //! @see wp_get_vignetted_spectrum_length
+    //! @see wp_get_cropped_spectrum_length
     //!
     //! @returns WP_SUCCESS or non-zero on error
     DLL_API int wp_get_raman_intensity_factors(int specIndex, double* factors, int factorsLen);
@@ -681,6 +681,10 @@ extern "C"
                                     unsigned int wIndex,
                                     unsigned char* data,
                                     int len);
+
+    //! Obviously shouldn't have to do this, but adding to work with developmental 
+    //! spectrometers and firmware.
+    DLL_API void wp_set_driver_delay_us(unsigned long delay_us = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

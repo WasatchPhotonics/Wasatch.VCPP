@@ -129,8 +129,8 @@ WasatchVCPP::Spectrometer::Spectrometer(WPVCPP_UDEV_TYPE* udev, int pid, int ind
     }
     bufSubspectrum.resize(pixelsPerEndpoint * 2);
 
-    // default high for Raman, low otherwise
-    setHighGainModeEnable(isInGaAs());
+    if (isInGaAs())
+        setHighGainModeEnable(true);
 
     logger.debug("Spectrometer::ctor: done");
 }
