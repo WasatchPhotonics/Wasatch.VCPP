@@ -22,6 +22,7 @@
 #include <string>
 #include <map>
 #include <math.h>
+#include <unistd.h>
 
 #include <string.h> // Linux memset
 
@@ -45,6 +46,7 @@ using std::min;
 ////////////////////////////////////////////////////////////////////////////////
 
 Driver* driver = Driver::getInstance();
+static unsigned long delay_us = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // helper functions
@@ -66,6 +68,12 @@ int exportString(string s, char* buf, int len)
             return WP_ERROR_INSUFFICIENT_STORAGE;
 
     return WP_SUCCESS;
+}
+
+void delay()
+{
+    if (delay_us)
+        usleep(delay_us);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,6 +233,7 @@ int wp_get_spectrum(int specIndex, double* spectrum, int len)
     for (int i = 0; i < (int)intensities.size(); i++)
         spectrum[i] = intensities[i];
 
+    delay();
     return WP_SUCCESS;
 }
 
@@ -421,6 +430,7 @@ int wp_set_integration_time_ms(int specIndex, unsigned long ms)
     if (!spec->setIntegrationTimeMS(ms))
         return WP_ERROR;
 
+    delay();
     return WP_SUCCESS;
 }
 
@@ -433,6 +443,7 @@ int wp_set_laser_enable(int specIndex, int value)
     if (!spec->setLaserEnable(value))
         return WP_ERROR;
 
+    delay();
     return WP_SUCCESS;
 }
 
@@ -461,7 +472,6 @@ int wp_set_laser_power_mW(int specIndex, float percent)
 
     return WP_SUCCESS;
 }
-
 
 int wp_set_detector_gain(int specIndex, float value)
 {
@@ -806,4 +816,9 @@ int wp_has_srm_calibration(int specIndex)
     if (spec == nullptr)
         return WP_ERROR_INVALID_SPECTROMETER;
     return spec->srm_in_EEPROM ? WP_SUCCESS : WP_ERROR;
+}
+
+void wp_set_driver_delay_us(unsigned long us)
+{
+    delay_us = us;
 }
