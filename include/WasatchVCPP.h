@@ -681,6 +681,10 @@ extern "C"
                                     unsigned int wIndex,
                                     unsigned char* data,
                                     int len);
+
+    //! Obviously shouldn't have to do this, but adding to work with developmental 
+    //! spectrometers and firmware.
+    DLL_API void wp_set_driver_delay_us(unsigned long delay_us = 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

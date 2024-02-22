@@ -41,9 +41,13 @@ char model[STR_LEN];
 bool testLaser = false;
 map<string, string> eeprom;
 bool ramanModeEnabled = false;
+bool tabs = false;
 bool EEPROMedit = false;
 bool integrationTimeEdit = false;
 vector<float> wavelengths;
+vector<float> wavenumbers;
+unsigned long delay_us = 0;
+int throwaways = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utility
@@ -78,6 +82,14 @@ void loadWavelengths()
     if (WP_SUCCESS == wp_get_wavelengths_float(specIndex, values, pixels))
         for (int i = 0; i < pixels; i++)
             wavelengths.push_back(values[i]);
+}
+
+void loadWavenumbers()
+{
+    float laserWavelength = atof(eeprom["excitationNM"].c_str());
+    if (laserWavelength > 0)
+        for (int i = 0; i < pixels; i++)
+            wavenumbers.push_back(1e7/laserWavelength - 1e7/wavelengths[i]);
 }
 
 void loadEEPROM()
@@ -145,8 +157,27 @@ void writeToEEPROM()
     printf("write successful");
 }
 
+void perform_throwaways()
+{
+    double junk[pixels];
+    for (int i = 0; i < throwaways; i++)
+    {
+        if (WP_SUCCESS == wp_get_spectrum(specIndex, junk, pixels))
+        {
+            printf("took throwaway %d of %d...\n", i + 1, throwaways);
+        }
+        else 
+        {
+            printf("ERROR *** failed to take throwaway %d of %d\n", i + 1, throwaways);
+            return;
+        }
+    }
+}
+
 void performRamanReading() 
 {
+    perform_throwaways();
+
     double dark[pixels];
     printf("taking dark spectrum\n");
     if (WP_SUCCESS == wp_get_spectrum(specIndex, dark, pixels))
@@ -164,6 +195,8 @@ void performRamanReading()
 
     printf("Waiting %d sec for laser to warm-up\n", LASER_WARMUP_SEC);
     usleep(LASER_WARMUP_SEC * 1000000);
+
+    perform_throwaways();
 
     double raw[pixels];
     printf("taking raw spectrum\n");
@@ -188,7 +221,7 @@ void performRamanReading()
 
         printf("found Raman Intensity Calibration from pixels %d to %d (%d total)\n",
             start, end, ROILen);
-        if (ROILen != end - start) // MZ: wp_get_cropped_spectrum_length uses end - start + 1
+        if (ROILen != end - start + 1) 
             printf("WARNING: ROILen %d != end %d - start %d\n", ROILen, end, start);
 
         if (ROILen > 0)
@@ -210,7 +243,7 @@ void performRamanReading()
                     factors,        // generated factors
                     ROILen,         // number of factors
                     start,          // start of horizontal ROI
-                    end);           // end+1 of horizontal ROI
+                    end);           // end of horizontal ROI
                 if (WP_SUCCESS == result)
                     printf("Raman Intensity Correction successfully applied\n");
                 else
@@ -225,10 +258,20 @@ void performRamanReading()
     else
         printf("skipping Raman Intensity Correction as no Raman Intensity Calibration found (result %d)\n", result);
 
-    printf("pixel,dark,raw,darkCorrected,srmCorrected\n");
-    for (int i = 0; i < pixels; i++)
-        printf("%d,%.2lf,%.2lf,%.2lf,%.2lf\n", i, dark[i], raw[i], darkCorrected[i], srmCorrected[i]);
-    printf(" ... \n");
+    if (tabs)
+    {
+        printf("\npixel\twavelength\twavenumber\tdark\traw\tdarkCorrected\tsrmCorrected\n");
+        for (int i = 0; i < pixels; i++)
+            printf("%d\t%.2lf\t%.2lf\t%.2lf\t%.2lf\t%.2lf\t%.2lf\n", 
+                i, wavelengths[i], wavenumbers[i], dark[i], raw[i], darkCorrected[i], srmCorrected[i]);
+    }
+    else
+    {
+        printf("\npixel, wavelength, wavenumber,     dark,      raw, darkCorrected, srmCorrected\n");
+        for (int i = 0; i < pixels; i++)
+            printf("%5d, %10.2lf, %10.2lf, %8.2lf, %8.2lf, %13.2lf, %12.2lf\n", 
+                i, wavelengths[i], wavenumbers[i], dark[i], raw[i], darkCorrected[i], srmCorrected[i]);
+    }
 }
 
 bool init()
@@ -239,6 +282,8 @@ bool init()
     wp_set_log_level(logLevel);
     const char* logfile = "demo.log";
     wp_set_logfile_path(logfile, strlen(logfile));
+
+    wp_set_driver_delay_us(delay_us);
 
     int numberOfSpectrometers = wp_open_all_spectrometers();
     printf("%d spectrometers found\n", numberOfSpectrometers);
@@ -263,42 +308,41 @@ bool init()
         printf("  %30s: %s\n", name.c_str(), value.c_str());
     }
 
+    loadWavenumbers();
+
     if (integrationTimeEdit) {
-        wp_set_integration_time_ms(specIndex,integrationTimeMS);
+        printf("Setting integration time to %dms\n", integrationTimeMS);
+        wp_set_integration_time_ms(specIndex, integrationTimeMS);
     }
 
     return true;
 }
 
-
-
 void demo()
 {
     ////////////////////////////////////////////////////////////////////////////
-    // read the requested number of spectra
+    // read the requested number of spectra (even for Raman mode, do this to warm-up the sensor)
     ////////////////////////////////////////////////////////////////////////////
+    for (int i = 0; i < count; i++)
+    {
+        float spectrum[pixels];
+        if (WP_SUCCESS == wp_get_spectrum_float(specIndex, spectrum, pixels))
+        {
+            auto now = timestamp();
+            printf("%s Spectrum %5d of %5d:", now.c_str(), i + 1, count);
+            for (int i = 0; i < 10; i++)
+                printf(" %.2f%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
+        }
+        else
+        {
+            printf("ERROR: failed getting spectrum\n");
+            exit(-1);
+        }
+    }
+
     if (ramanModeEnabled)
     {
         performRamanReading();
-    }
-    else
-    {
-        for (int i = 0; i < count; i++)
-        {
-            float spectrum[pixels];
-            if (WP_SUCCESS == wp_get_spectrum_float(specIndex, spectrum, pixels))
-            {
-                auto now = timestamp();
-                printf("%s Spectrum %5d of %5d:", now.c_str(), i + 1, count);
-                for (int i = 0; i < 10; i++)
-                    printf(" %.2f%s", spectrum[i], i + 1 < 10 ? "," : " ...\n");
-            }
-            else
-            {
-                printf("ERROR: failed getting spectrum\n");
-                exit(-1);
-            }
-        }
     }
 
     if (EEPROMedit) 
@@ -334,7 +378,9 @@ void demo()
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--count n] [--integration-time-ms] [--laser] [--log-level DEBUG|INFO|ERROR|NEVER] [--raman-mode] [--write-eeprom]\n");
+    printf("Usage: $ demo-linux [--count n] [--integration-time-ms] [--laser] [--raman-mode]"
+           "                    [--log-level DEBUG|INFO|ERROR|NEVER] [--write-eeprom]"
+           "                    [--delay-us delay_microsec] [--throwaways n]\n");
     exit(1);
 }
 
@@ -370,6 +416,20 @@ void parseArgs(int argc, char** argv)
             else
                 usage();
         }
+        else if (!strcmp(argv[i], "--throwaways"))
+        {
+            if (i + 1 < argc) 
+                throwaways = atoi(argv[++i]);
+            else
+                usage();
+        }
+        else if (!strcmp(argv[i], "--delay-us"))
+        {
+            if (i + 1 < argc) 
+                delay_us = strtoul(argv[++i], nullptr, 10);
+            else
+                usage();
+        }
         else if (!strcmp(argv[i], "--log-level"))
         {
             if (i + 1 < argc)
@@ -387,6 +447,10 @@ void parseArgs(int argc, char** argv)
         else if (!strcmp(argv[i], "--write-eeprom"))
         {
             EEPROMedit = true;
+        }
+        else if (!strcmp(argv[i], "--tabs"))
+        {
+            tabs = true;
         }
         else
         {
