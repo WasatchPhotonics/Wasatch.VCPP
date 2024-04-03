@@ -378,9 +378,9 @@ void demo()
 
 void usage()
 {
-    printf("Usage: $ demo-linux [--count n] [--integration-time-ms] [--laser] [--raman-mode]"
-           "                    [--log-level DEBUG|INFO|ERROR|NEVER] [--write-eeprom]"
-           "                    [--delay-us delay_microsec] [--throwaways n]\n");
+    printf("Usage: $ demo [--count n] [--integration-time-ms] [--laser] [--raman-mode]\n"
+           "              [--log-level DEBUG|INFO|ERROR|NEVER] [--write-eeprom]\n"
+           "              [--delay-us delay_microsec] [--throwaways n]\n");
     exit(1);
 }
 

@@ -169,6 +169,10 @@ namespace WasatchVCPP
             std::vector<uint16_t> getSubspectrum(uint8_t ep, long allocatedMS);
             long generateTotalWaitMS();
 
+            // post-processing
+            std::vector<double> bin2x2(const std::vector<double> spectrum);
+            void correctBadPixels(std::vector<double> spectrum);
+
             // control messages
             int sendCmd(uint8_t bRequest, uint16_t wValue, uint16_t wIndex, std::vector<uint8_t> data);
             std::vector<uint8_t> getCmd2(uint16_t wValue, int len, uint16_t wIndex=0, int fullLen=0);

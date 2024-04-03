@@ -1,5 +1,7 @@
 # Changelog
 
+- 2024-04-03 1.0.22
+    - added Spectrometer::badPixelCorrection
 - 2024-02-22 1.0.21
     - added --delay-us, --throwaways and --tabs in demo
 - 2023-06-06 1.0.20

@@ -116,7 +116,10 @@ namespace WasatchVCPP
             std::vector<uint8_t> userData;
             std::string userText;
 
-            std::set<int16_t> badPixels;
+            // it's convenient to have both, and faster to cache
+            std::set<int16_t> badPixelsSet;
+            std::vector<int16_t> badPixelsVector;
+
             std::string productConfiguration;
 
             uint8_t intensityCorrectionOrder = 0;
