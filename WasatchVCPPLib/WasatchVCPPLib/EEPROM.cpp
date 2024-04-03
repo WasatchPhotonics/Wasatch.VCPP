@@ -118,13 +118,17 @@ bool WasatchVCPP::EEPROM::parse(const vector<vector<uint8_t> >& pages_in)
             userText += '.';
     }
 
-    badPixels.clear();
+    badPixelsSet.clear();
     for (int i = 0; i < 15; i++)
     {
         auto pixel = ParseData::toInt16(pages[5], i * 2);
         if (pixel >= 0)
-            badPixels.insert(pixel); 
+            badPixelsSet.insert(pixel); // auto de-dupes
     }
+
+    badPixelsVector.clear();
+    for (auto pixel : badPixelsSet)
+        badPixelsVector.push_back(pixel); // cache sorted enumerable list
 
     if (format >= 5)
         productConfiguration = ParseData::toString(pages[5], 30, 16);
@@ -277,7 +281,7 @@ void WasatchVCPP::EEPROM::stringifyAll()
     stringify("userData", Util::toHex(userData)); // should be about 195 characters
     stringify("userText", userText);
 
-    stringify("badPixels", Util::join(badPixels, "%d"));
+    stringify("badPixels", Util::join(badPixelsSet, "%d"));
     stringify("productConfiguration", productConfiguration);
     stringify("avgResolution", Util::sprintf("%.2f", avgResolution));
 

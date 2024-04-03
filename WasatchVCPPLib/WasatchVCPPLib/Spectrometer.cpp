@@ -642,20 +642,16 @@ std::vector<double> WasatchVCPP::Spectrometer::getSpectrum()
     if (eeprom.featureMask.invertXAxis)
         std::reverse(spectrum.begin(), spectrum.end());
 
+    correctBadPixels(spectrum);
+
     if (eeprom.featureMask.bin2x2)
-    {
-        vector<double> binned;
-        for (int i = 0; i < (int)spectrum.size() - 1; i++)
-            binned.push_back((spectrum[i] + spectrum[i + 1]) / 2.0);
-        binned.push_back(spectrum[spectrum.size() - 1]);
-    }
+        spectrum = bin2x2(spectrum);
 
     logger.debug("getSpectrum: returning spectrum of %d pixels", spectrum.size());
     acquiring = false;
     mutAcquisition.unlock();
     return spectrum;
 }
-
 
 //! @param allocatedMS (Input) total time allocated in milliseconds (wall-clock)
 //! @returns either a populated subspectrum of exactly 'pixelsPerEndpoint' 
@@ -828,6 +824,83 @@ int WasatchVCPP::Spectrometer::getDetectorTECSetpointDegC()
 
 bool WasatchVCPP::Spectrometer::getHighGainModeEnable()
 { return isInGaAs() ? ParseData::toBool(getCmd(0xec, 1)) : false; }
+
+////////////////////////////////////////////////////////////////////////////////
+// Post-Processing
+////////////////////////////////////////////////////////////////////////////////
+
+//! Averages over bad pixels in-place.
+void WasatchVCPP::Spectrometer::correctBadPixels(std::vector<double> spectrum)
+{
+    int pixels = (int)spectrum.size();
+    for (int i = 0; i < eeprom.badPixelsVector.size(); i++)
+    {
+        auto badPix = eeprom.badPixelsVector[i];
+
+        if (badPix < 0)
+            continue;
+
+        if (badPix == 0)
+        {
+            // handle left edge
+            auto nextGood = badPix + 1;
+            while (eeprom.badPixelsSet.count(nextGood) && nextGood < pixels)
+            {
+                nextGood++;
+                i++;
+            }
+            if (nextGood < pixels)
+                for (int j = 0; j < nextGood; j++)
+                    spectrum[j] = spectrum[nextGood];
+        }
+        else
+        {
+            // find previous good pixel
+            auto prevGood = badPix - 1;
+            while (eeprom.badPixelsSet.count(prevGood) && prevGood >= 0)
+                prevGood -= 1;
+
+            if (prevGood >= 0) 
+            {
+                // find next good pixel
+                auto nextGood = badPix + 1;
+                while (eeprom.badPixelsSet.count(nextGood) && nextGood < pixels)
+                {
+                    nextGood++;
+                    i++;
+                }
+
+                if (nextGood < pixels)
+                {
+                    // draw a line between prevGood and nextGood intensity
+                    float deltaIntensity = spectrum[nextGood] - spectrum[prevGood];
+                    int rangePix = nextGood - prevGood;
+                    float intensityPerPix = deltaIntensity / rangePix;
+                    for (int j = 0; j < rangePix - 1; j++)
+                        spectrum[prevGood + j + 1] = spectrum[prevGood] + intensityPerPix * (j + 1);
+                }
+                else
+                {
+                    // we ran off the high end, so copy-right
+                    for (int j = badPix; j < pixels; j++)
+                        spectrum[j] = spectrum[prevGood];
+                }
+            }
+        }
+    }
+}
+
+//! perform 2x2 binning for Bayer filters
+std::vector<double> WasatchVCPP::Spectrometer::bin2x2(const std::vector<double> spectrum)
+{
+    vector<double> binned;
+    int pixels = (int)spectrum.size();
+    for (int i = 0; i < pixels - 1; i++)
+        binned.push_back((spectrum[i] + spectrum[i + 1]) / 2.0);
+    binned.push_back(spectrum[pixels - 1]);
+
+    return binned;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Control Messages
