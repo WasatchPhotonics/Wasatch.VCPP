@@ -207,60 +207,66 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
         logger.error("Unable to control laser. EEPROM reports no laser.");
         return false;
     }
+
     float value = float(max(0.f, min(100.f, percent)));
-    laserPowerPerc = value;
     logger.debug("set_laser_power_perc: range (0, 100), requested %.2f, applying %.2f", percent, value);
 
-    value = float(max(0.f, min(100.f, value)));
-    // If full power(and allowed), disable modulationand exit
+    // If zero, disable laser
+    if (value <= 0)
+        return setLaserEnable(false);
+
+    // If full power (and allowed), disable modulation and exit
     if (value >= 100) {
 
-        if (laserPowerRequireModulation) {
-            logger.debug("100% power requested, yet laser modulation required, so not disabling modulation");
+        if (laserPowerRequireModulation) 
+        {
+            logger.debug("100%% power requested, yet laser modulation required, so not disabling modulation");
         }
-        else {
+        else 
+        {
             logger.debug("Turning off laser modulation (full power)");
-            nextAppliedLaserPower = 100.0;
-            logger.debug("next_applied_laser_power = 100.0");
             setModEnable(false);
             return true;
         }
     }
+
     int period_us = laserPowerHighResolution ? 1000 : 100;
-    int width_us = int((value * period_us / 100.0)); // note that value is in range(0, 100) not (0, 1)
+    int width_us = int((value * period_us / 100.0)); // note that value is in range (0, 100) not (0, 1)
+
     // pulse width can't be longer than period, or shorter than 1us
     width_us = max(1, min(width_us, period_us));
 
     logger.debug("Writing values of period %d and width %d", period_us, width_us);
-    // Change the pulse period.Note that we're not parsing into 40-bit
-    // because this implementation is hard - coded to either 100 or 1000us
+    
+    // Change the pulse period. Note that we're not parsing into 40-bit
+    // because we currently enforce periods of either 100us or 1000us
     // (both fitting well within uint16)
     logger.debug("setting mod period");
     bool result = setModPeriodus(period_us);
-	if (!result) {
+	if (!result) 
+    {
         logger.error("Hardware Failure to send laser mod. pulse period");
         return false;
 	}
-    //getModPeriodus();
+
     // Set the pulse width to the 0 - 100 percentage of power
     logger.debug("setting mod width");
     result = setModWidthus(width_us);
-	if (!result) {
+	if (!result) 
+    {
         logger.error("Hardware Failure to send pulse width");
         return false;
 	}
+
     // Enable modulation
     logger.debug("enabling mod");
     result = setModEnable(true);
-	if (!result) {
+	if (!result) 
+    {
 		logger.error("Hardware Failure to send laser modulation");
 		return false;
 	}
-    //getModEnabled();
 
-    //nextAppliedLaserPower = value;
-    //logger.debug("next_applied_laser_power = %s", nextAppliedLaserPower);
-    //result = true;
     return result;
 }
 
