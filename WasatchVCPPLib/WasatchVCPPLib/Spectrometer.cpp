@@ -233,6 +233,9 @@ bool WasatchVCPP::Spectrometer::setLaserPowerPerc(float percent)
     int period_us = laserPowerHighResolution ? 1000 : 100;
     int width_us = int((value * period_us / 100.0)); // note that value is in range (0, 100) not (0, 1)
 
+    if (width_us <= 0)
+        return setLaserEnable(false);
+
     // pulse width can't be longer than period, or shorter than 1us
     width_us = max(1, min(width_us, period_us));
 
