@@ -1,5 +1,8 @@
 # Changelog
 
+- 2024-06-12 1.0.23
+    - setting PWM 0% disables laser
+    - update MacOS build to latest Homebrew
 - 2024-04-03 1.0.22
     - added Spectrometer::badPixelCorrection
 - 2024-02-22 1.0.21
