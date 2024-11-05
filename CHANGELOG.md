@@ -1,5 +1,7 @@
 # Changelog
 
+- 2024-11-05 1.0.24
+    - fixed correctBadPixels
 - 2024-06-12 1.0.23
     - setting PWM 0% disables laser
     - update MacOS build to latest Homebrew
