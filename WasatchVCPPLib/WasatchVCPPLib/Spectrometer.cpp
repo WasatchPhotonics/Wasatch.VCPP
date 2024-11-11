@@ -839,7 +839,7 @@ bool WasatchVCPP::Spectrometer::getHighGainModeEnable()
 ////////////////////////////////////////////////////////////////////////////////
 
 //! Averages over bad pixels in-place.
-void WasatchVCPP::Spectrometer::correctBadPixels(std::vector<double> spectrum)
+void WasatchVCPP::Spectrometer::correctBadPixels(std::vector<double>& spectrum)
 {
     int pixels = (int)spectrum.size();
     for (int i = 0; i < eeprom.badPixelsVector.size(); i++)
