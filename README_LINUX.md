@@ -12,6 +12,11 @@ sharing the basic source tree straightforward.
 # Dependencies
 
 - libusb-1.0
+- libusb-1.0-dev (for libusb.h)
+
+Example:
+
+    $ sudo apt install libusb-1.0-0-dev
 
 ## udev
 
