@@ -716,6 +716,7 @@ extern "C"
 
 #ifndef WASATCHVCPPLIB_EXPORTS
 
+#include <cstdint>
 #include <vector>
 #include <string>
 #include <map>
