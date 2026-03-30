@@ -340,7 +340,7 @@ void performTestTECSetpoint()
                 sum_of_delta_sqr += pow(pixel_mean - spectra[i][px], 2);
 
             // accrue summed pixel stdevs
-            summed_pixel_stdev += sum_of_delta_sqr / spectra.size();
+            summed_pixel_stdev += sqrt(sum_of_delta_sqr / (spectra.size() - 1));
         }
 
         // average per-pixel stdev across all pixels
