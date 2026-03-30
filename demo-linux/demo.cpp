@@ -299,8 +299,8 @@ void performTestTECSetpoint()
             break;
         }
 
-        printf("Waiting 30sec for stabilization...\n");
-        usleep(30000000);
+        printf("Waiting 1min for stabilization...\n");
+        usleep(60000000);
 
         float measured_degC = wp_get_detector_temperature_deg_c(specIndex);
 
@@ -397,7 +397,8 @@ bool init()
 void demo()
 {
     ////////////////////////////////////////////////////////////////////////////
-    // read the requested number of spectra (even for Raman mode, do this to warm-up the sensor)
+    // read the requested number of spectra (even for Raman and TEC tests, do 
+    // this to stabilize the sensor)
     ////////////////////////////////////////////////////////////////////////////
     for (int i = 0; i < count; i++)
     {
