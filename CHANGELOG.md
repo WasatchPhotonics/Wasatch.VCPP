@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-03-30 1.0.25
+    - added demo-linux --test-tec-setpoint
 - 2024-11-05 1.0.24
     - fixed correctBadPixels
 - 2024-06-12 1.0.23

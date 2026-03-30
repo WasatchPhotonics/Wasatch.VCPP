@@ -1,5 +1,6 @@
 CXXFLAGS += --std=c++11     \
-            -I../include
+            -I../include    \
+			-Wno-vla-cxx-extension
 LDFLAGS  += -L../lib        \
             -lwasatchvcpp   \
             -lusb-1.0

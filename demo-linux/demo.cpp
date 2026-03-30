@@ -48,6 +48,7 @@ vector<float> wavelengths;
 vector<float> wavenumbers;
 unsigned long delay_us = 0;
 int throwaways = 0;
+bool testTECSetpoint = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Utility
@@ -274,6 +275,81 @@ void performRamanReading()
     }
 }
 
+void performTestTECSetpoint()
+{
+    float spectrum[pixels];
+    int specIndex = 0;
+
+    printf("Ensuring detector TEC is enabled\n");
+    wp_set_detector_tec_enable(0, 1);
+
+    int lo = atoi(eeprom["detectorTempMin"].c_str());
+    int hi = atoi(eeprom["detectorTempMax"].c_str());
+    printf("Testing detector TEC across range (%d, %d C)\n", lo, hi);
+
+    for (int setpoint = lo; setpoint <= hi; setpoint++)
+    {
+        vector<vector<float> > spectra;
+
+        printf("\nSetting detector TEC setpoint to %d Celsius\n", setpoint);
+        int result = wp_set_detector_tec_setpoint_deg_c(specIndex, setpoint);
+        if (result != WP_SUCCESS)
+        {
+            printf("ERROR: failed to set %d C setpoint (result %d)\n", setpoint, result);
+            break;
+        }
+
+        printf("Waiting 1min for stabilization...\n");
+        usleep(60000000);
+
+        float measured_degC = wp_get_detector_temperature_deg_c(specIndex);
+
+        printf("Taking %d spectra", count);
+        for (int i = 0; i < count; i++)
+        {
+            result = wp_get_spectrum_float(specIndex, spectrum, pixels);
+            if (result != WP_SUCCESS)
+            {
+                printf("ERROR: failed to read spectrum (result %d)\n", result);
+                break;
+            }
+            printf(", %d", i);
+            fflush(stdout);
+
+            // inefficient, just for quick test
+            vector<float> spec;
+            for(int j = 0; j < pixels; j++)
+                spec.push_back(spectrum[j]);
+            spectra.push_back(spec);
+        } 
+        printf("\n");
+
+        // compute average per-pixel stdev across all pixels
+        float summed_pixel_stdev = 0;
+        for (int px = 0; px < pixels; px++)
+        {
+            // compute mean of this pixel
+            float pixel_sum = 0; // sum of intensities at this pixel across 'count' spectra
+            for (int i = 0; i < spectra.size(); i++)
+                pixel_sum += spectra[i][px];
+            float pixel_mean = pixel_sum / spectra.size(); // avg intensity at this pixel
+
+            // compute stdev of this pixel across 'count' spectra
+            float sum_of_delta_sqr = 0; 
+            for (int i = 0; i < spectra.size(); i++)
+                sum_of_delta_sqr += pow(pixel_mean - spectra[i][px], 2);
+
+            // accrue summed pixel stdevs
+            summed_pixel_stdev += sqrt(sum_of_delta_sqr / (spectra.size() - 1));
+        }
+
+        // average per-pixel stdev across all pixels
+        float mean_pixel_stdev = summed_pixel_stdev / pixels;
+
+        printf("Measured degC %8.2f, mean pixel stdev %8.2f\n", measured_degC, mean_pixel_stdev);
+    }
+}
+
 bool init()
 {
     char libraryVersion[STR_LEN];
@@ -321,7 +397,8 @@ bool init()
 void demo()
 {
     ////////////////////////////////////////////////////////////////////////////
-    // read the requested number of spectra (even for Raman mode, do this to warm-up the sensor)
+    // read the requested number of spectra (even for Raman and TEC tests, do 
+    // this to stabilize the sensor)
     ////////////////////////////////////////////////////////////////////////////
     for (int i = 0; i < count; i++)
     {
@@ -343,6 +420,11 @@ void demo()
     if (ramanModeEnabled)
     {
         performRamanReading();
+    }
+
+    if (testTECSetpoint)
+    {
+        performTestTECSetpoint();
     }
 
     if (EEPROMedit) 
@@ -380,7 +462,8 @@ void usage()
 {
     printf("Usage: $ demo [--count n] [--integration-time-ms] [--laser] [--raman-mode]\n"
            "              [--log-level DEBUG|INFO|ERROR|NEVER] [--write-eeprom]\n"
-           "              [--delay-us delay_microsec] [--throwaways n]\n");
+           "              [--delay-us delay_microsec] [--throwaways n]\n"
+           "              [--test-tec-setpoint]\n");
     exit(1);
 }
 
@@ -388,7 +471,7 @@ void parseArgs(int argc, char** argv)
 {
     for (int i = 1; i < argc; i++)
     {
-        printf("current arg is %s\n", argv[i]);
+        // printf("current arg is %s\n", argv[i]);
         if (!strcmp(argv[i], "--raman-mode"))
         {
             ramanModeEnabled = true;
@@ -451,6 +534,10 @@ void parseArgs(int argc, char** argv)
         else if (!strcmp(argv[i], "--tabs"))
         {
             tabs = true;
+        }
+        else if (!strcmp(argv[i], "--test-tec-setpoint"))
+        {
+            testTECSetpoint = true;
         }
         else
         {
