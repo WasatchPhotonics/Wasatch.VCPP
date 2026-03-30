@@ -470,7 +470,7 @@ void parseArgs(int argc, char** argv)
 {
     for (int i = 1; i < argc; i++)
     {
-        printf("current arg is %s\n", argv[i]);
+        // printf("current arg is %s\n", argv[i]);
         if (!strcmp(argv[i], "--raman-mode"))
         {
             ramanModeEnabled = true;
