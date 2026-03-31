@@ -22,7 +22,10 @@
 #include <string>
 #include <map>
 #include <math.h>
+
+#ifndef _WIN32 || _WIN64
 #include <unistd.h>
+#endif
 
 #include <string.h> // Linux memset
 
@@ -72,8 +75,10 @@ int exportString(string s, char* buf, int len)
 
 void delay()
 {
+#ifndef _WIN32 || _WIN64
     if (delay_us)
         usleep(delay_us);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
